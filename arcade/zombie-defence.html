@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zombi Terish O'yini</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Source+Code+Pro:wght@400;600&family=Poppins:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --primary: #b91c1c; /* Apokaliptik qizil (zombi) */
+      --secondary: #facc15; /* Neon sariq (so'zlar) */
+      --accent: #16a34a; /* Neon yashil (muvaffaqiyat) */
+      --error: #dc2626; /* Xato qizil */
+      --text: #e5e7eb; /* Oq-kulrang matn */
+      --bg-dark: #1f2937; /* Quyuk apokaliptik fon */
+      --bg-card: rgba(31, 41, 55, 0.9); /* Karta foni */
+      --game-bg-start: #1a2b27; /* O'yin maydoni yashil-kulrang */
+      --game-bg-end: #374151; /* O'yin maydoni oxiri */
+      --mana-start: #3b82f6; /* Mana gradient boshlanishi */
+      --mana-end: #06b6d4; /* Mana gradient oxiri */
+      --fast-zombie: #00b7eb; /* Tezkor zombi neon ko'k */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #4b1c1c, #1f2937);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      backdrop-filter: blur(5px);
+    }
+
+    .hero-background {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(75, 28, 28, 0.85), rgba(31, 41, 55, 0.85));
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: linear-gradient(45deg, #1f2937, #374151);
+      box-shadow: 0 4px 20px rgba(185, 28, 28, 0.7);
+      z-index: 10;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 2rem;
+      font-weight: 700;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .brand-icon:hover {
+      transform: rotate(360deg) scale(1.2);
+      box-shadow: 0 0 25px var(--primary);
+    }
+
+    .brand-text {
+      color: var(--accent);
+      font-family: 'Creepster', cursive;
+      font-size: 2rem;
+      font-weight: 700;
+      text-shadow: 0 0 12px rgba(22, 163, 74, 0.8);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 14px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(45deg, var(--primary), #991b1b);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+      text-shadow: 0 0 8px rgba(22, 163, 74, 0.7);
+      display: block;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 25px rgba(185, 28, 28, 0.7);
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 1400px;
+      height: 750px;
+      padding: 20px;
+      background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(26, 43, 39, 0.9));
+      border: 4 kapsamında: 2px solid #b91c1c, 2px solid #16a34a, 2px solid #1f2937;
+      border-radius: 16px;
+      box-shadow: 0 10px 50px rgba(185, 28, 28, 0.8), inset 0 0 15px rgba(22, 163, 74, 0.5);
+      animation: fadeIn 1s ease-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-title {
+      color: var(--accent);
+      font-family: 'Creepster', cursive;
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(22, 163, 74, 0.9), 0 0 30px rgba(185, 28, 28, 0.7);
+      animation: glow 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      0% { text-shadow: 0 0 10px rgba(22, 163, 74, 0.8), 0 0 15px rgba(185, 28, 28, 0.7); }
+      100% { text-shadow: 0 0 20px rgba(22, 163, 74, 1), 0 0 30px rgba(185, 28, 28, 0.9); }
+    }
+
+    .skills-title {
+      color: var(--accent);
+      font-family: 'Creepster', cursive;
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin: 10px 0;
+      text-shadow: 0 0 12px rgba(22, 163, 74, 0.8);
+      animation: glow 1.5s ease-in-out infinite alternate;
+    }
+
+    .skills-bar {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 15px;
+      justify-content: center;
+    }
+
+    .skill-card {
+      position: relative;
+      background: linear-gradient(45deg, var(--bg-card), #2d3b4a);
+      border: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      text-shadow: 0 0 8px rgba(22, 163, 74, 0.7);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .skill-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 15px rgba(22, 163, 74, 0.8);
+      animation: pulse 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .skill-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #555;
+    }
+
+    .skill-card .progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: var(--accent);
+      transition: width linear;
+    }
+
+    .game-area {
+      width: 100%;
+      height: 500px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(90deg, var(--game-bg-start), var(--game-bg-end));
+      border: 4px double var(--primary);
+      border-radius: 12px;
+      box-shadow: inset 0 0 25px rgba(185, 28, 28, 0.6), 0 0 20px rgba(22, 163, 74, 0.5);
+      z-index: 2;
+    }
+
+    .player {
+      position: absolute;
+      left: 20px;
+      font-size: 2.2rem;
+      color: var(--accent);
+      z-index: 5;
+      animation: soldierPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes soldierPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    #healthDisplay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 1.6rem;
+      color: var(--error);
+      text-shadow: 0 0 10px rgba(185, 28, 28, 0.8);
+      z-index: 6;
+    }
+
+    #manaBar {
+      position: absolute;
+      top: 40px;
+      left: 10px;
+      width: 120px;
+      height: 24px;
+      background: #1f2937;
+      border: 3px solid var(--accent);
+      border-radius: 8px;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(22, 163, 74, 0.5);
+    }
+
+    #manaFill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--mana-start), var(--mana-end));
+      border-radius: 6px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+    }
+
+    #manaText {
+      position: relative;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+      z-index: 7;
+    }
+
+    .zombie {
+      position: absolute;
+      font-size: 2.2rem;
+      color: var(--primary);
+      z-index: 5;
+      opacity: 1;
+      box-shadow: 0 0 20px var(--primary), 0 0 30px rgba(185, 28, 28, 0.8);
+      border-radius: 50%;
+      padding: 5px;
+      filter: drop-shadow(0 0 6px rgba(185, 28, 28, 0.9));
+      animation: zombiePulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes zombiePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .zombie.boss {
+      font-size: 3rem;
+      box-shadow: 0 0 25px var(--primary), 0 0 35px rgba(185, 28, 28, 0.9);
+    }
+
+    .zombie.fast {
+      font-size: 2rem;
+      color: var(--fast-zombie);
+      box-shadow: 0 0 20px var(--fast-zombie), 0 0 30px rgba(0, 183, 235, 0.8);
+      filter: drop-shadow(0 0 6px rgba(0, 183, 235, 0.9));
+    }
+
+    .zombie.destroyed {
+      animation: destroy 0.6s ease-out forwards;
+    }
+
+    @keyframes destroy {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.6; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .zombie-word {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Source Code Pro', monospace;
+      font-size: 1.3rem;
+      color: var(--secondary);
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.9);
+      white-space: nowrap;
+      z-index: 6;
+    }
+
+    .zombie-word.boss {
+      font-size: 1.5rem;
+      top: -40px;
+    }
+
+    .zombie-word.fast {
+      font-size: 1.2rem;
+      top: -25px;
+      color: var(--fast-zombie);
+      text-shadow: 0 0 10px rgba(0, 183, 235, 0.9);
+    }
+
+    .bullet {
+      position: absolute;
+      font-size: 1.1rem;
+      color: var(--accent);
+      z-index: 5;
+      animation: shoot 0.5s linear forwards;
+    }
+
+    @keyframes shoot {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(1400px); }
+    }
+
+    .bomb {
+      position: absolute;
+      font-size: 1.5rem;
+      color: var(--error);
+      z-index: 5;
+      opacity: 1;
+      animation: fall 0.5s linear forwards;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-100px); opacity: 1; }
+      100% { transform: translateY(0); opacity: 0.5; }
+    }
+
+    .input-area {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    #wordInput {
+      padding: 12px;
+      font-size: 1.3rem;
+      font-family: 'Source Code Pro', monospace;
+      border: 3px solid var(--primary);
+      border-radius: 10px;
+      background: #1f2937;
+      color: var(--text);
+      width: 320px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 15px rgba(185, 28, 28, 0.5);
+    }
+
+    #wordInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(22, 163, 74, 0.8);
+    }
+
+    #scoreDisplay {
+      font-family: 'Creepster', cursive;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--secondary);
+      text-shadow: 0 0 12px rgba(250, 204, 21, 0.8);
+      margin-top: 15px;
+    }
+
+    #gameOverModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(31, 41, 55, 0.95), rgba(26, 43, 39, 0.95));
+      border: 4px double var(--primary);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 0 40px rgba(185, 28, 28, 0.9), inset 0 0 15px rgba(22, 163, 74, 0.5);
+      z-index: 10;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    #gameOverModal.show {
+      display: block;
+    }
+
+    #gameOverText {
+      font-family: 'Creepster', cursive;
+      font-size: 1.8rem;
+      text-shadow: 0 0 15px rgba(22, 163, 74, 0.8);
+    }
+
+    #restartButton {
+      padding: 12px 24px;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      color: var(--text);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 15px rgba(22, 163, 74, 0.7);
+      margin-top: 20px;
+    }
+
+    #restartButton:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 25px rgba(22, 163, 74, 0.9);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(45deg, #1f2937, #374151);
+      color: var(--text);
+      font-family: 'Creepster', cursive;
+      font-size: 1.1rem;
+      animation: fadeIn 1s ease-out;
+      z-index: 4;
+      box-shadow: 0 -4px 20px rgba(185, 28, 28, 0.7);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      transition: transform 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .footer a:hover {
+      transform: scale(1.15);
+      text-shadow: 0 0 10px rgba(22, 163, 74, 0.8);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .game-container { width: 90%; height: 650px; }
+      .game-title { font-size: 2.5rem; }
+      .skills-title { font-size: 1.8rem; }
+      .game-area { height: 400px; }
+      .zombie { font-size: 1.6rem; }
+      .zombie.boss { font-size: 2.2rem; }
+      .zombie.fast { font-size: 1.5rem; }
+      .zombie-word { font-size: 1rem; top: -22px; }
+      .zombie-word.boss { font-size: 1.2rem; top: -30px; }
+      .zombie-word.fast { font-size: 1rem; top: -20px; }
+      .player { font-size: 1.6rem; }
+      .bullet, .bomb { font-size: 0.8rem; }
+      #healthDisplay { font-size: 1.3rem; }
+      #manaBar { width: 100px; height: 20px; }
+      #manaText { font-size: 0.8rem; }
+      .skill-card { padding: 8px 12px; font-size: 0.9rem; }
+      #wordInput { width: 280px; font-size: 1.1rem; }
+      #scoreDisplay { font-size: 1.2rem; }
+      #gameOverModal p { font-size: 1.4rem; }
+      .header { padding: 12px 18px; }
+      .nav-btn { padding: 10px 18px; font-size: 1.1rem; }
+      .brand-icon { width: 40px; height: 40px; font-size: 1.6rem; }
+      .brand-text { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { width: 95%; height: 550px; }
+      .game-title { font-size: 2rem; }
+      .skills-title { font-size: 1.5rem; }
+      .game-area { height: 350px; }
+      .zombie { font-size: 1.3rem; }
+      .zombie.boss { font-size: 1.8rem; }
+      .zombie.fast { font-size: 1.3rem; }
+      .zombie-word { font-size: 0.8rem; top: -18px; }
+      .zombie-word.boss { font-size: 1rem; top: -25px; }
+      .zombie-word.fast { font-size: 0.8rem; top: -18px; }
+      .player { font-size: 1.3rem; }
+      .bullet, .bomb { font-size: 0.6rem; }
+      #healthDisplay { font-size: 1.1rem; }
+      #manaBar { width: 80px; height: 18px; }
+      #manaText { font-size: 0.7rem; }
+      .skill-card { padding: 6px 10px; font-size: 0.8rem; }
+      #wordInput { width: 240px; font-size: 0.9rem; }
+      #scoreDisplay { font-size: 1rem; }
+      #gameOverModal p { font-size: 1.2rem; }
+      .header { padding: 10px 12px; }
+      .nav-btn { padding: 8px 12px; font-size: 0.9rem; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.4rem; }
+      .brand-text { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="game-container">
+      <h2 class="game-title">Zombi Himoya O'yini</h2>
+      <h3 class="skills-title">Qobiliyatlar</h3>
+      <div class="skills-bar">
+        <button class="skill-card" id="rainShotBtn">O'qlar Yomg'iri (30)<div class="progress"></div></button>
+        <button class="skill-card" id="bombardBtn">Bombardimon (40)<div class="progress"></div></button>
+        <button class="skill-card" id="healBtn">Heal (35)<div class="progress"></div></button>
+        <button class="skill-card" id="slowTimeBtn">Slow Time (25)<div class="progress"></div></button>
+      </div>
+      <div class="game-area" id="gameArea">
+        <div class="player" style="top: 10%;">🪖</div>
+        <div class="player" style="top: 30%;">🪖</div>
+        <div class="player" style="top: 50%;">🪖</div>
+        <div class="player" style="top: 70%;">🪖</div>
+        <div class="player" style="top: 90%;">🪖</div>
+        <div id="healthDisplay">❤️❤️❤️❤️❤️</div>
+        <div id="manaBar"><div id="manaFill" style="width: 0%"></div><span id="manaText">Mana: 0/100</span></div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="wordInput" placeholder="So'zni kiriting" autocomplete="off">
+      </div>
+      <div id="scoreDisplay">Ball: 0 | Wave: 1</div>
+      <div class="game-over-modal" id="gameOverModal">
+        <p id="gameOverText"></p>
+        <button id="restartButton">Qayta boshlash</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const wordInput = document.getElementById('wordInput');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const healthDisplay = document.getElementById('healthDisplay');
+    const manaBar = document.getElementById('manaBar');
+    const manaFill = document.getElementById('manaFill');
+    const manaText = document.getElementById('manaText');
+    const rainShotBtn = document.getElementById('rainShotBtn');
+    const bombardBtn = document.getElementById('bombardBtn');
+    const healBtn = document.getElementById('healBtn');
+    const slowTimeBtn = document.getElementById('slowTimeBtn');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const gameOverText = document.getElementById('gameOverText');
+    const restartButton = document.getElementById('restartButton');
+    const players = document.querySelectorAll('.player');
+
+    const words = [
+      'zombi', 'xavf', 'qorongu', 'oqibat', 'sher', 'qilich', 'sehr', 'jodu', 'xazina', 'yirtqich',
+      'olma', 'quyon', 'yulduz', 'oy', 'qum', 'tog', 'daryo', 'oq', 'qora', 'yashil',
+      'jangchi', 'qalqon', 'otash', 'shiddat', 'chaqmoq', "bo'ron", 'sir', 'xiyonat', 'qayta', 'tiklanish',
+      "qirg'in", 'dahshat', "qutqaruv", 'muqaddas', 'lanat', "o'lim", 'hayot', 'kuch', 'sadoqat', 'xavfsizlik',
+      'qasr', 'qabriston', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer', "do'zax"
+    ];
+
+    const bossWords = [
+      'apokalipsis', 'qiyomat', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik', "xavflijo'r", "qonxirlik", "to'fon", 'halokat'
+    ];
+
+    let zombies = [];
+    let score = 0;
+    let health = 5;
+    let mana = 0;
+    let gameActive = true;
+    let difficulty = 1;
+    let wave = 1;
+    let zombiesSpawned = 0;
+    let zombiesPerWave = 10;
+    let slowTimeActive = false;
+    let rainShotCooldown = 0;
+    let bombardCooldown = 0;
+    let healCooldown = 0;
+    let slowTimeCooldown = 0;
+    let lastManaUpdate = Date.now();
+
+    class Zombie {
+      constructor(word, isBoss = false, isFast = false) {
+        this.word = word;
+        this.isBoss = isBoss;
+        this.isFast = isFast;
+        this.x = 1300;
+        this.y = Math.random() * (gameArea.offsetHeight - 100) + 50;
+        this.speed = isFast ? (0.9 + Math.random() * 0.5) : isBoss ? (0.4 + Math.random() * 0.3) : (0.3 + Math.random() * 0.3);
+        this.active = true;
+        this.element = null;
+        this.wordElement = null;
+      }
+
+      createElement() {
+        this.element = document.createElement('div');
+        this.element.className = `zombie ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+        this.element.style.opacity = '1';
+        this.element.innerHTML = this.isFast ? '💀' : this.isBoss ? '👹' : '🧟';
+
+        this.wordElement = document.createElement('div');
+        this.wordElement.className = `zombie-word ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
+        this.wordElement.innerText = this.word;
+        this.element.appendChild(this.wordElement);
+
+        gameArea.appendChild(this.element);
+        if (this.isBoss) console.log(`Boss zombi paydo bo'ldi: ${this.word}`);
+        if (this.isFast) console.log(`Tezkor zombi paydo bo'ldi: ${this.word}`);
+      }
+
+      update() {
+        if (this.active) {
+          const speed = slowTimeActive ? this.speed * 0.5 : this.speed;
+          this.x -= speed;
+          this.element.style.left = `${this.x}px`;
+          if (this.x <= 50) {
+            health = Math.max(0, health - 1);
+            healthDisplay.innerText = '❤️'.repeat(health);
+            const playerToRemove = document.querySelectorAll('.player')[health];
+            if (playerToRemove) playerToRemove.remove();
+            this.destroy(false);
+            if (health <= 0) {
+              gameOver();
+            }
+          }
+        }
+      }
+
+      destroy(addMana = true) {
+        this.element.classList.add('destroyed');
+        setTimeout(() => {
+          if (this.element) this.element.remove();
+          this.active = false;
+        }, 600);
+        if (addMana) {
+          const manaGain = this.isFast || this.isBoss ? 5 : 2;
+          const scoreGain = this.isFast ? 50 : this.isBoss ? 20 : 10;
+          mana = Math.min(100, mana + manaGain);
+          score += scoreGain;
+          updateMana();
+        }
+        zombiesSpawned++;
+        if (zombiesSpawned >= zombiesPerWave) {
+          wave++;
+          zombiesSpawned = 0;
+          zombiesPerWave = 10 + wave * 2;
+          difficulty += 0.2;
+        }
+      }
+    }
+
+    function updateMana() {
+      manaFill.style.width = `${mana}%`;
+      manaText.innerText = `Mana: ${Math.floor(mana)}/100`;
+    }
+
+    function shootBullet(targetX, targetY) {
+      const bullet = document.createElement('div');
+      bullet.className = 'bullet';
+      bullet.innerText = '🔸';
+      bullet.style.left = '50px';
+      bullet.style.top = `${targetY}px`;
+      gameArea.appendChild(bullet);
+      setTimeout(() => bullet.remove(), 500);
+    }
+
+    function spawnBomb(targetX, targetY) {
+      const bomb = document.createElement('div');
+      bomb.className = 'bomb';
+      bomb.innerText = '💣';
+      bomb.style.left = `${targetX + (Math.random() * 100 - 50)}px`;
+      bomb.style.top = `-50px`;
+      bomb.style.zIndex = '5';
+      bomb.style.opacity = '1';
+      gameArea.appendChild(bomb);
+      setTimeout(() => bomb.remove(), 500);
+    }
+
+    function spawnZombie() {
+      if (!gameActive) return;
+      const isBoss = Math.random() < 0.2 && zombiesSpawned === 0;
+      const isFast = !isBoss && Math.random() < 0.005;
+      const wordList = isBoss ? bossWords : words;
+      const word = wordList[Math.floor(Math.random() * wordList.length)];
+      const zombie = new Zombie(word, isBoss, isFast);
+      zombie.createElement();
+      zombies.push(zombie);
+    }
+
+    function updateGame() {
+      if (!gameActive) return;
+
+      zombies.forEach(zombie => zombie.update());
+      zombies = zombies.filter(zombie => zombie.active);
+      scoreDisplay.innerText = `Ball: ${score} | Wave: ${wave}`;
+
+      if (Math.random() < 0.005 * difficulty * wave) {
+        spawnZombie();
+      }
+
+      const now = Date.now();
+      if (now - lastManaUpdate >= 2000) {
+        mana = Math.min(100, mana + 1);
+        updateMana();
+        lastManaUpdate = now;
+      }
+
+      if (rainShotCooldown > 0) {
+        rainShotCooldown -= 1 / 60;
+        rainShotBtn.querySelector('.progress').style.width = `${(rainShotCooldown / 15) * 100}%`;
+        if (rainShotCooldown <= 0) {
+          rainShotBtn.classList.remove('disabled');
+          rainShotBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (bombardCooldown > 0) {
+        bombardCooldown -= 1 / 60;
+        bombardBtn.querySelector('.progress').style.width = `${(bombardCooldown / 15) * 100}%`;
+        if (bombardCooldown <= 0) {
+          bombardBtn.classList.remove('disabled');
+          bombardBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (healCooldown > 0) {
+        healCooldown -= 1 / 60;
+        healBtn.querySelector('.progress').style.width = `${(healCooldown / 15) * 100}%`;
+        if (healCooldown <= 0) {
+          healBtn.classList.remove('disabled');
+          healBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (slowTimeCooldown > 0) {
+        slowTimeCooldown -= 1 / 60;
+        slowTimeBtn.querySelector('.progress').style.width = `${(slowTimeCooldown / 15) * 100}%`;
+        if (slowTimeCooldown <= 0) {
+          slowTimeBtn.classList.remove('disabled');
+          slowTimeBtn.querySelector('.progress').style.width = '0%';
+          slowTimeActive = false;
+        }
+      }
+
+      requestAnimationFrame(updateGame);
+    }
+
+    function gameOver() {
+      gameActive = false;
+      gameOverText.innerText = `O'yin tugadi! Sizning balingiz: ${score}\nOxirgi wave: ${wave}\nQayta urinib ko'ring!`;
+      gameOverModal.classList.add('show');
+      playSound(300, 0.2);
+    }
+
+    function restartGame() {
+      zombies.forEach(zombie => zombie.destroy(false));
+      zombies = [];
+      score = 0;
+      health = 5;
+      mana = 0;
+      wave = 1;
+      zombiesSpawned = 0;
+      zombiesPerWave = 10;
+      difficulty = 1;
+      healthDisplay.innerText = '❤️❤️❤️❤️❤️';
+      manaFill.style.width = '0%';
+      manaText.innerText = 'Mana: 0/100';
+      rainShotBtn.classList.remove('disabled');
+      rainShotBtn.querySelector('.progress').style.width = '0%';
+      bombardBtn.classList.remove('disabled');
+      bombardBtn.querySelector('.progress').style.width = '0%';
+      healBtn.classList.remove('disabled');
+      healBtn.querySelector('.progress').style.width = '0%';
+      slowTimeBtn.classList.remove('disabled');
+      slowTimeBtn.querySelector('.progress').style.width = '0%';
+      gameActive = true;
+      lastManaUpdate = Date.now();
+      wordInput.value = '';
+      wordInput.focus();
+      gameOverModal.classList.remove('show');
+      const gameArea = document.getElementById('gameArea');
+      gameArea.querySelectorAll('.player').forEach(p => p.remove());
+      const positions = ['10%', '30%', '50%', '70%', '90%'];
+      positions.forEach(pos => {
+        const player = document.createElement('div');
+        player.className = 'player';
+        player.style.top = pos;
+        player.innerText = '🪖';
+        gameArea.appendChild(player);
+      });
+      setInterval(spawnZombie, 3000);
+    }
+
+    function playSound(frequency, duration) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), duration * 1000);
+    }
+
+    wordInput.addEventListener('input', () => {
+      const input = wordInput.value.trim().toLowerCase();
+      const index = zombies.findIndex(zombie => zombie.active && zombie.word.toLowerCase() === input);
+      if (index !== -1) {
+        shootBullet(zombies[index].x, zombies[index].y);
+        zombies[index].destroy(true);
+        wordInput.value = '';
+        playSound(500, 0.1);
+      }
+    });
+
+    wordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && wordInput.value.trim() !== '') {
+        playSound(200, 0.1);
+        wordInput.value = '';
+      }
+    });
+
+    rainShotBtn.addEventListener('click', () => {
+      if (mana >= 30 && rainShotCooldown <= 0) {
+        mana -= 30;
+        updateMana();
+        zombies.forEach(zombie => {
+          if (zombie.active) {
+            shootBullet(zombie.x, zombie.y);
+            zombie.destroy(false);
+            score += zombie.isFast ? 50 : zombie.isBoss ? 20 : 10;
+          }
+        });
+        rainShotCooldown = 15;
+        rainShotBtn.classList.add('disabled');
+        rainShotBtn.querySelector('.progress').style.width = '100%';
+        playSound(600, 0.2);
+      }
+    });
+
+    bombardBtn.addEventListener('click', () => {
+      if (mana >= 40 && bombardCooldown <= 0) {
+        mana -= 40;
+        updateMana();
+        zombies.forEach(zombie => {
+          if (zombie.active) {
+            spawnBomb(zombie.x, zombie.y);
+            zombie.destroy(false);
+            score += zombie.isFast ? 50 : zombie.isBoss ? 20 : 10;
+          }
+        });
+        bombardCooldown = 15;
+        bombardBtn.classList.add('disabled');
+        bombardBtn.querySelector('.progress').style.width = '100%';
+        playSound(1000, 0.3);
+      }
+    });
+
+    healBtn.addEventListener('click', () => {
+      if (mana >= 35 && healCooldown <= 0 && health < 5) {
+        mana -= 35;
+        health = Math.min(5, health + 1);
+        healthDisplay.innerText = '❤️'.repeat(health);
+        const gameArea = document.getElementById('gameArea');
+        const currentPlayers = document.querySelectorAll('.player').length;
+        if (currentPlayers < health) {
+          const positions = ['10%', '30%', '50%', '70%', '90%'];
+          const player = document.createElement('div');
+          player.className = 'player';
+          player.style.top = positions[currentPlayers];
+          player.innerText = '🪖';
+          gameArea.appendChild(player);
+        }
+        updateMana();
+        healCooldown = 15;
+        healBtn.classList.add('disabled');
+        healBtn.querySelector('.progress').style.width = '100%';
+        playSound(600, 0.2);
+      }
+    });
+
+    slowTimeBtn.addEventListener('click', () => {
+      if (mana >= 25 && slowTimeCooldown <= 0) {
+        mana -= 25;
+        slowTimeActive = true;
+        setTimeout(() => slowTimeActive = false, 5000);
+        updateMana();
+        slowTimeCooldown = 15;
+        slowTimeBtn.classList.add('disabled');
+        slowTimeBtn.querySelector('.progress').style.width = '100%';
+        playSound(600, 0.2);
+      }
+    });
+
+    restartButton.addEventListener('click', restartGame);
+
+    setInterval(spawnZombie, 3000);
+    requestAnimationFrame(updateGame);
+    wordInput.focus();
+  </script>
+</body>
+</html>

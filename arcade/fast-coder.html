@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kod Yozish O'yini</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --secondary: #f59e0b;
+      --accent: #a5b4fc;
+      --text: #ffffff;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+      --success: #22c55e;
+      --disabled: #6b7280;
+      --hover-shadow: rgba(165, 180, 252, 0.8);
+      --glow: rgba(245, 158, 11, 0.8);
+      --card-glow: rgba(79, 70, 229, 0.7);
+      --alert-red: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .hero-background {
+      position: relative;
+      width: 100%;
+      min-height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+      padding-top: 12vh;
+    }
+
+    .starfield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(2px 2px at 10px 20px, var(--accent) 1px, transparent 0),
+                       radial-gradient(1.5px 1.5px at 50px 60px, var(--secondary) 1px, transparent 0),
+                       radial-gradient(1.8px 1.8px at 80px 90px, var(--text) 1px, transparent 0);
+      background-size: 130px 130px;
+      background-repeat: repeat;
+      animation: twinkle 4s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes twinkle {
+      0% { transform: translate(0, 0); opacity: 0.7; }
+      100% { transform: translate(-30px, -30px); opacity: 0.7; }
+    }
+
+    .floating-elements {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .floating-icon {
+      position: absolute;
+      font-size: 2rem;
+      color: var(--accent);
+      opacity: 0.6;
+      animation: float 7s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .floating-icon:nth-child(1) { top: 8%; left: 12%; --delay: 0s; }
+    .floating-icon:nth-child(2) { top: 45%; right: 10%; --delay: 1.2s; }
+    .floating-icon:nth-child(3) { top: 30%; right: 15%; --delay: 0.6s; }
+    .floating-icon:nth-child(4) { bottom: 15%; left: 20%; --delay: 1.8s; }
+    .floating-icon:nth-child(5) { bottom: 10%; left: 65%; --delay: 2.4s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-25px) scale(1.3); }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 50px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      z-index: 4;
+      animation: fadeUp 0.9s ease-out;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .brand-icon {
+      width: 55px;
+      height: 55px;
+      background: var(--secondary);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      font-size: 2.2rem;
+      font-weight: 900;
+      transition: transform 0.6s ease, box-shadow 0.4s ease;
+    }
+
+    .brand-icon:hover {
+      transform: rotate(360deg) scale(1.25);
+      box-shadow: 0 0 25px var(--glow);
+    }
+
+    .brand-text {
+      color: var(--accent);
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-shadow: 0 0 15px var(--hover-shadow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(45deg, var(--primary), #7c3aed);
+      border: none;
+      border-radius: 14px;
+      padding: 14px 30px;
+      cursor: pointer;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+      text-shadow: 0 0 10px var(--hover-shadow);
+      display: block;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.12) rotate(4deg);
+      box-shadow: 0 12px 30px rgba(79, 70, 229, 0.8);
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 50px 40px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+      border-radius: 24px;
+      border: 4px solid transparent;
+      border-image: linear-gradient(45deg, var(--secondary), #facc15, var(--success)) 1;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      animation: fadeUp 1.2s ease-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-title {
+      color: var(--accent);
+      font-size: 4.5rem;
+      font-weight: 900;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-shadow: 0 0 25px var(--hover-shadow);
+      animation: glowPulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { text-shadow: 0 0 15px var(--hover-shadow); }
+      100% { text-shadow: 0 0 30px var(--hover-shadow); }
+    }
+
+    .language-selector {
+      margin-bottom: 30px;
+    }
+
+    #languageSelect {
+      padding: 14px 20px;
+      font-size: 1.3rem;
+      border: 3px solid transparent;
+      border-image: linear-gradient(45deg, var(--secondary), #facc15) 1;
+      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.95);
+      color: var(--text);
+      outline: none;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      font-weight: 700;
+    }
+
+    #languageSelect:focus {
+      box-shadow: 0 0 15px var(--glow);
+      transform: scale(1.05);
+    }
+
+    .code-area {
+      display: flex;
+      gap: 30px;
+      width: 100%;
+      max-width: 1300px;
+      margin-bottom: 30px;
+    }
+
+    .code-display, .code-input {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(46, 16, 101, 0.95));
+      border: 3px solid transparent;
+      border-image: linear-gradient(45deg, var(--secondary), #facc15) 1;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 6px 20px var(--card-glow);
+      position: relative;
+    }
+
+    .code-display {
+      overflow-x: auto;
+      display: flex;
+    }
+
+    .line-numbers {
+      width: 50px;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-align: right;
+      padding-right: 15px;
+      user-select: none;
+      border-right: 2px solid var(--primary);
+      margin-right: 15px;
+    }
+
+    .code-display pre {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 1.1rem;
+      color: var(--text);
+      white-space: pre-wrap;
+      line-height: 1.5;
+      margin: 0;
+      flex: 1;
+    }
+
+    .code-display .correct { color: var(--success); }
+    .code-display .error { color: var(--alert-red); }
+    .code-display .current { background: rgba(165, 180, 252, 0.3); }
+
+    #codeInput {
+      width: 100%;
+      max-width: 98%;
+      height: 600px;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-family: 'Source Code Pro', monospace;
+      border: 3px solid transparent;
+      border-image: linear-gradient(45deg, var(--secondary), #facc15) 1;
+      border-radius: 12px;
+      background: rgba(30, 41, 59, 0.95);
+      color: var(--text);
+      outline: none;
+      resize: none;
+      transition: box-shadow 0.4s ease, transform 0.4s ease;
+    }
+
+    #codeInput:focus {
+      box-shadow: 0 0 15px var(--glow);
+      transform: scale(1.01);
+    }
+
+    .stats-card, .console-card {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 6px 20px var(--card-glow);
+      width: 100%;
+      max-width: 1300px;
+      text-align: center;
+      margin-bottom: 20px;
+      border: 3px solid transparent;
+      border-image: linear-gradient(45deg, var(--secondary), #facc15) 1;
+    }
+
+    .console-card {
+      height: 120px;
+      overflow-y: auto;
+    }
+
+    #consoleOutput {
+      font-size: 1rem;
+      font-family: 'Source Code Pro', monospace;
+      color: var(--text);
+      text-align: left;
+      padding: 10px;
+    }
+
+    #consoleOutput .code-log { color: var(--success); }
+    #consoleOutput .error-log { color: var(--alert-red); }
+    #consoleOutput .info-log { color: var(--text); }
+
+    #runButton {
+      padding: 14px 30px;
+      font-size: 1.2rem;
+      background: linear-gradient(45deg, var(--secondary), #facc15);
+      color: var(--text);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      font-weight: 700;
+      text-shadow: 0 0 8px var(--glow);
+      width: 250px;
+      margin-top: 15px;
+    }
+
+    #runButton:hover {
+      transform: scale(1.12) rotate(4deg);
+      box-shadow: 0 8px 20px var(--glow);
+    }
+
+    #runButton:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(124, 58, 237, 0.95));
+      border: 4px solid transparent;
+      border-image: linear-gradient(45deg, var(--accent), var(--secondary)) 1;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 700px;
+      width: 90%;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 0 30px var(--glow);
+      z-index: 10;
+      animation: fadeIn 0.5s ease-out, scalePulse 1.5s ease-in-out infinite;
+    }
+
+    .result-modal.show {
+      display: block;
+    }
+
+    @keyframes scalePulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.05); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .result-modal p {
+      font-size: 1.5rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      text-shadow: 0 0 12px var(--hover-shadow);
+      animation: popIn 0.6s ease forwards;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      color: #f0f9ff;
+      font-size: 1.2rem;
+      animation: fadeUp 1.2s ease-out;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 12px;
+      transition: transform 0.5s ease, color 0.5s ease;
+    }
+
+    .footer a:hover {
+      transform: scale(1.2);
+      color: var(--secondary);
+    }
+
+    @media (max-width: 1200px) {
+      .game-container { max-width: 1000px; padding: 40px 30px; }
+      .game-title { font-size: 4rem; }
+      .code-area { gap: 20px; }
+      #codeInput { height: 500px; font-size: 1rem; }
+      .line-numbers, .code-display pre { font-size: 1rem; }
+      #languageSelect { font-size: 1.2rem; padding: 12px 18px; }
+      #runButton { font-size: 1.1rem; padding: 12px 24px; width: 220px; }
+      .console-card { height: 110px; }
+      .result-modal p { font-size: 1.4rem; }
+    }
+
+    @media (max-width: 900px) {
+      .hero-background { padding-top: 10vh; }
+      .game-container { padding: 30px 20px; }
+      .game-title { font-size: 3.5rem; }
+      .code-area { flex-direction: column; gap: 25px; }
+      .code-display, .code-input { width: 100%; }
+      #codeInput { height: 450px; font-size: 0.95rem; }
+      .line-numbers, .code-display pre { font-size: 0.95rem; }
+      #languageSelect { font-size: 1.1rem; padding: 10px 16px; }
+      #runButton { font-size: 1rem; padding: 10px 20px; width: 200px; }
+      .console-card { height: 100px; }
+      #consoleOutput { font-size: 0.9rem; }
+      .result-modal p { font-size: 1.3rem; }
+      .header { padding: 20px 30px; }
+      .nav-links { gap: 20px; }
+    }
+
+    @media (max-width: 768px) {
+      .hero-background { padding-top: 8vh; }
+      .game-container { padding: 20px 15px; }
+      .game-title { font-size: 3rem; }
+      .code-area { gap: 20px; }
+      #codeInput { height: 400px; font-size: 0.9rem; }
+      .line-numbers, .code-display pre { font-size: 0.9rem; }
+      #languageSelect { font-size: 1rem; padding: 8px 14px; }
+      #runButton { font-size: 0.9rem; padding: 8px 18px; width: 180px; }
+      .console-card { height: 90px; }
+      #consoleOutput { font-size: 0.85rem; }
+      .result-modal p { font-size: 1.2rem; }
+      .nav-links { flex-direction: column; gap: 15px; }
+      .nav-btn { padding: 10px 18px; font-size: 1.1rem; }
+      .brand-icon { width: 50px; height: 50px; font-size: 2rem; }
+      .brand-text { font-size: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-background { padding-top: 6vh; }
+      .game-container { padding: 15px 12px; }
+      .game-title { font-size: 2.5rem; }
+      #codeInput { height: 350px; font-size: 0.85rem; }
+      .line-numbers, .code-display pre { font-size: 0.85rem; }
+      #languageSelect { font-size: 0.9rem; padding: 6px 12px; }
+      #runButton { font-size: 0.8rem; padding: 6px 16px; width: 160px; }
+      .console-card { height: 80px; }
+      #consoleOutput { font-size: 0.8rem; }
+      .result-modal p { font-size: 1.1rem; }
+      .nav-btn { padding: 8px 16px; font-size: 1rem; }
+      .brand-icon { width: 45px; height: 45px; font-size: 1.8rem; }
+      .brand-text { font-size: 1.8rem; }
+      .header { padding: 15px 25px; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon"><i class="fas fa-rocket"></i></div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="starfield"></div>
+    <div class="floating-elements">
+      <div class="floating-icon"><i class="fas fa-star"></i></div>
+      <div class="floating-icon"><i class="fas fa-bolt"></i></div>
+      <div class="floating-icon"><i class="fas fa-rocket"></i></div>
+      <div class="floating-icon"><i class="fas fa-star"></i></div>
+      <div class="floating-icon"><i class="fas fa-bolt"></i></div>
+    </div>
+    <div class="game-container">
+      <h2 class="game-title">Kod Yozish O'yini</h2>
+      <div class="language-selector">
+        <select id="languageSelect">
+          <option value="python">Python</option>
+          <option value="javascript">JavaScript</option>
+          <option value="cpp">C++</option>
+          <option value="java">Java</option>
+          <option value="go">Go</option>
+          <option value="ruby">Ruby</option>
+        </select>
+      </div>
+      <div class="code-area">
+        <div class="code-display">
+          <div class="line-numbers" id="lineNumbers"></div>
+          <pre id="codeDisplay"></pre>
+        </div>
+        <div class="code-input">
+          <textarea id="codeInput" placeholder="Bu yerga kodni kiriting" autocomplete="off"></textarea>
+        </div>
+      </div>
+      <div class="stats-card">
+        <div id="statsDisplay">Vaqt: 0s | WPM: 0 | Aniqlik: 100%</div>
+      </div>
+      <button id="runButton" disabled>Run</button>
+      <div class="console-card">
+        <div id="consoleOutput"></div>
+      </div>
+      <div class="result-modal" id="resultModal">
+        <p id="resultOutput"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
+  </footer>
+
+  <script>
+    const codeSnippets = {
+      python: [
+        {
+          code: `def move_snake(direction, snake):\n    new_head = [snake[0][0], snake[0][1]]\n    if direction == "UP":\n        new_head[1] -= 1\n    elif direction == "DOWN":\n        new_head[1] += 1\n    elif direction == "LEFT":\n        new_head[0] -= 1\n    elif direction == "RIGHT":\n        new_head[0] += 1\n    snake.insert(0, new_head)\n    return snake`,
+          output: "Ilon bir qadam yo‘nalish bo‘yicha harakatlandi.\nMisol: snake=[[1,1]], direction='RIGHT' → [[2,1],[1,1]]"
+        },
+        {
+          code: `import random\ndef spawn_food(width, height, snake):\n    while True:\n        food = [random.randint(0, width-1), random.randint(0, height-1)]\n        if food not in snake:\n            return food`,
+          output: "Oziq-ovqat ilon joylashmagan tasodifiy joyda paydo bo‘ldi.\nMisol: width=5, height=5, snake=[[1,1]] → [3,4]"
+        },
+        {
+          code: `def fibonacci(n):\n    if n <= 1:\n        return n\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\nfor i in range(10):\n    print(fibonacci(i))`,
+          output: "Dastlabki 10 ta Fibonachchi sonlari: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34"
+        },
+        {
+          code: `def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1`,
+          output: "Ikkilik qidiruv orqali maqsad indeksini qaytaradi.\nMisol: arr=[1,3,5,7], target=5 → 2"
+        },
+        {
+          code: `def quicksort(arr):\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]\n    left = [x for x in arr if x < pivot]\n    middle = [x for x in arr if x == pivot]\n    right = [x for x in arr if x > pivot]\n    return quicksort(left) + middle + quicksort(right)`,
+          output: "Massivni quicksort algoritmi bilan tartiblaydi.\nMisol: arr=[3,1,4,1,5] → [1,1,3,4,5]"
+        },
+        {
+          code: `def is_palindrome(s):\n    s = s.lower().replace(" ", "")\n    return s == s[::-1]`,
+          output: "Matn palindrom ekanligini tekshiradi.\nMisol: s='radar' → True"
+        },
+        {
+          code: `def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n-1)`,
+          output: "Sonning faktorialini hisoblaydi.\nMisol: n=5 → 120"
+        },
+        {
+          code: `def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a`,
+          output: "Ikkita sonning eng katta umumiy bo‘luvchisini topadi.\nMisol: a=48, b=18 → 6"
+        },
+        {
+          code: `def reverse_list(lst):\n    return lst[::-1]`,
+          output: "Ro‘yxatni teskari qiladi.\nMisol: lst=[1,2,3] → [3,2,1]"
+        },
+        {
+          code: `def bubble_sort(arr):\n    n = len(arr)\n    for i in range(n):\n        for j in range(0, n-i-1):\n            if arr[j] > arr[j+1]:\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n    return arr`,
+          output: "Massivni bubble sort algoritmi bilan tartiblaydi.\nMisol: arr=[64,34,25,12] → [12,25,34,64]"
+        }
+      ],
+      javascript: [
+        {
+          code: `function updateBird(bird, velocity) {\n    bird.y += velocity;\n    velocity += 0.5; // Gravity\n    if (bird.y > canvas.height) {\n        bird.y = canvas.height;\n        velocity = 0;\n    }\n    return { bird, velocity };\n}`,
+          output: "Qushning pozitsiyasi tortishish kuchi bilan yangilandi.\nMisol: bird={y:50}, velocity=2, canvas.height=500 → {bird:{y:52}, velocity:2.5}"
+        },
+        {
+          code: `function checkCollision(bird, pipes) {\n    for (let pipe of pipes) {\n        if (bird.x + bird.width > pipe.x && \n            bird.x < pipe.x + pipe.width && \n            (bird.y < pipe.top || bird.y + bird.height > pipe.bottom)) {\n            return true;\n        }\n    }\n    return false;\n}`,
+          output: "Qush va quvurlar o‘rtasida to‘qnashuv tekshirildi.\nMisol: bird={x:50,y:100}, pipes=[{x:60,top:80,bottom:120}] → true"
+        },
+        {
+          code: `function factorial(n) {\n    if (n === 0) return 1;\n    return n * factorial(n - 1);\n}`,
+          output: () => {
+            const n = 5;
+            function factorial(n) {
+              if (n === 0) return 1;
+              return n * factorial(n - 1);
+            }
+            return `Sonning faktoriali: ${factorial(n)} (n=${n})`;
+          }
+        },
+        {
+          code: `function shuffleArray(array) {\n    for (let i = array.length - 1; i > 0; i--) {\n        const j = Math.floor(Math.random() * (i + 1));\n        [array[i], array[j]] = [array[j], array[i]];\n    }\n    return array;\n}`,
+          output: () => {
+            const array = [1, 2, 3, 4, 5];
+            for (let i = array.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [array[i], array[j]] = [array[j], array[i]];
+            }
+            return `Massiv tasodifiy tartibda: ${array}`;
+          }
+        },
+        {
+          code: `function debounce(func, wait) {\n    let timeout;\n    return function executedFunction(...args) {\n        const later = () => {\n            clearTimeout(timeout);\n            func(...args);\n        };\n        clearTimeout(timeout);\n        timeout = setTimeout(later, wait);\n    };\n}`,
+          output: "Funksiya kechiktirilib ishga tushirildi.\nMisol: func=console.log, wait=100ms → kechikish bilan ishlaydi"
+        },
+        {
+          code: `function throttle(func, limit) {\n    let inThrottle;\n    return function(...args) {\n        if (!inThrottle) {\n            func(...args);\n            inThrottle = true;\n            setTimeout(() => inThrottle = false, limit);\n        }\n    };\n}`,
+          output: "Funksiya cheklangan chastotada ishga tushirildi.\nMisol: func=console.log, limit=200ms → cheklangan chastota"
+        },
+        {
+          code: `function memoize(fn) {\n    const cache = {};\n    return function(...args) {\n        const key = JSON.stringify(args);\n        if (cache[key]) return cache[key];\n        const result = fn(...args);\n        cache[key] = result;\n        return result;\n    };\n}`,
+          output: "Funksiya natijalari keshlandi.\nMisol: fn=(x)=>x*x, args=[4] → 16 (keshlanadi)"
+        },
+        {
+          code: `function deepClone(obj) {\n    return JSON.parse(JSON.stringify(obj));\n}`,
+          output: () => {
+            const obj = { a: 1, b: { c: 2 } };
+            return `Obyektning chuqur nusxasi: ${JSON.stringify(JSON.parse(JSON.stringify(obj)))}`;
+          }
+        },
+        {
+          code: `function isPrime(num) {\n    if (num <= 1) return false;\n    for (let i = 2; i <= Math.sqrt(num); i++) {\n        if (num % i === 0) return false;\n    }\n    return true;\n}`,
+          output: () => {
+            const num = 17;
+            function isPrime(num) {
+              if (num <= 1) return false;
+              for (let i = 2; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) return false;
+              }
+              return true;
+            }
+            return `Son tub ekanligi: ${isPrime(num)} (num=${num})`;
+          }
+        },
+        {
+          code: `function chunkArray(array, size) {\n    return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>\n        array.slice(i * size, i * size + size));\n}`,
+          output: () => {
+            const array = [1, 2, 3, 4, 5, 6], size = 2;
+            return `Massiv bo‘laklarga bo‘lindi: ${JSON.stringify(Array.from({ length: Math.ceil(array.length / size) }, (_, i) => array.slice(i * size, i * size + size)))}`;
+          }
+        }
+      ],
+      cpp: [
+        {
+          code: `void moveTetrimino(Tetrimino& t, int dx, int dy) {\n    t.x += dx;\n    t.y += dy;\n    if (checkCollision(t)) {\n        t.x -= dx;\n        t.y -= dy;\n    }\n}`,
+          output: "Tetrimino harakatlantirildi (Tetris).\nMisol: t={x:2,y:3}, dx=1, dy=0 → t={x:3,y:3} (agar to‘qnashuv bo‘lmasa)"
+        },
+        {
+          code: `bool checkGameOver(const Board& board) {\n    for (int x = 0; x < BOARD_WIDTH; x++) {\n        if (board[0][x] != 0) {\n            return true;\n        }\n    }\n    return false;\n}`,
+          output: "O‘yin tugashi yuqori qator bo‘yicha tekshirildi.\nMisol: board[0]=[0,0,1] → true"
+        },
+        {
+          code: `int factorial(int n) {\n    if (n == 0) return 1;\n    return n * factorial(n - 1);\n}`,
+          output: "Sonning faktoriali hisoblandi.\nMisol: n=5 → 120"
+        },
+        {
+          code: `void reverseString(string& s) {\n    int left = 0, right = s.length() - 1;\n    while (left < right) {\n        swap(s[left++], s[right--]);\n    }\n}`,
+          output: "Satr teskari aylantirildi.\nMisol: s='hello' → 'olleh'"
+        },
+        {
+          code: `int gcd(int a, int b) {\n    while (b) {\n        a %= b;\n        swap(a, b);\n    }\n    return a;\n}`,
+          output: "Ikkita sonning eng katta umumiy bo‘luvchisi topildi.\nMisol: a=48, b=18 → 6"
+        },
+        {
+          code: `void bubbleSort(int arr[], int n) {\n    for (int i = 0; i < n-1; i++) {\n        for (int j = 0; j < n-i-1; j++) {\n            if (arr[j] > arr[j+1]) {\n                swap(arr[j], arr[j+1]);\n            }\n        }\n    }\n}`,
+          output: "Massiv bubble sort bilan tartiblandi.\nMisol: arr=[64,34,25,12] → [12,25,34,64]"
+        },
+        {
+          code: `bool isPalindrome(string s) {\n    int left = 0, right = s.length() - 1;\n    while (left < right) {\n        if (s[left++] != s[right--]) return false;\n    }\n    return true;\n}`,
+          output: "Satr palindrom ekanligi tekshirildi.\nMisol: s='radar' → true"
+        },
+        {
+          code: `int binarySearch(int arr[], int left, int right, int target) {\n    while (left <= right) {\n        int mid = left + (right - left) / 2;\n        if (arr[mid] == target) return mid;\n        if (arr[mid] < target) left = mid + 1;\n        else right = mid - 1;\n    }\n    return -1;\n}`,
+          output: "Ikkilik qidiruv orqali maqsad indeksi topildi.\nMisol: arr=[1,3,5,7], target=5 → 2"
+        },
+        {
+          code: `void mergeSort(int arr[], int l, int r) {\n    if (l < r) {\n        int m = l + (r - l) / 2;\n        mergeSort(arr, l, m);\n        mergeSort(arr, m + 1, r);\n        merge(arr, l, m, r);\n    }\n}`,
+          output: "Massiv merge sort algoritmi bilan tartiblandi.\nMisol: arr=[38,27,43,3] → [3,27,38,43]"
+        },
+        {
+          code: `int maxSubArraySum(int arr[], int n) {\n    int maxSoFar = arr[0], currMax = arr[0];\n    for (int i = 1; i < n; i++) {\n        currMax = max(arr[i], currMax + arr[i]);\n        maxSoFar = max(maxSoFar, currMax);\n    }\n    return maxSoFar;\n}`,
+          output: "Maksimal subarray yig‘indisi topildi (Kadane algoritmi).\nMisol: arr=[-2,1,-3,4,-1,2,1] → 6"
+        }
+      ],
+      java: [
+        {
+          code: `public class SnakeGame {\n    public void moveSnake(String direction, List<int[]> snake) {\n        int[] newHead = new int[]{snake.get(0)[0], snake.get(0)[1]};\n        if (direction.equals("UP")) newHead[1]--;\n        else if (direction.equals("DOWN")) newHead[1]++;\n        else if (direction.equals("LEFT")) newHead[0]--;\n        else if (direction.equals("RIGHT")) newHead[0]++;\n        snake.add(0, newHead);\n    }\n}`,
+          output: "Ilon yo‘nalish bo‘yicha harakatlantirildi.\nMisol: snake=[[1,1]], direction='RIGHT' → [[2,1],[1,1]]"
+        },
+        {
+          code: `public class FoodSpawner {\n    public int[] spawnFood(int width, int height, List<int[]> snake) {\n        Random rand = new Random();\n        while (true) {\n            int[] food = new int[]{rand.nextInt(width), rand.nextInt(height)};\n            if (!snake.contains(Arrays.asList(food))) return food;\n        }\n    }\n}`,
+          output: "Oziq-ovqat ilon joylashmagan tasodifiy joyda paydo bo‘ldi.\nMisol: width=5, height=5, snake=[[1,1]] → [3,4]"
+        },
+        {
+          code: `public class Fibonacci {\n    public int fib(int n) {\n        if (n <= 1) return n;\n        return fib(n-1) + fib(n-2);\n    }\n}`,
+          output: "Fibonachchi soni hisoblandi.\nMisol: n=6 → 8"
+        },
+        {
+          code: `public class BinarySearch {\n    public int search(int[] arr, int target) {\n        int left = 0, right = arr.length - 1;\n        while (left <= right) {\n            int mid = left + (right - left) / 2;\n            if (arr[mid] == target) return mid;\n            if (arr[mid] < target) left = mid + 1;\n            else right = mid - 1;\n        }\n        return -1;\n    }\n}`,
+          output: "Ikkilik qidiruv orqali maqsad indeksi topildi.\nMisol: arr=[1,3,5,7], target=5 → 2"
+        },
+        {
+          code: `public class QuickSort {\n    public void quickSort(int[] arr, int low, int high) {\n        if (low < high) {\n            int pi = partition(arr, low, high);\n            quickSort(arr, low, pi - 1);\n            quickSort(arr, pi + 1, high);\n        }\n    }\n    private int partition(int[] arr, int low, int high) {\n        int pivot = arr[high];\n        int i = low - 1;\n        for (int j = low; j < high; j++) {\n            if (arr[j] <= pivot) {\n                i++;\n                int temp = arr[i];\n                arr[i] = arr[j];\n                arr[j] = temp;\n            }\n        }\n        int temp = arr[i + 1];\n        arr[i + 1] = arr[high];\n        arr[high] = temp;\n        return i + 1;\n    }\n}`,
+          output: "Massiv quicksort algoritmi bilan tartiblandi.\nMisol: arr=[3,1,4,1,5] → [1,1,3,4,5]"
+        },
+        {
+          code: `public class Palindrome {\n    public boolean isPalindrome(String s) {\n        s = s.toLowerCase().replaceAll("[^a-z0-9]", "");\n        return s.equals(new StringBuilder(s).reverse().toString());\n    }\n}`,
+          output: "Satr palindrom ekanligi tekshirildi.\nMisol: s='radar' → true"
+        },
+        {
+          code: `public class Factorial {\n    public long factorial(int n) {\n        if (n == 0) return 1;\n        return n * factorial(n - 1);\n    }\n}`,
+          output: "Sonning faktoriali hisoblandi.\nMisol: n=5 → 120"
+        },
+        {
+          code: `public class GCD {\n    public int gcd(int a, int b) {\n        while (b != 0) {\n            int temp = b;\n            b = a % b;\n            a = temp;\n        }\n        return a;\n    }\n}`,
+          output: "Ikkita sonning eng katta umumiy bo‘luvchisi topildi.\nMisol: a=48, b=18 → 6"
+        },
+        {
+          code: `public class ReverseList {\n    public List<Integer> reverseList(List<Integer> list) {\n        Collections.reverse(list);\n        return list;\n    }\n}`,
+          output: "Ro‘yxat teskari aylantirildi.\nMisol: list=[1,2,3] → [3,2,1]"
+        },
+        {
+          code: `public class BubbleSort {\n    public void bubbleSort(int[] arr) {\n        int n = arr.length;\n        for (int i = 0; i < n - 1; i++) {\n            for (int j = 0; j < n - i - 1; j++) {\n                if (arr[j] > arr[j + 1]) {\n                    int temp = arr[j];\n                    arr[j] = arr[j + 1];\n                    arr[j + 1] = temp;\n                }\n            }\n        }\n    }\n}`,
+          output: "Massiv bubble sort bilan tartiblandi.\nMisol: arr=[64,34,25,12] → [12,25,34,64]"
+        }
+      ],
+      go: [
+        {
+          code: `func moveSnake(direction string, snake [][]int) [][]int {\n    newHead := []int{snake[0][0], snake[0][1]}\n    switch direction {\n    case "UP":\n        newHead[1]--\n    case "DOWN":\n        newHead[1]++\n    case "LEFT":\n        newHead[0]--\n    case "RIGHT":\n        newHead[0]++\n    }\n    snake = append([][]int{newHead}, snake...)\n    return snake\n}`,
+          output: "Ilon yo‘nalish bo‘yicha harakatlantirildi.\nMisol: snake=[[1,1]], direction='RIGHT' → [[2,1],[1,1]]"
+        },
+        {
+          code: `func spawnFood(width, height int, snake [][]int) []int {\n    rand.Seed(time.Now().UnixNano())\n    for {\n        food := []int{rand.Intn(width), rand.Intn(height)}\n        contains := false\n        for _, s := range snake {\n            if s[0] == food[0] && s[1] == food[1] {\n                contains = true\n                break\n            }\n        }\n        if !contains {\n            return food\n        }\n    }\n}`,
+          output: "Oziq-ovqat ilon joylashmagan tasodifiy joyda paydo bo‘ldi.\nMisol: width=5, height=5, snake=[[1,1]] → [3,4]"
+        },
+        {
+          code: `func fibonacci(n int) int {\n    if n <= 1 {\n        return n\n    }\n    return fibonacci(n-1) + fibonacci(n-2)\n}`,
+          output: "Fibonachchi soni hisoblandi.\nMisol: n=6 → 8"
+        },
+        {
+          code: `func binarySearch(arr []int, target int) int {\n    left, right := 0, len(arr)-1\n    for left <= right {\n        mid := left + (right-left)/2\n        if arr[mid] == target {\n            return mid\n        }\n        if arr[mid] < target {\n            left = mid + 1\n        } else {\n            right = mid - 1\n        }\n    }\n    return -1\n}`,
+          output: "Ikkilik qidiruv orqali maqsad indeksi topildi.\nMisol: arr=[1,3,5,7], target=5 → 2"
+        },
+        {
+          code: `func quickSort(arr []int, low, high int) []int {\n    if low < high {\n        pi := partition(arr, low, high)\n        quickSort(arr, low, pi-1)\n        quickSort(arr, pi+1, high)\n    }\n    return arr\n}\nfunc partition(arr []int, low, high int) int {\n    pivot := arr[high]\n    i := low - 1\n    for j := low; j < high; j++ {\n        if arr[j] <= pivot {\n            i++\n            arr[i], arr[j] = arr[j], arr[i]\n        }\n    }\n    arr[i+1], arr[high] = arr[high], arr[i+1]\n    return i + 1\n}`,
+          output: "Massiv quicksort algoritmi bilan tartiblandi.\nMisol: arr=[3,1,4,1,5] → [1,1,3,4,5]"
+        },
+        {
+          code: `func isPalindrome(s string) bool {\n    s = strings.ToLower(strings.ReplaceAll(s, " ", ""))\n    for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {\n        if s[i] != s[j] {\n            return false\n        }\n    }\n    return true\n}`,
+          output: "Satr palindrom ekanligi tekshirildi.\nMisol: s='radar' → true"
+        },
+        {
+          code: `func factorial(n int) int64 {\n    if n == 0 {\n        return 1\n    }\n    return int64(n) * factorial(n-1)\n}`,
+          output: "Sonning faktoriali hisoblandi.\nMisol: n=5 → 120"
+        },
+        {
+          code: `func gcd(a, b int) int {\n    for b != 0 {\n        a, b = b, a%b\n    }\n    return a\n}`,
+          output: "Ikkita sonning eng katta umumiy bo‘luvchisi topildi.\nMisol: a=48, b=18 → 6"
+        },
+        {
+          code: `func reverseSlice(slice []int) []int {\n    n := len(slice)\n    result := make([]int, n)\n    for i := 0; i < n; i++ {\n        result[i] = slice[n-1-i]\n    }\n    return result\n}`,
+          output: "Massiv teskari aylantirildi.\nMisol: slice=[1,2,3] → [3,2,1]"
+        },
+        {
+          code: `func bubbleSort(arr []int) []int {\n    n := len(arr)\n    for i := 0; i < n-1; i++ {\n        for j := 0; j < n-i-1; j++ {\n            if arr[j] > arr[j+1] {\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n            }\n        }\n    }\n    return arr\n}`,
+          output: "Massiv bubble sort bilan tartiblandi.\nMisol: arr=[64,34,25,12] → [12,25,34,64]"
+        }
+      ],
+      ruby: [
+        {
+          code: `def move_snake(direction, snake)\n    new_head = snake[0].dup\n    case direction\n    when 'UP'\n        new_head[1] -= 1\n    when 'DOWN'\n        new_head[1] += 1\n    when 'LEFT'\n        new_head[0] -= 1\n    when 'RIGHT'\n        new_head[0] += 1\n    end\n    snake.unshift(new_head)\n    snake\nend`,
+          output: "Ilon yo‘nalish bo‘yicha harakatlantirildi.\nMisol: snake=[[1,1]], direction='RIGHT' → [[2,1],[1,1]]"
+        },
+        {
+          code: `def spawn_food(width, height, snake)\n    loop do\n        food = [rand(width), rand(height)]\n        return food unless snake.include?(food)\n    end\nend`,
+          output: "Oziq-ovqat ilon joylashmagan tasodifiy joyda paydo bo‘ldi.\nMisol: width=5, height=5, snake=[[1,1]] → [3,4]"
+        },
+        {
+          code: `def fibonacci(n)\n    return n if n <= 1\n    fibonacci(n-1) + fibonacci(n-2)\nend`,
+          output: "Fibonachchi soni hisoblandi.\nMisol: n=6 → 8"
+        },
+        {
+          code: `def binary_search(arr, target)\n    left, right = 0, arr.length - 1\n    while left <= right\n        mid = (left + right) / 2\n        return mid if arr[mid] == target\n        if arr[mid] < target\n            left = mid + 1\n        else\n            right = mid - 1\n        end\n    end\n    -1\nend`,
+          output: "Ikkilik qidiruv orqali maqsad indeksi topildi.\nMisol: arr=[1,3,5,7], target=5 → 2"
+        },
+        {
+          code: `def quicksort(arr)\n    return arr if arr.length <= 1\n    pivot = arr[arr.length / 2]\n    left = arr.select { |x| x < pivot }\n    middle = arr.select { |x| x == pivot }\n    right = arr.select { |x| x > pivot }\n    quicksort(left) + middle + quicksort(right)\nend`,
+          output: "Massiv quicksort algoritmi bilan tartiblandi.\nMisol: arr=[3,1,4,1,5] → [1,1,3,4,5]"
+        },
+        {
+          code: `def is_palindrome(s)\n    s = s.downcase.gsub(" ", "")\n    s == s.reverse\nend`,
+          output: "Satr palindrom ekanligi tekshirildi.\nMisol: s='radar' → true"
+        },
+        {
+          code: `def factorial(n)\n    return 1 if n == 0\n    n * factorial(n-1)\nend`,
+          output: "Sonning faktoriali hisoblandi.\nMisol: n=5 → 120"
+        },
+        {
+          code: `def gcd(a, b)\n    while b != 0\n        a, b = b, a % b\n    end\n    a\nend`,
+          output: "Ikkita sonning eng katta umumiy bo‘luvchisi topildi.\nMisol: a=48, b=18 → 6"
+        },
+        {
+          code: `def reverse_array(arr)\n    arr.reverse\nend`,
+          output: "Massiv teskari aylantirildi.\nMisol: arr=[1,2,3] → [3,2,1]"
+        },
+        {
+          code: `def bubble_sort(arr)\n    n = arr.length\n    (0...n).each do |i|\n        (0...(n-i-1)).each do |j|\n            if arr[j] > arr[j+1]\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n            end\n        end\n    end\n    arr\nend`,
+          output: "Massiv bubble sort bilan tartiblandi.\nMisol: arr=[64,34,25,12] → [12,25,34,64]"
+        }
+      ]
+    };
+
+    let currentCode = '';
+    let currentOutput = '';
+    let currentLanguage = 'python';
+    let startTime = 0;
+    let totalChars = 0;
+    let correctChars = 0;
+    let errors = 0;
+    let consoleLogs = [];
+
+    function formatTime() {
+      const now = new Date();
+      return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+    }
+
+    function logToConsole(message, type = 'info') {
+      const consoleOutput = document.getElementById('consoleOutput');
+      if (!consoleOutput) return;
+      consoleLogs.push({ message, type });
+      consoleLogs = consoleLogs.slice(-50);
+      consoleOutput.innerHTML = consoleLogs.map(log =>
+        `<div class="${log.type}-log">${formatTime()} ${log.message}</div>`
+      ).join('');
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function updateLineNumbers(code) {
+      const lineNumbers = document.getElementById('lineNumbers');
+      if (!lineNumbers) return;
+      const lines = code.split('\n').length;
+      lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+    }
+
+    function initializeGame() {
+      const languageSelect = document.getElementById('languageSelect');
+      const codeDisplay = document.getElementById('codeDisplay');
+      const codeInput = document.getElementById('codeInput');
+      const statsDisplay = document.getElementById('statsDisplay');
+      const runButton = document.getElementById('runButton');
+      const resultModal = document.getElementById('resultModal');
+      const consoleOutput = document.getElementById('consoleOutput');
+      const lineNumbers = document.getElementById('lineNumbers');
+
+      if (!codeDisplay || !codeInput || !statsDisplay || !runButton || !consoleOutput || !resultModal || !languageSelect || !lineNumbers) {
+        console.error('DOM elementlari topilmadi');
+        return;
+      }
+
+      currentLanguage = languageSelect.value;
+      startTime = Date.now();
+      totalChars = 0;
+      correctChars = 0;
+      errors = 0;
+      consoleLogs = [];
+
+      const snippets = codeSnippets[currentLanguage] || codeSnippets.python;
+      const randomSnippet = snippets[Math.floor(Math.random() * snippets.length)];
+      currentCode = randomSnippet.code;
+      currentOutput = typeof randomSnippet.output === 'function' ? randomSnippet.output() : randomSnippet.output;
+
+      codeDisplay.innerHTML = escapeHtml(currentCode).replace(/\n/g, '<br>');
+      updateLineNumbers(currentCode);
+      codeInput.value = '';
+      codeInput.focus();
+      statsDisplay.innerHTML = `Vaqt: 0s | WPM: 0 | Aniqlik: 100%`;
+      consoleOutput.innerHTML = '';
+      runButton.disabled = true;
+      resultModal.classList.remove('show');
+      logToConsole(`Yangi kod: ${currentLanguage.toUpperCase()}`, 'code');
+    }
+
+    function updateCodeDisplay(input) {
+      const codeDisplay = document.getElementById('codeDisplay');
+      if (!codeDisplay) return;
+      const inputChars = input.replace(/\t/g, '    ').split('');
+      const codeChars = currentCode.replace(/\t/g, '    ').split('');
+      let html = '';
+      let i = 0;
+      while (i < codeChars.length) {
+        if (i < inputChars.length) {
+          if (inputChars[i] === codeChars[i]) {
+            html += `<span class="correct">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
+          } else {
+            html += `<span class="error">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
+          }
+        } else {
+          html += `<span class="current">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
+        }
+        if (codeChars[i] === '\n' || i === codeChars.length - 1) {
+          html += codeChars[i] === '\n' ? '<br>' : '';
+        }
+        i++;
+      }
+      codeDisplay.innerHTML = html;
+    }
+
+    function updateStats() {
+      const statsDisplay = document.getElementById('statsDisplay');
+      if (!statsDisplay) return;
+      const elapsed = (Date.now() - startTime) / 1000;
+      const wpm = totalChars > 0 ? Math.round((totalChars / 5) / (elapsed / 60)) : 0;
+      const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+      statsDisplay.innerHTML = `Vaqt: ${Math.floor(elapsed)}s | WPM: ${wpm} | Aniqlik: ${accuracy}%`;
+    }
+
+    function runCode() {
+      const codeInput = document.getElementById('codeInput');
+      const resultModal = document.getElementById('resultModal');
+      const resultOutput = document.getElementById('resultOutput');
+      if (!codeInput || !resultModal || !resultOutput) return;
+      const normalizedInput = codeInput.value.replace(/\t/g, '    ').trim();
+      const normalizedCode = currentCode.replace(/\t/g, '    ').trim();
+      if (normalizedInput === normalizedCode) {
+        resultOutput.innerText = `Ajoyib ish! Kod to‘g‘ri kiritildi.\nNatija: ${currentOutput}`;
+        resultModal.classList.add('show');
+        playSound('run');
+        setTimeout(() => {
+          resultModal.classList.remove('show');
+          initializeGame();
+        }, 3000);
+      } else {
+        logToConsole('Xato: Kod to‘liq yoki to‘g‘ri kiritilmadi', 'error');
+        playSound('error');
+      }
+    }
+
+    function playSound(type) {
+      const audio = new Audio();
+      if (type === 'success') audio.src = 'https://cdn.pixabay.com/audio/2023/02/28/audio_4e5a696f62.mp3';
+      else if (type === 'error') audio.src = 'https://cdn.pixabay.com/audio/2022/01/25/audio_d6c577e705.mp3';
+      else if (type === 'run') audio.src = 'https://cdn.pixabay.com/audio/2024/03/29/audio_4f6b3b23b5.mp3';
+      audio.play().catch(() => {});
+    }
+
+    window.onload = function() {
+      const languageSelect = document.getElementById('languageSelect');
+      const codeInput = document.getElementById('codeInput');
+      const runButton = document.getElementById('runButton');
+      const codeDisplay = document.getElementById('codeDisplay');
+      const lineNumbers = document.getElementById('lineNumbers');
+
+      if (!languageSelect || !codeInput || !runButton || !codeDisplay || !lineNumbers) {
+        console.error('DOM elementlari topilmadi');
+        return;
+      }
+
+      codeDisplay.addEventListener('copy', (e) => e.preventDefault());
+      codeDisplay.addEventListener('cut', (e) => e.preventDefault());
+      codeDisplay.addEventListener('contextmenu', (e) => e.preventDefault());
+
+      languageSelect.addEventListener('change', () => {
+        currentLanguage = languageSelect.value;
+        initializeGame();
+      });
+
+      codeInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          const start = codeInput.selectionStart;
+          const end = codeInput.selectionEnd;
+          codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
+          codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+        }
+      });
+
+      codeInput.addEventListener('input', () => {
+        const input = codeInput.value.replace(/\t/g, '    ').trim();
+        totalChars = input.length;
+        correctChars = 0;
+        const codeChars = currentCode.replace(/\t/g, '    ').split('');
+        const inputChars = input.split('');
+        for (let i = 0; i < inputChars.length && i < codeChars.length; i++) {
+          if (inputChars[i] === codeChars[i]) {
+            correctChars++;
+            if (i === inputChars.length - 1) {
+              playSound('success');
+              logToConsole(`To‘g‘ri belgi: ${inputChars[i] === '\n' ? '\\n' : inputChars[i] === ' ' ? '[space]' : inputChars[i]}`, 'code');
+            }
+          } else {
+            errors++;
+            playSound('error');
+            logToConsole(`Xato belgi: ${inputChars[i] === '\n' ? '\\n' : inputChars[i] === ' ' ? '[space]' : inputChars[i]} (kerak edi: ${codeChars[i] === '\n' ? '\\n' : codeChars[i] === ' ' ? '[space]' : codeChars[i]})`, 'error');
+          }
+        }
+        updateCodeDisplay(input);
+        updateStats();
+        runButton.disabled = input !== currentCode.replace(/\t/g, '    ').trim();
+      });
+
+      runButton.addEventListener('click', runCode);
+
+      setInterval(updateStats, 1000);
+      initializeGame();
+    };
+  </script>
+</body>
+</html>

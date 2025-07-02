@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yulduzli Klaviatura</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pinkie: #b32445; /* Subdued red */
+      --ring: #cc9e1a; /* Muted yellow */
+      --middle: #1f9e5f; /* Softer green */
+      --index: #1e5a9e; /* Muted blue */
+      --special: #8c8c8c; /* Neutral gray */
+      --text: #d9d9e0; /* Soft white-gray text */
+      --bg: #0c0c1a; /* Dark cosmic background */
+      --bg-keyboard: #1c2333; /* Dark keyboard background */
+      --bg-key: #2a3147; /* Subtle key background */
+      --button: #1f9e5f; /* Muted button green */
+      --glow: #3c5b8a; /* Subtle blue glow */
+      --gradient: linear-gradient(135deg, rgba(28, 35, 51, 0.9), rgba(42, 49, 71, 0.9));
+      --nebula: radial-gradient(circle, rgba(45, 45, 90, 0.25), rgba(12, 12, 26, 0.95));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: var(--nebula);
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 25px;
+      background: var(--bg-keyboard);
+      border-bottom: 1px solid var(--glow);
+      width: 100%;
+      box-shadow: 0 2px 6px rgba(60, 91, 138, 0.15);
+      z-index: 20;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 45px;
+      height: 45px;
+      background: var(--button);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 2rem;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 6px rgba(60, 91, 138, 0.2);
+    }
+
+    .brand-icon:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(60, 91, 138, 0.3);
+    }
+
+    .brand-text {
+      font-size: 2.2rem;
+      font-weight: 600;
+      text-shadow: 0 0 6px var(--glow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-btn {
+      background: var(--button);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--text);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 6px rgba(60, 91, 138, 0.2);
+    }
+
+    .nav-btn:hover {
+      background: #187b4a;
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px rgba(60, 91, 138, 0.3);
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 1400px;
+      padding: 20px;
+      background: var(--gradient);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glow);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 70px auto 20px;
+      box-shadow: 0 0 15px rgba(60, 91, 138, 0.2);
+      z-index: 5;
+    }
+
+    .game-title {
+      font-size: 2.8rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: var(--text);
+      text-shadow: 0 0 6px var(--glow);
+    }
+
+    .difficulty-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--gradient);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glow);
+      border-radius: 12px;
+      padding: 25px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 0 15px rgba(60, 91, 138, 0.2);
+      z-index: 30;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .difficulty-modal.show {
+      display: flex;
+    }
+
+    .difficulty-btn {
+      background: var(--button);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 25px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--text);
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 6px rgba(60, 91, 138, 0.2);
+    }
+
+    .difficulty-btn:hover {
+      background: #187b4a;
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px rgba(60, 91, 138, 0.3);
+    }
+
+    .timer-bar-container {
+      width: 320px;
+      height: 35px;
+      background: var(--bg-keyboard);
+      border: 1px solid var(--glow);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      box-shadow: 0 0 8px rgba(60, 91, 138, 0.2);
+      position: relative;
+      display: none;
+    }
+
+    .timer-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--middle), #b32445);
+      transition: width 0.5s linear;
+      border-radius: 10px 0 0 10px;
+      box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.1rem;
+      color: var(--text);
+      text-shadow: 0 0 4px var(--glow);
+      font-weight: 600;
+    }
+
+    .keyboard {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      background: var(--bg-keyboard);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+    }
+
+    .row.top { grid-template-columns: 120px repeat(12, 80px) 120px; }
+    .row.middle { grid-template-columns: 140px repeat(11, 80px) 160px; }
+    .row.bottom { grid-template-columns: 200px repeat(10, 80px) 160px; }
+    .row.space { grid-template-columns: 120px 120px 480px 120px 120px; }
+
+    .key {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(145deg, var(--bg-key), #38415f);
+      border: 1px solid;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--text);
+      transition: transform 0.1s, background 0.1s, box-shadow 0.1s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .key:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 8px var(--glow);
+    }
+
+    .key.correct {
+      animation: correct-key 0.2s ease;
+      box-shadow: 0 0 12px var(--middle);
+      background: linear-gradient(145deg, #187b4a, var(--middle));
+    }
+
+    @keyframes correct-key {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    .key.wide-tab { width: 120px; }
+    .key.wide-caps { width: 140px; }
+    .key.wide-shift { width: 200px; }
+    .key.wide-shift-right { width: 160px; }
+    .key.wide-enter { width: 160px; }
+    .key.space { width: 480px; }
+    .key.wide-ctrl { width: 120px; }
+    .key.wide-alt { width: 120px; }
+    .key.no-text { font-size: 0; }
+
+    .key[data-finger="pinkie"] { border-color: var(--pinkie); }
+    .key[data-finger="ring"] { border-color: var(--ring); }
+    .key[data-finger="middle"] { border-color: var(--middle); }
+    .key[data-finger="index"] { border-color: var(--index); }
+    .key[data-finger="special"] { border-color: var(--special); }
+
+    .star {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      color: var(--ring);
+      text-shadow: 0 0 6px var(--glow);
+      animation: pulse 1s ease-in-out infinite;
+      z-index: 10;
+    }
+
+    @keyframes pulse {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.25); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .score-board {
+      display: none;
+      gap: 25px;
+      font-size: 1.6rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      text-shadow: 0 0 6px var(--glow);
+    }
+
+    #gameOverModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--gradient);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glow);
+      border-radius: 12px;
+      padding: 25px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 0 15px rgba(60, 91, 138, 0.2);
+      z-index: 30;
+    }
+
+    #gameOverModal.show {
+      display: block;
+    }
+
+    #gameOverText {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      text-shadow: 0 0 6px var(--glow);
+    }
+
+    #restartButton {
+      padding: 10px 25px;
+      background: var(--button);
+      color: var(--text);
+      border: none;
+      border-radius: 8px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 6px rgba(60, 91, 138, 0.2);
+    }
+
+    #restartButton:hover {
+      background: #187b4a;
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px rgba(60, 91, 138, 0.3);
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      text-align: center;
+      padding: 8px;
+      background: var(--bg-keyboard);
+      border-top: 1px solid var(--glow);
+      font-size: 0.9rem;
+      width: 100%;
+      box-shadow: 0 -2px 6px rgba(60, 91, 138, 0.15);
+      z-index: 10;
+    }
+
+    .footer a {
+      color: var(--button);
+      text-decoration: none;
+      margin: 0 8px;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+
+    .footer a:hover {
+      color: #187b4a;
+      text-shadow: 0 0 6px var(--glow);
+    }
+
+    @media (max-width: 768px) {
+      .game-container { width: 90%; margin: 65px auto 15px; }
+      .game-title { font-size: 2.4rem; }
+      .row.top { grid-template-columns: 100px repeat(12, 65px) 100px; }
+      .row.middle { grid-template-columns: 115px repeat(11, 65px) 130px; }
+      .row.bottom { grid-template-columns: 160px repeat(10, 65px) 130px; }
+      .row.space { grid-template-columns: 100px 100px 380px 100px 100px; }
+      .key { width: 65px; height: 65px; font-size: 1.3rem; }
+      .key.wide-tab { width: 100px; }
+      .key.wide-caps { width: 115px; }
+      .key.wide-shift { width: 160px; }
+      .key.wide-shift-right { width: 130px; }
+      .key.wide-enter { width: 130px; }
+      .key.space { width: 380px; }
+      .key.wide-ctrl { width: 100px; }
+      .key.wide-alt { width: 100px; }
+      .star { font-size: 1.3rem; }
+      .score-board { font-size: 1.4rem; }
+      .timer-bar-container { width: 280px; height: 30px; }
+      .timer-text { font-size: 1rem; }
+      #gameOverText { font-size: 1.8rem; }
+      .header { padding: 10px 20px; }
+      .nav-btn { padding: 8px 18px; font-size: 1rem; }
+      .difficulty-btn { padding: 8px 20px; font-size: 1rem; }
+      .brand-icon { width: 40px; height: 40px; font-size: 1.8rem; }
+      .brand-text { font-size: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { width: 95%; margin: 60px auto 15px; }
+      .game-title { font-size: 2rem; }
+      .row.top { grid-template-columns: 80px repeat(12, 50px) 80px; }
+      .row.middle { grid-template-columns: 90px repeat(11, 50px) 100px; }
+      .row.bottom { grid-template-columns: 120px repeat(10, 50px) 100px; }
+      .row.space { grid-template-columns: 80px 80px 300px 80px 80px; }
+      .key { width: 50px; height: 50px; font-size: 1.1rem; }
+      .key.wide-tab { width: 80px; }
+      .key.wide-caps { width: 90px; }
+      .key.wide-shift { width: 120px; }
+      .key.wide-shift-right { width: 100px; }
+      .key.wide-enter { width: 100px; }
+      .key.space { width: 300px; }
+      .key.wide-ctrl { width: 80px; }
+      .key.wide-alt { width: 80px; }
+      .star { font-size: 1.1rem; }
+      .score-board { font-size: 1.2rem; }
+      .timer-bar-container { width: 200px; height: 25px; }
+      .timer-text { font-size: 0.9rem; }
+      #gameOverText { font-size: 1.6rem; }
+      .header { padding: 8px 15px; }
+      .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
+      .difficulty-btn { padding: 6px 15px; font-size: 0.9rem; }
+      .brand-icon { width: 35px; height: 35px; font-size: 1.6rem; }
+      .brand-text { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="starsCanvas"></canvas>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="game-container">
+    <h2 class="game-title">Yulduzli Klaviatura</h2>
+    <div class="difficulty-modal show" id="difficultyModal">
+      <h2 style="font-size: 2rem; margin-bottom: 12px; text-shadow: 0 0 6px var(--glow);">Darajani tanlang</h2>
+      <button class="difficulty-btn" data-difficulty="easy">Oson (1 ⭐)</button>
+      <button class="difficulty-btn" data-difficulty="medium">O'rta (2 ⭐)</button>
+      <button class="difficulty-btn" data-difficulty="hard">Qiyin (3 ⭐)</button>
+    </div>
+    <div class="timer-bar-container" id="timerBarContainer">
+      <div class="timer-bar" id="timerBar"></div>
+      <span class="timer-text" id="timerText">120s</span>
+    </div>
+    <div class="score-board">
+      <span id="correctDisplay">To'g'ri: 0</span>
+      <span id="wrongDisplay">Xato: 0</span>
+    </div>
+    <div class="keyboard" id="keyboard">
+      <div class="row top">
+        <div class="key wide-tab no-text" data-letter="tab" data-finger="pinkie"></div>
+        <div class="key" data-letter="q" data-finger="pinkie">Q</div>
+        <div class="key" data-letter="w" data-finger="ring">W</div>
+        <div class="key" data-letter="e" data-finger="middle">E</div>
+        <div class="key" data-letter="r" data-finger="index">R</div>
+        <div class="key" data-letter="t" data-finger="index">T</div>
+        <div class="key" data-letter="y" data-finger="index">Y</div>
+        <div class="key" data-letter="u" data-finger="index">U</div>
+        <div class="key" data-letter="i" data-finger="middle">I</div>
+        <div class="key" data-letter="o" data-finger="ring">O</div>
+        <div class="key" data-letter="p" data-finger="pinkie">P</div>
+        <div class="key" data-letter="[" data-finger="pinkie">[</div>
+        <div class="key" data-letter="]" data-finger="pinkie">]</div>
+        <div class="key" data-letter="\" data-finger="pinkie">\</div>
+      </div>
+      <div class="row middle">
+        <div class="key wide-caps no-text" data-letter="capslock" data-finger="pinkie"></div>
+        <div class="key" data-letter="a" data-finger="pinkie">A</div>
+        <div class="key" data-letter="s" data-finger="ring">S</div>
+        <div class="key" data-letter="d" data-finger="middle">D</div>
+        <div class="key" data-letter="f" data-finger="index">F</div>
+        <div class="key" data-letter="g" data-finger="index">G</div>
+        <div class="key" data-letter="h" data-finger="index">H</div>
+        <div class="key" data-letter="j" data-finger="index">J</div>
+        <div class="key" data-letter="k" data-finger="middle">K</div>
+        <div class="key" data-letter="l" data-finger="ring">L</div>
+        <div class="key" data-letter=";" data-finger="pinkie">;</div>
+        <div class="key" data-letter="'" data-finger="pinkie">'</div>
+        <div class="key wide-enter no-text" data-letter="enter" data-finger="pinkie"></div>
+      </div>
+      <div class="row bottom">
+        <div class="key wide-shift no-text" data-letter="shift" data-finger="pinkie"></div>
+        <div class="key" data-letter="z" data-finger="pinkie">Z</div>
+        <div class="key" data-letter="x" data-finger="ring">X</div>
+        <div class="key" data-letter="c" data-finger="middle">C</div>
+        <div class="key" data-letter="v" data-finger="index">V</div>
+        <div class="key" data-letter="b" data-finger="index">B</div>
+        <div class="key" data-letter="n" data-finger="index">N</div>
+        <div class="key" data-letter="m" data-finger="index">M</div>
+        <div class="key" data-letter="," data-finger="pinkie">,</div>
+        <div class="key" data-letter="." data-finger="pinkie">.</div>
+        <div class="key" data-letter="/" data-finger="pinkie">/</div>
+        <div class="key wide-shift-right no-text" data-letter="shift" data-finger="pinkie"></div>
+      </div>
+      <div class="row space">
+        <div class="key wide-ctrl no-text" data-letter="ctrl" data-finger="pinkie"></div>
+        <div class="key wide-alt no-text" data-letter="alt" data-finger="pinkie"></div>
+        <div class="key space" data-letter=" " data-finger="special">Space</div>
+        <div class="key wide-alt no-text" data-letter="alt" data-finger="pinkie"></div>
+        <div class="key wide-ctrl no-text" data-letter="ctrl" data-finger="pinkie"></div>
+      </div>
+    </div>
+    <div class="game-over-modal" id="gameOverModal">
+      <p id="gameOverText"></p>
+      <button id="restartButton">Qayta boshlash</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    // Cosmic background with stars and comets
+    const canvas = document.getElementById('starsCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let comets = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2.5 + 1;
+        this.speedX = Math.random() * 0.3 - 0.15;
+        this.speedY = Math.random() * 0.3 - 0.15;
+        this.opacity = Math.random() * 0.3 + 0.3;
+        this.color = ['#cc9e1a', '#b32445', '#1f9e5f', '#1e5a9e'][Math.floor(Math.random() * 4)];
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        this.opacity -= 0.0008;
+        if (this.opacity < 0.2) this.opacity = 0.5;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.opacity;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    class Comet {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height / 3;
+        this.length = Math.random() * 50 + 30;
+        this.speed = Math.random() * 5 + 3;
+        this.angle = Math.random() * Math.PI / 3 + Math.PI / 6;
+        this.opacity = Math.random() * 0.3 + 0.3;
+      }
+
+      update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.opacity -= 0.002;
+        if (this.opacity < 0 || this.x > canvas.width || this.y > canvas.height) {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height / 3;
+          this.opacity = Math.random() * 0.3 + 0.3;
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - Math.cos(this.angle) * this.length, this.y - Math.sin(this.angle) * this.length);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      comets = [];
+      for (let i = 0; i < 150; i++) {
+        particles.push(new Particle());
+      }
+      for (let i = 0; i < 4; i++) {
+        comets.push(new Comet());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+      comets.forEach(comet => {
+        comet.update();
+        comet.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    // Game logic
+    const keyboard = document.getElementById('keyboard');
+    const timerBarContainer = document.getElementById('timerBarContainer');
+    const timerBar = document.getElementById('timerBar');
+    const timerText = document.getElementById('timerText');
+    const correctDisplay = document.getElementById('correctDisplay');
+    const wrongDisplay = document.getElementById('wrongDisplay');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const gameOverText = document.getElementById('gameOverText');
+    const restartButton = document.getElementById('restartButton');
+    const difficultyModal = document.getElementById('difficultyModal');
+    const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+
+    const starKeys = [
+      'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\',
+      'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
+      'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', ' '
+    ];
+
+    const inputKeys = [
+      'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\',
+      'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
+      'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', ' ',
+      'tab', 'capslock', 'shift', 'ctrl', 'alt', 'enter'
+    ];
+
+    let currentKeys = [];
+    let correctCount = 0;
+    let wrongCount = 0;
+    let gameActive = false;
+    let timeLeft = 120;
+    let totalTime = 120;
+    let timer = null;
+    let difficulty = null;
+    let timerStarted = false;
+    const difficultyStarCount = {
+      easy: 1,
+      medium: 2,
+      hard: 3
+    };
+
+    function setDifficulty(newDifficulty) {
+      difficulty = newDifficulty;
+      difficultyModal.style.display = 'none';
+      timerBarContainer.style.display = 'block';
+      keyboard.style.display = 'flex';
+      correctDisplay.parentElement.style.display = 'flex';
+      placeStars();
+      gameActive = true;
+    }
+
+    difficultyButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        setDifficulty(btn.dataset.difficulty);
+      });
+    });
+
+    function placeStars() {
+      // Clear existing stars
+      document.querySelectorAll('.key .star').forEach(star => star.remove());
+      currentKeys = [];
+
+      const starCount = difficultyStarCount[difficulty];
+      let availableKeys = [...starKeys];
+
+      // Shuffle availableKeys to ensure random selection
+      for (let i = availableKeys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableKeys[i], availableKeys[j]] = [availableKeys[j], availableKeys[i]];
+      }
+
+      // Place stars on keys
+      for (let i = 0; i < starCount && availableKeys.length > 0; i++) {
+        const selectedKey = availableKeys.pop();
+        currentKeys.push(selectedKey);
+        const keyElement = document.querySelector(`.key[data-letter="${selectedKey}"]`);
+        if (keyElement) {
+          const star = document.createElement('div');
+          star.className = 'star';
+          star.innerText = '⭐';
+          keyElement.appendChild(star);
+        } else {
+          console.warn(`Key element for "${selectedKey}" not found`);
+        }
+      }
+
+      // If no stars were placed and there are available keys, retry
+      if (currentKeys.length < starCount && starKeys.length > 0) {
+        console.warn(`Failed to place ${starCount} stars, placed ${currentKeys.length}, retrying...`);
+        placeStars();
+      }
+    }
+
+    function playSound(frequency, duration) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), duration * 1000);
+    }
+
+    function triggerVibration() {
+      if (navigator.vibrate) {
+        navigator.vibrate(80);
+      } else {
+        playSound(200, 0.1);
+      }
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        if (!gameActive) {
+          clearInterval(timer);
+          return;
+        }
+        timeLeft--;
+        const percentage = (timeLeft / totalTime) * 100;
+        timerBar.style.width = `${percentage}%`;
+        timerText.innerText = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          gameActive = false;
+          clearInterval(timer);
+          gameOver();
+        }
+      }, 1000);
+    }
+
+    function gameOver() {
+      gameActive = false;
+      document.querySelectorAll('.key .star').forEach(star => star.remove());
+      currentKeys = [];
+      gameOverText.innerText = `O'yin tugadi!\nTo'g'ri: ${correctCount}\nXato: ${wrongCount}`;
+      gameOverModal.style.display = 'block';
+      playSound(250, 0.2);
+    }
+
+    function restartGame() {
+      correctCount = 0;
+      wrongCount = 0;
+      timeLeft = 120;
+      totalTime = 120;
+      gameActive = false;
+      timerStarted = false;
+      correctDisplay.innerText = `To'g'ri: 0`;
+      wrongDisplay.innerText = `Xato: 0`;
+      timerBar.style.width = '100%';
+      timerText.innerText = '120s';
+      gameOverModal.style.display = 'none';
+      currentKeys = [];
+      if (timer) clearInterval(timer);
+      difficultyModal.style.display = 'flex';
+      timerBarContainer.style.display = 'none';
+      keyboard.style.display = 'none';
+      correctDisplay.parentElement.style.display = 'none';
+      document.querySelectorAll('.key .star').forEach(star => star.remove());
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!gameActive || gameOverModal.style.display === 'block' || difficultyModal.style.display === 'flex') return;
+
+      let key = e.key.toLowerCase();
+      if (key === ' ') key = ' ';
+      if (!inputKeys.includes(key)) return;
+
+      if (!timerStarted && starKeys.includes(key)) {
+        timerStarted = true;
+        startTimer();
+      }
+
+      const currentKeyElement = document.querySelector(`.key[data-letter="${key}"]`);
+      if (currentKeys.includes(key)) {
+        correctCount++;
+        correctDisplay.innerText = `To'g'ri: ${correctCount}`;
+        if (currentKeyElement) {
+          currentKeyElement.classList.add('correct');
+          setTimeout(() => currentKeyElement.classList.remove('correct'), 200);
+          const star = currentKeyElement.querySelector('.star');
+          if (star) star.remove();
+        } else {
+          console.warn(`Key element for "${key}" not found during keydown`);
+        }
+        currentKeys = currentKeys.filter(k => k !== key);
+        if (currentKeys.length === 0) {
+          placeStars();
+        }
+        playSound(400, 0.1);
+      } else {
+        wrongCount++;
+        wrongDisplay.innerText = `Xato: ${wrongCount}`;
+        triggerVibration();
+      }
+    });
+
+    // Initialize game state
+    difficultyModal.style.display = 'flex';
+    timerBarContainer.style.display = 'none';
+    keyboard.style.display = 'none';
+    correctDisplay.parentElement.style.display = 'none';
+
+    restartButton.addEventListener('click', restartGame);
+  </script>
+</body>
+</html>

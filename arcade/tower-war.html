@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qal'a Himoyachisi</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Fira+Code:wght@400;600&display=swap">
+  <style>
+    :root {
+      --primary: #10b981; /* Zummrad yashil */
+      --secondary: #f59e0b; /* Olovli sariq */
+      --accent: #34d399; /* Yengil yashil */
+      --error: #ef4444; /* Xato qizil */
+      --text: #e5e7eb; /* Oq-kulrang matn */
+      --bg-dark: #0a0f1c; /* Kosmik qora */
+      --bg-card: rgba(17, 24, 39, 0.8); /* Karta foni */
+      --game-bg-start: #1e293b; /* O'yin maydoni ko'k */
+      --game-bg-end: #0a0f1c; /* O'yin maydoni oxiri */
+      --fast-unit: #06b6d4; /* Tezkor askar neon ko'k */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Fira Code', monospace;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero-background {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: linear-gradient(45deg, var(--bg-dark), #1f2937);
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+      z-index: 10;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .brand-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+
+    .brand-text {
+      color: var(--accent);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.5);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(45deg, var(--primary), #059669);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+      display: block;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.6);
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 1800px;
+      height: 800px;
+      padding: 15px;
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.8), rgba(31, 41, 55, 0.8));
+      border: 3px solid var(--primary);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+      animation: fadeIn 1s ease-out;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .game-title {
+      color: var(--accent);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+    }
+
+    .units-title {
+      color: var(--accent);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 8px 0;
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.5);
+    }
+
+    .units-bar {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 10px;
+      justify-content: center;
+    }
+
+    .unit-card {
+      position: relative;
+      background: linear-gradient(45deg, var(--bg-card), #1f2937);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .unit-card:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+    }
+
+    .unit-card.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: #555;
+    }
+
+    .unit-card .progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: var(--accent);
+      transition: width linear;
+    }
+
+    .game-area {
+      width: 100%;
+      height: 700px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(90deg, var(--game-bg-start), #0a0f1c, var(--game-bg-end));
+      border: 3px solid var(--primary);
+      border-radius: 10px;
+      box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.4);
+      z-index: 2;
+    }
+
+    .tower, .resource, .barracks, .simple-tower {
+      position: absolute;
+      font-size: 2rem;
+      color: var(--accent);
+      z-index: 4;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .tower:hover, .resource:hover, .barracks:hover, .simple-tower:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.6);
+    }
+
+    .tower:hover::after, .resource:hover::after, .barracks:hover::after, .simple-tower:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      color: var(--text);
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+      white-space: nowrap;
+      z-index: 5;
+    }
+
+    .tower .hp-bar, .enemy .hp-bar, .ally .hp-bar {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 8px;
+      background: #1f2937;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+    }
+
+    .tower .hp-fill, .enemy .hp-fill, .ally .hp-fill {
+      height: 100%;
+      background: var(--error);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .tower .hp-text, .enemy .hp-text, .ally .hp-text {
+      position: absolute;
+      top: -45px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: var(--secondary);
+      text-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+      line-height: 1;
+    }
+
+    .tower .level-text, .barracks .level-text, .simple-tower .level-text {
+      position: absolute;
+      top: -65px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: var(--secondary);
+      text-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+      line-height: 1;
+    }
+
+    .tower .name-text, .resource .name-text, .barracks .name-text, .simple-tower .name-text {
+      position: absolute;
+      bottom: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.4);
+      white-space: nowrap;
+    }
+
+    .enemy, .ally {
+      position: absolute;
+      font-size: 1.8rem;
+      color: var(--primary);
+      z-index: 5;
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+      border-radius: 50%;
+      padding: 5px;
+      animation: movePulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes movePulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .enemy.boss, .ally.boss {
+      font-size: 2.2rem;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    }
+
+    .enemy.fast, .ally.fast {
+      font-size: 1.6rem;
+      color: var(--fast-unit);
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+    }
+
+    .enemy.destroyed, .ally.destroyed {
+      animation: destroy 0.5s ease-out forwards;
+    }
+
+    @keyframes destroy {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.5; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+
+    .enemy-word {
+      position: absolute;
+      top: -35px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      color: var(--secondary);
+      text-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+      white-space: nowrap;
+      z-index: 6;
+    }
+
+    .enemy-word.boss {
+      font-size: 1.4rem;
+      top: -40px;
+    }
+
+    .enemy-word.fast {
+      font-size: 1.1rem;
+      top: -30px;
+      color: var(--fast-unit);
+      text-shadow: 0 0 5px rgba(6, 182, 212, 0.6);
+    }
+
+    .attack {
+      position: absolute;
+      font-size: 1.2rem;
+      color: var(--accent);
+      z-index: 5;
+      animation: shoot 0.4s linear forwards;
+    }
+
+    @keyframes shoot {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(120px); }
+    }
+
+    .input-area {
+      margin-top: 15px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #wordInput {
+      padding: 12px;
+      font-size: 1.2rem;
+      font-family: 'Fira Code', monospace;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text);
+      width: 320px;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+
+    #wordInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.6);
+    }
+
+    #scoreDisplay, #hpDisplay {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--secondary);
+      text-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+      margin-top: 10px;
+    }
+
+    #gameOverModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.8), rgba(31, 41, 55, 0.8));
+      border: 3px solid var(--primary);
+      border-radius: 10px;
+      padding: 25px;
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      z-index: 10;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    #gameOverModal.show {
+      display: block;
+    }
+
+    #gameOverText {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+    }
+
+    #restartButton {
+      padding: 12px 25px;
+      background: linear-gradient(45deg, var(--primary), var(--accent));
+      color: var(--text);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+      margin-top: 15px;
+    }
+
+    #restartButton:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 15px rgba(52, 211, 153, 0.6);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 15px;
+      background: linear-gradient(45deg, var(--bg-dark), #1f2937);
+      color: var(--text);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      animation: fadeIn 1s ease-out;
+      z-index: 4;
+      box-shadow: 0 -2px 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 6px;
+      transition: transform 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .footer a:hover {
+      transform: scale(1.1);
+      text-shadow: 0 0 5px rgba(52, 211, 153, 0.6);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .game-container { width: 90%; height: 700px; }
+      .game-title { font-size: 2.8rem; }
+      .units-title { font-size: 1.8rem; }
+      .game-area { height: 600px; }
+      .tower, .resource, .barracks, .simple-tower { font-size: 1.8rem; }
+      .tower .hp-text, .enemy .hp-text, .ally .hp-text { font-size: 0.8rem; top: -40px; }
+      .tower .level-text, .barracks .level-text, .simple-tower .level-text { font-size: 0.8rem; top: -60px; }
+      .tower .name-text, .resource .name-text, .barracks .name-text, .simple-tower .name-text { font-size: 0.7rem; bottom: -20px; }
+      .enemy, .ally { font-size: 1.6rem; }
+      .enemy.boss, .ally.boss { font-size: 2rem; }
+      .enemy.fast, .ally.fast { font-size: 1.4rem; }
+      .enemy-word { font-size: 1rem; top: -30px; }
+      .enemy-word.boss { font-size: 1.2rem; top: -35px; }
+      .enemy-word.fast { font-size: 0.9rem; top: -25px; }
+      .attack { font-size: 1rem; }
+      .tower .hp-bar, .enemy .hp-bar, .ally .hp-bar { width: 50px; height: 6px; }
+      #wordInput { width: 280px; font-size: 1rem; }
+      #scoreDisplay, #hpDisplay { font-size: 1.3rem; }
+      #gameOverModal p { font-size: 1.6rem; }
+      .header { padding: 10px 15px; }
+      .nav-btn { padding: 8px 15px; font-size: 1rem; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
+      .brand-text { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { width: 95%; height: 600px; }
+      .game-title { font-size: 2.2rem; }
+      .units-title { font-size: 1.5rem; }
+      .game-area { height: 500px; }
+      .tower, .resource, .barracks, .simple-tower { font-size: 1.6rem; }
+      .tower .hp-text, .enemy .hp-text, .ally .hp-text { font-size: 0.7rem; top: -35px; }
+      .tower .level-text, .barracks .level-text, .simple-tower .level-text { font-size: 0.7rem; top: -55px; }
+      .tower .name-text, .resource .name-text, .barracks .name-text, .simple-tower .name-text { font-size: 0.6rem; bottom: -18px; }
+      .enemy, .ally { font-size: 1.4rem; }
+      .enemy.boss, .ally.boss { font-size: 1.8rem; }
+      .enemy.fast, .ally.fast { font-size: 1.2rem; }
+      .enemy-word { font-size: 0.9rem; top: -25px; }
+      .enemy-word.boss { font-size: 1.1rem; top: -30px; }
+      .enemy-word.fast { font-size: 0.8rem; top: -20px; }
+      .attack { font-size: 0.9rem; }
+      .tower .hp-bar, .enemy .hp-bar, .ally .hp-bar { width: 40px; height: 5px; }
+      #wordInput { width: 240px; font-size: 0.9rem; }
+      #scoreDisplay, #hpDisplay { font-size: 1.1rem; }
+      #gameOverModal p { font-size: 1.4rem; }
+      .header { padding: 8px 10px; }
+      .nav-btn { padding: 6px 10px; font-size: 0.9rem; }
+      .brand-icon { width: 32px; height: 32px; font-size: 1.4rem; }
+      .brand-text { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stardustCanvas"></canvas>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="game-container">
+      <h2 class="game-title">Qal'a Himoyachisi</h2>
+      <h3 class="units-title">Askarlar</h3>
+      <div class="units-bar">
+        <button class="unit-card" id="piyodaBtn">🗡️ Piyoda (10) | HP: 75 | Zarar: 5<div class="progress"></div></button>
+        <button class="unit-card" id="kamonchiBtn">🏹 Kamonchi (15) | HP: 50 | Zarar: 3<div class="progress"></div></button>
+        <button class="unit-card" id="ritsarBtn">🛡️ Ritsar (25) | HP: 120 | Zarar: 8<div class="progress"></div></button>
+        <button class="unit-card" id="mageBtn">🔮 Mage (20) | HP: 60 | Zarar: 10<div class="progress"></div></button>
+      </div>
+      <div class="game-area" id="gameArea">
+        <!-- Chap taraf (o'yinchi) -->
+        <div class="tower" id="leftTower1" style="left: 50px; top: 15%;" data-tooltip="Keyingi: HP +50, Zarar +5, 75R">
+          🏰
+          <div class="hp-bar"><div class="hp-fill" style="width: 100%"></div></div>
+          <div class="hp-text">100</div>
+          <div class="level-text">Lvl 1</div>
+          <div class="name-text">Minora, 75R</div>
+        </div>
+        <div class="resource" id="leftResource" style="left: 150px; top: 35%;" data-tooltip="Keyingi: +2/sec, 100R">
+          🏭
+          <div class="name-text">Resurs Uyi, 4/sec, 100R</div>
+        </div>
+        <div class="barracks" id="leftBarracks" style="left: 150px; top: 65%;" data-tooltip="Keyingi: Askarlar +10%, 80R">
+          ⚔️
+          <div class="level-text">Lvl 1</div>
+          <div class="name-text">Kazarma, 80R</div>
+        </div>
+        <div class="simple-tower" id="simpleTower" style="left: 50px; top: 85%;" data-tooltip="Keyingi: So'z zarari +5, 75R">
+          🏯
+          <div class="hp-bar"><div class="hp-fill" style="width: 100%"></div></div>
+          <div class="hp-text">100</div>
+          <div class="level-text">Lvl 1</div>
+          <div class="name-text">Oddiy Minora, 75R</div>
+        </div>
+        <div id="resourceDisplay" style="position: absolute; top: 10px; left: 10px; font-size: 1.5rem; color: var(--accent); text-shadow: 0 0 5px rgba(52, 211, 153, 0.4);">Resurs: 0</div>
+        <div id="hpDisplay" style="position: absolute; top: 40px; left: 10px; font-size: 1.5rem; color: var(--secondary); text-shadow: 0 0 5px rgba(245, 158, 11, 0.6);">HP: 1200</div>
+      </div>
+      <div class="input-area">
+        <input type="text" id="wordInput" placeholder="Kiber-so'zni kiriting" autocomplete="off">
+      </div>
+      <div id="scoreDisplay">Ball: 0</div>
+      <div class="game-over-modal" id="gameOverModal">
+        <p id="gameOverText"></p>
+        <button id="restartButton">Qayta boshlash</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    const gameArea = document.getElementById('gameArea');
+    const wordInput = document.getElementById('wordInput');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const resourceDisplay = document.getElementById('resourceDisplay');
+    const hpDisplay = document.getElementById('hpDisplay');
+    const piyodaBtn = document.getElementById('piyodaBtn');
+    const kamonchiBtn = document.getElementById('kamonchiBtn');
+    const ritsarBtn = document.getElementById('ritsarBtn');
+    const mageBtn = document.getElementById('mageBtn');
+    const gameOverModal = document.getElementById('gameOverModal');
+    const gameOverText = document.getElementById('gameOverText');
+    const restartButton = document.getElementById('restartButton');
+
+    const words = [
+      'kosmos', 'yulduz', 'quyosh', 'sayyora', 'galaktika', 'kema', 'lazer', 'qalqon', 'hujum', 'xavf',
+      'sehr', 'xazina', 'qilich', 'jangchi', 'otash', 'chaqmoq', "bo'ron", 'sir', 'xiyonat', 'qayta',
+      'tiklanish', "qirg'in", 'dahshat', "qutqaruv", 'muqaddas', "o'lim", 'hayot', 'kuch', 'sadoqat',
+      'xavfsizlik', 'qasr', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer', "do'zax"
+    ];
+
+    const bossWords = [
+      'qiyomat', 'halokat', 'apokalipsis', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik',
+      "xavflijo'r", "qonxirlik", "to'fon"
+    ];
+
+    let enemies = [];
+    let allies = [];
+    let score = 0;
+    let resources = 0;
+    let playerHP = 1200;
+    let gameActive = true;
+    let piyodaCooldown = 0;
+    let kamonchiCooldown = 0;
+    let ritsarCooldown = 0;
+    let mageCooldown = 0;
+    let lastResourceUpdate = Date.now();
+    let lastTowerAttack = Date.now();
+    let lastEnemyBoost = Date.now();
+    let enemyBoostCount = 0;
+
+    const towers = {
+      left: [
+        { id: 'leftTower1', hp: 100, level: 1, damage: 5, element: document.getElementById('leftTower1') }
+      ]
+    };
+
+    const resourceBuildings = {
+      left: { level: 1, production: 4, element: document.getElementById('leftResource') }
+    };
+
+    const barracks = {
+      left: { level: 1, element: document.getElementById('leftBarracks') }
+    };
+
+    const simpleTower = {
+      id: 'simpleTower',
+      hp: 100,
+      level: 1,
+      wordDamage: 20,
+      element: document.getElementById('simpleTower')
+    };
+
+    // Yangilash xarajatlarini hisoblash
+    function getUpgradeCost(baseCost, level) {
+      return Math.round(baseCost * (1 + 0.5 * level));
+    }
+
+    // Minora, HP va darajani yangilash
+    function updateTowerLevelDisplay(tower) {
+      tower.element.querySelector('.level-text').innerText = `Lvl ${tower.level}`;
+      const nextCost = tower.level < 10 ? getUpgradeCost(75, tower.level) : 'Maks';
+      tower.element.querySelector('.name-text').innerText = `Minora, ${nextCost}R`;
+      tower.element.setAttribute('data-tooltip', `Keyingi: HP +50, Zarar +5, ${nextCost}R`);
+    }
+
+    function updateSimpleTowerLevelDisplay() {
+      simpleTower.element.querySelector('.level-text').innerText = `Lvl ${simpleTower.level}`;
+      const nextCost = simpleTower.level < 10 ? getUpgradeCost(75, simpleTower.level) : 'Maks';
+      simpleTower.element.querySelector('.name-text').innerText = `Oddiy Minora, ${nextCost}R`;
+      simpleTower.element.setAttribute('data-tooltip', `Keyingi: So'z zarari +5, ${nextCost}R`);
+    }
+
+    function updateTowerHpDisplay(tower) {
+      tower.element.querySelector('.hp-text').innerText = Math.round(tower.hp);
+    }
+
+    function updateSimpleTowerHpDisplay() {
+      simpleTower.element.querySelector('.hp-text').innerText = Math.round(simpleTower.hp);
+    }
+
+    function updateEnemyHpDisplay(enemy) {
+      if (enemy.hpTextElement) {
+        enemy.hpTextElement.innerText = Math.round(enemy.hp);
+      }
+    }
+
+    function updateAllyHpDisplay(ally) {
+      if (ally.hpTextElement) {
+        ally.hpTextElement.innerText = Math.round(ally.hp);
+      }
+    }
+
+    function updateBarracksLevelDisplay() {
+      barracks.left.element.querySelector('.level-text').innerText = `Lvl ${barracks.left.level}`;
+      const nextCost = barracks.left.level < 10 ? getUpgradeCost(80, barracks.left.level) : 'Maks';
+      barracks.left.element.querySelector('.name-text').innerText = `Kazarma, ${nextCost}R`;
+      barracks.left.element.setAttribute('data-tooltip', `Keyingi: Askarlar +10%, ${nextCost}R`);
+    }
+
+    function updateResourceNameDisplay() {
+      const nextCost = resourceBuildings.left.level < 3 ? getUpgradeCost(100, resourceBuildings.left.level) : 'Maks';
+      const nextProd = resourceBuildings.left.level === 1 ? 6 : resourceBuildings.left.level === 2 ? 8 : resourceBuildings.left.production;
+      resourceBuildings.left.element.querySelector('.name-text').innerText = `Resurs Uyi, ${resourceBuildings.left.production}/sec, ${nextCost}R`;
+      resourceBuildings.left.element.setAttribute('data-tooltip', `Keyingi: +${nextProd - resourceBuildings.left.production}/sec, ${nextCost}R`);
+    }
+
+    // Olovli yulduz changi effekti
+    const canvas = document.getElementById('stardustCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.color = `hsl(${Math.random() * 60}, 80%, ${Math.random() * 20 + 50}%)`;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.size > 0.2) this.size -= 0.01;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
+
+    function initParticles() {
+      for (let i = 0; i < 150; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+        if (p.size <= 0.2) {
+          particles.splice(particles.indexOf(p), 1);
+          particles.push(new Particle());
+        }
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    class Unit {
+      constructor(type, side, isBoss = false, isFast = false) {
+        this.type = type;
+        this.side = side;
+        this.isBoss = isBoss;
+        this.isFast = isFast;
+        this.word = isBoss ? bossWords[Math.floor(Math.random() * bossWords.length)] : words[Math.floor(Math.random() * words.length)];
+        const barracksLevel = barracks.left.level;
+        const baseStats = {
+          piyoda: { hp: 80, damage: 5 },
+          kamonchi: { hp: 55, damage: 3 },
+          ritsar: { hp: 130, damage: 8 },
+          mage: { hp: 65, damage: 10 },
+          boss: { hp: 120, damage: 15 }
+        };
+        const boost = side === 'left' ? (1 + 0.1 * (barracksLevel - 1)) : (1 + 0.15 * enemyBoostCount);
+        this.hp = (isBoss ? baseStats.boss.hp : baseStats[type].hp) * boost;
+        this.maxHp = this.hp;
+        this.damage = (isBoss ? baseStats.boss.damage : baseStats[type].damage) * boost;
+        this.speed = isFast ? 0.8 : isBoss ? 0.3 : type === 'kamonchi' ? 0.6 : 0.4;
+        this.x = side === 'left' ? 200 : 1600;
+        this.y = Math.random() * (gameArea.offsetHeight - 100) + 50;
+        this.active = true;
+        this.element = null;
+        this.wordElement = null;
+        this.hpTextElement = null;
+        this.targetEnemy = null;
+      }
+
+      createElement() {
+        this.element = document.createElement('div');
+        this.element.className = `enemy ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
+        if (this.side === 'left') this.element.className = `ally ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+        this.element.style.opacity = '1';
+        this.element.innerHTML = this.type === 'piyoda' ? '🗡️' : this.type === 'kamonchi' ? '🏹' : this.type === 'ritsar' ? '🛡️' : '🔮';
+        if (this.isBoss) this.element.innerHTML = '👾';
+
+        const hpBar = document.createElement('div');
+        hpBar.className = 'hp-bar';
+        const hpFill = document.createElement('div');
+        hpFill.className = 'hp-fill';
+        hpFill.style.width = '100%';
+        hpBar.appendChild(hpFill);
+        this.element.appendChild(hpBar);
+
+        this.hpTextElement = document.createElement('div');
+        this.hpTextElement.className = 'hp-text';
+        this.hpTextElement.innerText = Math.round(this.hp);
+        this.element.appendChild(this.hpTextElement);
+
+        if (this.side === 'right') {
+          this.wordElement = document.createElement('div');
+          this.wordElement.className = `enemy-word ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
+          this.wordElement.innerText = this.word;
+          this.element.appendChild(this.wordElement);
+        }
+
+        gameArea.appendChild(this.element);
+        if (this.isBoss) console.log(`Boss askar paydo bo'ldi: ${this.word}`);
+        if (this.isFast) console.log(`Tezkor askar paydo bo'ldi: ${this.word}`);
+      }
+
+      findClosestEnemy() {
+        if (this.side !== 'left') return null;
+        let closest = null;
+        let minDistance = Infinity;
+        enemies.forEach(enemy => {
+          if (enemy.active) {
+            const distance = Math.abs(this.x - enemy.x);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closest = enemy;
+            }
+          }
+        });
+        return closest;
+      }
+
+      update() {
+        if (!this.active) return;
+
+        let targetX = this.side === 'right' ? 50 : 1600;
+        let targetY = this.y;
+
+        if (this.side === 'left') {
+          this.targetEnemy = this.findClosestEnemy();
+          if (this.targetEnemy) {
+            targetX = this.targetEnemy.x - 50;
+            targetY = this.targetEnemy.y;
+            this.y += (targetY - this.y) * 0.05;
+          }
+        }
+
+        if (this.side === 'left' && this.x < targetX) {
+          this.x += this.speed;
+        } else if (this.side === 'right' && this.x > targetX) {
+          this.x -= this.speed;
+        }
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+
+        if (this.side === 'right' && Math.abs(this.x - 50) < 10) {
+          const damage = this.type === 'piyoda' ? 5 : this.type === 'kamonchi' ? 3 : this.type === 'ritsar' ? 8 : this.type === 'mage' ? 10 : 15;
+          playerHP -= damage;
+          hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
+          this.destroy(false);
+        }
+
+        const opponents = this.side === 'right' ? allies : enemies;
+        const closestOpponent = opponents.find(opp => opp.active && Math.abs(opp.x - this.x) < 50 && Math.abs(opp.y - this.y) < 50);
+        if (closestOpponent) {
+          closestOpponent.hp -= this.damage / 60;
+          closestOpponent.element.querySelector('.hp-fill').style.width = `${(closestOpponent.hp / closestOpponent.maxHp) * 100}%`;
+          if (closestOpponent.side === 'right') updateEnemyHpDisplay(closestOpponent);
+          else updateAllyHpDisplay(closestOpponent);
+          if (closestOpponent.hp <= 0) {
+            closestOpponent.destroy(closestOpponent.side === 'right');
+            if (this.side === 'left') this.targetEnemy = null;
+          }
+        }
+
+        const now = Date.now();
+        if (now - lastTowerAttack >= 1000) {
+          const targetTowers = this.side === 'right' ? towers.left : [];
+          targetTowers.forEach(tower => {
+            if (this.active && Math.abs(this.x - 50) < 150 && Math.abs(this.y - tower.element.offsetTop) < 100) {
+              this.hp -= tower.damage / 60;
+              this.element.querySelector('.hp-fill').style.width = `${(this.hp / this.maxHp) * 100}%`;
+              if (this.side === 'right') updateEnemyHpDisplay(this);
+              else updateAllyHpDisplay(this);
+              shootAttack(50, this.y);
+              if (this.hp <= 0) {
+                this.destroy(this.side === 'right');
+              }
+            }
+          });
+          lastTowerAttack = now;
+        }
+
+        if (this.hp <= 0) {
+          this.destroy(this.side === 'right');
+        }
+      }
+
+      destroy(addResources = true) {
+        this.element.classList.add('destroyed');
+        setTimeout(() => {
+          if (this.element) this.element.remove();
+          this.active = false;
+        }, 500);
+        if (addResources && this.side === 'right') {
+          resources += this.isBoss || this.isFast ? 5 : 3;
+          score += this.isBoss || this.isFast ? 10 : 5;
+          resourceDisplay.innerText = `Resurs: ${resources}`;
+          scoreDisplay.innerText = `Ball: ${score}`;
+        }
+      }
+    }
+
+    function spawnEnemy() {
+      if (!gameActive) return;
+      const isBoss = Math.random() < 0.3;
+      const isFast = !isBoss && Math.random() < 0.02;
+      const types = ['piyoda', 'kamonchi', 'ritsar', 'mage'];
+      const type = isBoss ? 'boss' : types[Math.floor(Math.random() * types.length)];
+      const enemy = new Unit(type, 'right', isBoss, isFast);
+      enemy.createElement();
+      enemies.push(enemy);
+    }
+
+    function spawnAlly(type) {
+      const ally = new Unit(type, 'left');
+      ally.createElement();
+      allies.push(ally);
+    }
+
+    function shootAttack(targetX, targetY) {
+      const attack = document.createElement('div');
+      attack.className = 'attack';
+      attack.innerText = '🔥';
+      attack.style.left = `${targetX}px`;
+      attack.style.top = `${targetY}px`;
+      gameArea.appendChild(attack);
+      setTimeout(() => attack.remove(), 400);
+    }
+
+    function updateGame() {
+      if (!gameActive) return;
+
+      enemies.forEach(enemy => enemy.update());
+      allies.forEach(ally => ally.update());
+      enemies = enemies.filter(enemy => enemy.active);
+      allies = allies.filter(ally => ally.active);
+      scoreDisplay.innerText = `Ball: ${score}`;
+      hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
+
+      const now = Date.now();
+      if (now - lastResourceUpdate >= 2000) {
+        resources += resourceBuildings.left.production;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        lastResourceUpdate = now;
+      }
+
+      if (now - lastEnemyBoost >= 30000 && enemyBoostCount < 10) {
+        enemyBoostCount++;
+        lastEnemyBoost = now;
+      }
+
+      if (piyodaCooldown > 0) {
+        piyodaCooldown -= 1 / 60;
+        piyodaBtn.querySelector('.progress').style.width = `${(piyodaCooldown / 4) * 100}%`;
+        if (piyodaCooldown <= 0) {
+          piyodaBtn.classList.remove('disabled');
+          piyodaBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (kamonchiCooldown > 0) {
+        kamonchiCooldown -= 1 / 60;
+        kamonchiBtn.querySelector('.progress').style.width = `${(kamonchiCooldown / 5) * 100}%`;
+        if (kamonchiCooldown <= 0) {
+          kamonchiBtn.classList.remove('disabled');
+          kamonchiBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (ritsarCooldown > 0) {
+        ritsarCooldown -= 1 / 60;
+        ritsarBtn.querySelector('.progress').style.width = `${(ritsarCooldown / 7) * 100}%`;
+        if (ritsarCooldown <= 0) {
+          ritsarBtn.classList.remove('disabled');
+          ritsarBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+      if (mageCooldown > 0) {
+        mageCooldown -= 1 / 60;
+        mageBtn.querySelector('.progress').style.width = `${(mageCooldown / 6) * 100}%`;
+        if (mageCooldown <= 0) {
+          mageBtn.classList.remove('disabled');
+          mageBtn.querySelector('.progress').style.width = '0%';
+        }
+      }
+
+      if (playerHP <= 0) {
+        gameOver();
+      }
+
+      requestAnimationFrame(updateGame);
+    }
+
+    function gameOver() {
+      gameActive = false;
+      gameOverText.innerText = `O'yin tugadi! Sizning balingiz: ${score}\nQayta urinib ko'ring!`;
+      gameOverModal.classList.add('show');
+      playSound(300, 0.2);
+    }
+
+    function restartGame() {
+      enemies.forEach(enemy => enemy.destroy(false));
+      allies.forEach(ally => ally.destroy(false));
+      enemies = [];
+      allies = [];
+      score = 0;
+      resources = 0;
+      playerHP = 1200;
+      enemyBoostCount = 0;
+      piyodaCooldown = 0;
+      kamonchiCooldown = 0;
+      ritsarCooldown = 0;
+      mageCooldown = 0;
+      towers.left.forEach(t => {
+        t.hp = 100;
+        t.level = 1;
+        t.damage = 5;
+        t.element.querySelector('.hp-fill').style.width = '100%';
+        updateTowerLevelDisplay(t);
+        updateTowerHpDisplay(t);
+        if (!t.element.parentNode) gameArea.appendChild(t.element);
+      });
+      simpleTower.hp = 100;
+      simpleTower.level = 1;
+      simpleTower.wordDamage = 20;
+      simpleTower.element.querySelector('.hp-fill').style.width = '100%';
+      updateSimpleTowerLevelDisplay();
+      updateSimpleTowerHpDisplay();
+      resourceBuildings.left.level = 1;
+      resourceBuildings.left.production = 4;
+      barracks.left.level = 1;
+      updateBarracksLevelDisplay();
+      updateResourceNameDisplay();
+      resourceDisplay.innerText = 'Resurs: 0';
+      scoreDisplay.innerText = 'Ball: 0';
+      hpDisplay.innerText = 'HP: 1200';
+      piyodaBtn.classList.remove('disabled');
+      piyodaBtn.querySelector('.progress').style.width = '0%';
+      kamonchiBtn.classList.remove('disabled');
+      kamonchiBtn.querySelector('.progress').style.width = '0%';
+      ritsarBtn.classList.remove('disabled');
+      ritsarBtn.querySelector('.progress').style.width = '0%';
+      mageBtn.classList.remove('disabled');
+      mageBtn.querySelector('.progress').style.width = '0%';
+      gameActive = true;
+      lastResourceUpdate = Date.now();
+      lastTowerAttack = Date.now();
+      lastEnemyBoost = Date.now();
+      wordInput.value = '';
+      wordInput.focus();
+      gameOverModal.classList.remove('show');
+      clearInterval(spawnEnemyInterval);
+      spawnEnemyInterval = setInterval(spawnEnemy, 8000);
+    }
+
+    function playSound(frequency, duration) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), duration * 1000);
+    }
+
+    wordInput.addEventListener('input', () => {
+      const input = wordInput.value.trim().toLowerCase();
+      const index = enemies.findIndex(enemy => enemy.active && enemy.word.toLowerCase() === input);
+      if (index !== -1) {
+        shootAttack(enemies[index].x, enemies[index].y);
+        enemies[index].hp -= simpleTower.wordDamage;
+        enemies[index].element.querySelector('.hp-fill').style.width = `${(enemies[index].hp / enemies[index].maxHp) * 100}%`;
+        updateEnemyHpDisplay(enemies[index]);
+        if (enemies[index].hp <= 0) {
+          enemies[index].destroy(true);
+        }
+        wordInput.value = '';
+        playSound(500, 0.1);
+      }
+    });
+
+    wordInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && wordInput.value.trim() !== '') {
+        playSound(200, 0.1);
+        wordInput.value = '';
+      }
+    });
+
+    piyodaBtn.addEventListener('click', () => {
+      if (resources >= 10 && piyodaCooldown <= 0 && gameActive) {
+        resources -= 10;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        spawnAlly('piyoda');
+        piyodaCooldown = 4;
+        piyodaBtn.classList.add('disabled');
+        piyodaBtn.querySelector('.progress').style.width = '100%';
+        playSound(400, 0.2);
+      }
+    });
+
+    kamonchiBtn.addEventListener('click', () => {
+      if (resources >= 15 && kamonchiCooldown <= 0 && gameActive) {
+        resources -= 15;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        spawnAlly('kamonchi');
+        kamonchiCooldown = 5;
+        kamonchiBtn.classList.add('disabled');
+        kamonchiBtn.querySelector('.progress').style.width = '100%';
+        playSound(400, 0.2);
+      }
+    });
+
+    ritsarBtn.addEventListener('click', () => {
+      if (resources >= 25 && ritsarCooldown <= 0 && gameActive) {
+        resources -= 25;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        spawnAlly('ritsar');
+        ritsarCooldown = 7;
+        ritsarBtn.classList.add('disabled');
+        ritsarBtn.querySelector('.progress').style.width = '100%';
+        playSound(400, 0.2);
+      }
+    });
+
+    mageBtn.addEventListener('click', () => {
+      if (resources >= 20 && mageCooldown <= 0 && gameActive) {
+        resources -= 20;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        spawnAlly('mage');
+        mageCooldown = 6;
+        mageBtn.classList.add('disabled');
+        mageBtn.querySelector('.progress').style.width = '100%';
+        playSound(400, 0.2);
+      }
+    });
+
+    // Minora kuchaytirish
+    document.getElementById('leftTower1').addEventListener('click', () => {
+      const cost = getUpgradeCost(75, towers.left[0].level);
+      if (resources >= cost && towers.left[0].level < 10 && gameActive) {
+        resources -= cost;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        towers.left[0].level++;
+        towers.left[0].hp = 100 + (towers.left[0].level - 1) * 50;
+        towers.left[0].damage = 5 + (towers.left[0].level - 1) * 5;
+        playerHP += 100;
+        towers.left[0].element.querySelector('.hp-fill').style.width = '100%';
+        updateTowerLevelDisplay(towers.left[0]);
+        updateTowerHpDisplay(towers.left[0]);
+        hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
+        playSound(600, 0.2);
+      }
+    });
+
+    // Oddiy minora kuchaytirish
+    document.getElementById('simpleTower').addEventListener('click', () => {
+      const cost = getUpgradeCost(75, simpleTower.level);
+      if (resources >= cost && simpleTower.level < 10 && gameActive) {
+        resources -= cost;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        simpleTower.level++;
+        simpleTower.hp = 100 + (simpleTower.level - 1) * 50;
+        simpleTower.wordDamage = 20 + (simpleTower.level - 1) * 5;
+        simpleTower.element.querySelector('.hp-fill').style.width = '100%';
+        updateSimpleTowerLevelDisplay();
+        updateSimpleTowerHpDisplay();
+        playSound(600, 0.2);
+      }
+    });
+
+    // Resurs uyi kuchaytirish
+    document.getElementById('leftResource').addEventListener('click', () => {
+      const cost = getUpgradeCost(100, resourceBuildings.left.level);
+      if (resources >= cost && resourceBuildings.left.level < 3 && gameActive) {
+        resources -= cost;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        resourceBuildings.left.level++;
+        resourceBuildings.left.production = resourceBuildings.left.level === 2 ? 6 : 8;
+        updateResourceNameDisplay();
+        playSound(600, 0.2);
+      }
+    });
+
+    // Kazarma kuchaytirish
+    document.getElementById('leftBarracks').addEventListener('click', () => {
+      const cost = getUpgradeCost(80, barracks.left.level);
+      if (resources >= cost && barracks.left.level < 10 && gameActive) {
+        resources -= cost;
+        resourceDisplay.innerText = `Resurs: ${resources}`;
+        barracks.left.level++;
+        updateBarracksLevelDisplay();
+        playSound(600, 0.2);
+      }
+    });
+
+    restartButton.addEventListener('click', restartGame);
+
+    let spawnEnemyInterval = setInterval(spawnEnemy, 8000);
+    requestAnimationFrame(updateGame);
+    wordInput.focus();
+    updateResourceNameDisplay();
+  </script>
+</body>
+</html>

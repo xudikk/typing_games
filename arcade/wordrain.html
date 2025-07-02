@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>So‘zlar Yomg‘iri</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --secondary: #f59e0b;
+      --accent: #a5b4fc;
+      --text: #ffffff;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .hero-background {
+      position: relative;
+      width: 100%;
+      min-height: calc(100vh - 80px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+    }
+
+    .starfield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(1.5px 1.5px at 15px 25px, var(--accent) 1px, transparent 0),
+                       radial-gradient(1px 1px at 40px 50px, var(--secondary) 1px, transparent 0),
+                       radial-gradient(1.2px 1.2px at 70px 80px, var(--text) 1px, transparent 0);
+      background-size: 100px 100px;
+      background-repeat: repeat;
+      animation: twinkle 5s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes twinkle {
+      0% { transform: translate(0, 0); opacity: 0.8; }
+      100% { transform: translate(-30px, -30px); opacity: 0.8; }
+    }
+
+    .floating-elements {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .floating-icon {
+      position: absolute;
+      font-size: 1.4rem;
+      color: var(--accent);
+      opacity: 0.5;
+      animation: float 4s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .floating-icon:nth-child(1) { top: 15%; left: 10%; --delay: 0s; }
+    .floating-icon:nth-child(2) { top: 45%; right: 8%; --delay: 0.8s; }
+    .floating-icon:nth-child(3) { top: 30%; right: 25%; --delay: 0.4s; }
+    .floating-icon:nth-child(4) { bottom: 20%; left: 15%; --delay: 1.2s; }
+    .floating-icon:nth-child(5) { bottom: 15%; left: 50%; --delay: 1.6s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-12px) scale(1.1); }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 4;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--secondary);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      transition: transform 0.4s ease;
+    }
+
+    .brand-icon:hover {
+      transform: rotate(360deg);
+    }
+
+    .brand-text {
+      color: var(--accent);
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-shadow: 0 0 8px rgba(165, 180, 252, 0.6);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(45deg, var(--primary), #7c3aed);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+      display: block;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 30px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.2));
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      transition: box-shadow 0.2s ease;
+      min-height: 700px;
+    }
+
+    .game-container:hover {
+      box-shadow: 0 10px 25px rgba(165, 180, 252, 0.4);
+    }
+
+    .game-title {
+      color: var(--accent);
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(165, 180, 252, 0.7);
+      animation: glowPulse 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { text-shadow: 0 0 10px rgba(165, 180, 252, 0.7); }
+      100% { text-shadow: 0 0 20px rgba(165, 180, 252, 0.9); }
+    }
+
+    #gameCanvas {
+      background: rgba(79, 70, 229, 0.3);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 800px;
+      height: 500px;
+      margin: 0 auto;
+      display: block;
+      transition: box-shadow 0.2s ease;
+    }
+
+    #gameCanvas:hover {
+      box-shadow: 0 8px 20px rgba(165, 180, 252, 0.4);
+    }
+
+    #wordInput {
+      width: 100%;
+      max-width: 650px;
+      padding: 12px;
+      font-size: 1.3rem;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid var(--secondary);
+      color: var(--text);
+      text-align: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      margin: 20px auto;
+    }
+
+    #wordInput:focus {
+      outline: none;
+      border-bottom-color: var(--accent);
+      box-shadow: 0 2px 8px rgba(165, 180, 252, 0.4);
+    }
+
+    #wordInput.correct {
+      color: #22c55e;
+    }
+
+    #wordInput.incorrect {
+      color: #ef4444;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin-top: 25px;
+      background: rgba(79, 70, 229, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .stats span {
+      border: 1px solid var(--accent);
+      padding: 8px 16px;
+      border-radius: 8px;
+      animation: popIn 0.5s ease forwards;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stats span:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(165, 180, 252, 0.3);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      border: 2px solid #facc15;
+      width: 90%;
+      max-width: 450px;
+      animation: glowFade 0.4s ease-in;
+      backdrop-filter: blur(5px);
+    }
+
+    @keyframes glowFade {
+      from { opacity: 0; transform: scale(0.9); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+      to { opacity: 1; transform: scale(1); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5); }
+    }
+
+    .modal-content h2 {
+      color: var(--accent);
+      font-size: 2rem;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(165, 180, 252, 0.6);
+    }
+
+    .modal-content p {
+      font-size: 1.2rem;
+      margin: 12px 0;
+    }
+
+    .modal-content select,
+    .modal-content button {
+      padding: 10px 18px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--secondary);
+      background: linear-gradient(45deg, var(--secondary), #facc15);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin: 10px 5px;
+      width: 100%;
+    }
+
+    .modal-content select:focus,
+    .modal-content button:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 4px 10px rgba(165, 180, 252, 0.4);
+    }
+
+    .modal-content select:hover,
+    .modal-content button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
+    }
+
+    .modal-content button::after {
+      content: "✨";
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .modal-content button:hover::after {
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 12px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+      color: #e0f2fe;
+      font-size: 0.9rem;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 5px;
+      transition: text-shadow 0.2s ease;
+    }
+
+    .footer a:hover {
+      text-shadow: 0 0 8px rgba(165, 180, 252, 0.6);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 1200px) {
+      .game-container { max-width: 800px; min-height: 650px; }
+      .game-title { font-size: 2.5rem; }
+      .stats { font-size: 1rem; }
+      .header { padding: 14px 20px; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.4rem; }
+      .brand-text { font-size: 1.5rem; }
+      .nav-btn { padding: 10px 18px; font-size: 1rem; }
+    }
+
+    @media (max-width: 900px) {
+      .hero-background { min-height: calc(100vh - 80px); }
+      .game-container { padding: 20px; min-height: 600px; }
+      .game-title { font-size: 2.2rem; }
+      #gameCanvas { height: 400px; }
+      #wordInput { font-size: 1.2rem; }
+      .header { padding: 12px 18px; }
+      .brand-icon { width: 34px; height: 34px; font-size: 1.3rem; }
+      .brand-text { font-size: 1.4rem; }
+      .nav-btn { padding: 8px 16px; font-size: 0.95rem; }
+      .nav-btn:hover { transform: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4); }
+    }
+
+    @media (max-width: 768px) {
+      .hero-background { min-height: calc(100vh - 80px); }
+      .game-container { padding: 20px; min-height: 600px; }
+      .game-title { font-size: 2rem; }
+      #gameCanvas { height: 350px; }
+      #wordInput { max-width: 500px; font-size: 1.1rem; }
+      .stats { flex-direction: column; gap: 12px; font-size: 0.95rem; }
+      .stats span:hover { transform: none; box-shadow: 0 4px 10px rgba(165, 180, 252, 0.3); }
+      .header { padding: 10px 16px; }
+      .nav-links { flex-direction: column; gap: 10px; }
+      .brand-icon { width: 32px; height: 32px; font-size: 1.2rem; }
+      .brand-text { font-size: 1.3rem; }
+      .nav-btn { padding: 8px 14px; font-size: 0.95rem; }
+      .modal-content { max-width: 400px; }
+      .modal-content select, .modal-content button { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-background { min-height: calc(100vh - 80px); }
+      .game-container { padding: 15px; min-height: 550px; }
+      .game-title { font-size: 1.8rem; }
+      #gameCanvas { height: 300px; }
+      #wordInput { max-width: 100%; font-size: 1rem; }
+      .stats { font-size: 0.9rem; }
+      .modal-content { padding: 15px; }
+      .modal-content h2 { font-size: 1.8rem; }
+      .modal-content p { font-size: 1.1rem; }
+      .header { padding: 8px 12px; }
+      .brand-icon { width: 32px; height: 32px; font-size: 1.2rem; }
+      .brand-text { font-size: 1.3rem; }
+      .nav-btn { padding: 6px 12px; font-size: 0.95rem; }
+      .modal-content select, .modal-content button { font-size: 0.9rem; }
+      .modal-content select:hover, .modal-content button:hover { transform: none; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4); }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="starfield"></div>
+    <div class="floating-elements">
+      <div class="floating-icon">🌟</div>
+      <div class="floating-icon">✨</div>
+      <div class="floating-icon">⚡</div>
+      <div class="floating-icon">🌠</div>
+      <div class="floating-icon">💫</div>
+    </div>
+    <div class="game-container">
+      <h2 class="game-title">So‘zlar Yomg‘iri</h2>
+      <div class="stats">
+        <span>Ball: <span id="score">0</span></span>
+        <span>Tezlik: <span id="speed">1</span></span>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <input type="text" id="wordInput" placeholder="So‘zni kiriting" autocomplete="off">
+      <div class="modal" id="gameOver">
+        <div class="modal-content">
+          <h2>O‘yin Tugadi!</h2>
+          <p>Ball: <span id="finalScore">0</span></p>
+          <p>O‘yin vaqti: <span id="gameDuration">0</span> sekund</p>
+          <select id="languageSelectGameOver">
+            <option value="uz" style="color: #FFA11E;">O‘zbekcha</option>
+            <option value="en" style="color: #FFA11E;">English</option>
+            <option value="ru" style="color: #FFA11E;">Русский</option>
+          </select>
+          <button id="restartGame">Qayta boshlash</button>
+        </div>
+      </div>
+      <div class="modal" id="startGame">
+        <div class="modal-content">
+          <h2>Tilni tanlang</h2>
+          <select id="languageSelect">
+            <option value="uz" style="color: #FFA11E;">O‘zbekcha</option>
+            <option value="en" style="color: #FFA11E;">English</option>
+            <option value="ru" style="color: #FFA11E;">Русский</option>
+          </select>
+          <button id="startGameBtn">Boshlash</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const wordInput = document.getElementById("wordInput");
+    const scoreDisplay = document.getElementById("score");
+    const speedDisplay = document.getElementById("speed");
+    const gameOverScreen = document.getElementById("gameOver");
+    const finalScoreDisplay = document.getElementById("finalScore");
+    const gameDurationDisplay = document.getElementById("gameDuration");
+    const restartGameBtn = document.getElementById("restartGame");
+    const startGameScreen = document.getElementById("startGame");
+    const startGameBtn = document.getElementById("startGameBtn");
+    const languageSelect = document.getElementById("languageSelect");
+    const languageSelectGameOver = document.getElementById("languageSelectGameOver");
+
+    canvas.width = 800;
+    canvas.height = 500;
+
+    const words = {
+      uz: [
+        "salom", "dunyo", "kitob", "dastur", "o'zbek", "kompyuter", "yozish", "tezlik", "o'yin", "kod",
+        "internet", "sayt", "dars", "matn", "rang", "bilim", "fan", "texnika", "olam", "sher",
+        "quyosh", "yulduz", "daraxt", "gul", "suv", "havo", "oy", "yomg'ir", "sham", "yaxshi",
+        "kuch", "vaqt", "soat", "kun", "tun", "uy", "ish", "maktab", "o'qish", "yozuv",
+        "raqam", "hisob", "kitobxon", "dasturchi", "foyda", "tarmoq", "xabar", "aloqa", "rivoj", "ijod",
+        "sanat", "musiqa", "raqs", "rasm", "chizma", "shakl", "geometriya", "algebra", "kodlash", "satr"
+      ],
+      en: [
+        "hello", "world", "book", "program", "code", "computer", "write", "speed", "game", "internet",
+        "website", "lesson", "text", "color", "knowledge", "science", "technology", "universe", "lion", "sun",
+        "star", "tree", "flower", "water", "air", "moon", "rain", "light", "good", "power",
+        "time", "hour", "day", "night", "home", "work", "school", "read", "writing", "number",
+        "math", "reader", "programmer", "benefit", "network", "message", "contact", "progress", "create", "art",
+        "music", "dance", "picture", "drawing", "shape", "geometry", "algebra", "coding", "line", "string"
+      ],
+      ru: [
+        "привет", "мир", "книга", "программа", "код", "компьютер", "писать", "скорость", "игра", "интернет",
+        "сайт", "урок", "текст", "цвет", "знание", "наука", "техника", "вселенная", "лев", "солнце",
+        "звезда", "дерево", "цветок", "вода", "воздух", "луна", "дождь", "свет", "хорошо", "сила",
+        "время", "час", "день", "ночь", "дом", "работа", "школа", "читать", "письмо", "число",
+        "математика", "читатель", "программист", "польза", "сеть", "сообщение", "связь", "прогресс", "творчество", "искусство",
+        "музыка", "танец", "картина", "рисунок", "форма", "геометрия", "алгебра", "кодирование", "линия", "строка"
+      ]
+    };
+
+    let currentWords = words.uz;
+    let fallingWords = [];
+    let score = 0;
+    let speed = 1;
+    let gameOver = false;
+    let gameStarted = false;
+    let wordInterval = 2000;
+    let wordIntervalId = null;
+    let lastScoreMilestone = 0;
+    let startTime = 0;
+    let gameDuration = 0;
+    let isGameOverHandled = false;
+
+    class Word {
+      constructor(text) {
+        this.text = text;
+        this.x = Math.random() * (canvas.width - 100) + 50;
+        this.y = -20;
+        this.speed = speed;
+        this.color = ["#a5b4fc", "#f59e0b", "#ffffff"][Math.floor(Math.random() * 3)];
+        this.fontSize = Math.random() * 8 + 20; // 20px to 28px
+      }
+
+      draw() {
+        ctx.font = `${this.fontSize}px Inter`;
+        ctx.fillStyle = this.color;
+        ctx.textAlign = "center";
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.shadowBlur = 0;
+      }
+
+      update() {
+        this.y += this.speed;
+        if (this.y > canvas.height + 20) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function addWord() {
+      if (gameStarted && !gameOver) {
+        const randomWord = currentWords[Math.floor(Math.random() * currentWords.length)];
+        fallingWords.push(new Word(randomWord));
+      }
+    }
+
+    function updateGame() {
+      if (!gameStarted) {
+        startGameScreen.style.display = "flex";
+        return;
+      }
+
+      if (gameOver && !isGameOverHandled) {
+        gameOverScreen.style.display = "flex";
+        finalScoreDisplay.textContent = score;
+        gameDuration = Math.floor((Date.now() - startTime) / 1000);
+        gameDurationDisplay.textContent = gameDuration;
+        isGameOverHandled = true;
+        clearInterval(wordIntervalId);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      fallingWords.forEach((word, index) => {
+        word.update();
+        word.draw();
+        if (word.y > canvas.height + 20) {
+          fallingWords.splice(index, 1);
+        }
+      });
+
+      scoreDisplay.textContent = score;
+      speedDisplay.textContent = speed.toFixed(1);
+
+      if (score >= lastScoreMilestone + 50) {
+        speed = Math.min(speed + 0.2, 3);
+        wordInterval = Math.max(wordInterval - 100, 800);
+        lastScoreMilestone = score;
+        clearInterval(wordIntervalId);
+        wordIntervalId = setInterval(addWord, wordInterval);
+      }
+    }
+
+    languageSelect.addEventListener("change", () => {
+      currentWords = words[languageSelect.value];
+      languageSelectGameOver.value = languageSelect.value;
+      wordInput.placeholder = languageSelect.value === "uz" ? "So‘zni kiriting" :
+                             languageSelect.value === "en" ? "Enter the word" : "Введите слово";
+    });
+
+    languageSelectGameOver.addEventListener("change", () => {
+      languageSelect.value = languageSelectGameOver.value;
+      currentWords = words[languageSelectGameOver.value];
+      wordInput.placeholder = languageSelectGameOver.value === "uz" ? "So‘zni kiriting" :
+                             languageSelectGameOver.value === "en" ? "Enter the word" : "Введите слово";
+    });
+
+    wordInput.addEventListener("input", () => {
+      if (!gameStarted || gameOver) return;
+      const inputText = wordInput.value.trim().toLowerCase();
+      fallingWords.forEach((word, index) => {
+        if (inputText === word.text) {
+          fallingWords.splice(index, 1);
+          score += 10;
+          wordInput.value = "";
+          wordInput.classList.add("correct");
+          setTimeout(() => wordInput.classList.remove("correct"), 300);
+        } else if (inputText && !fallingWords.some(w => w.text.startsWith(inputText))) {
+          wordInput.classList.add("incorrect");
+          setTimeout(() => wordInput.classList.remove("incorrect"), 300);
+        }
+      });
+    });
+
+    startGameBtn.addEventListener("click", () => {
+      gameStarted = true;
+      startGameScreen.style.display = "none";
+      fallingWords = [];
+      score = 0;
+      speed = 1;
+      wordInterval = 2000;
+      lastScoreMilestone = 0;
+      gameOver = false;
+      isGameOverHandled = false;
+      startTime = Date.now();
+      clearInterval(wordIntervalId);
+      wordIntervalId = setInterval(addWord, wordInterval);
+      addWord();
+      wordInput.focus();
+    });
+
+    restartGameBtn.addEventListener("click", () => {
+      gameStarted = true;
+      gameOver = false;
+      isGameOverHandled = false;
+      fallingWords = [];
+      score = 0;
+      speed = 1;
+      wordInterval = 2000;
+      lastScoreMilestone = 0;
+      startTime = Date.now();
+      gameOverScreen.style.display = "none";
+      wordInput.value = "";
+      wordInput.classList.remove("correct", "incorrect");
+      currentWords = words[languageSelectGameOver.value];
+      wordInput.placeholder = languageSelectGameOver.value === "uz" ? "So‘zni kiriting" :
+                             languageSelectGameOver.value === "en" ? "Enter the word" : "Введите слово";
+      clearInterval(wordIntervalId);
+      wordIntervalId = setInterval(addWord, wordInterval);
+      addWord();
+      wordInput.focus();
+    });
+
+    function gameLoop() {
+      updateGame();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+    startGameScreen.style.display = "flex";
+    wordInput.focus();
+  </script>
+</body>
+</html>
