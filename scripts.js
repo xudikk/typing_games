@@ -1,6 +1,7 @@
 const words = {
       en: ["year", "call", "few", "she", "very", "here", "this", "even", "out", "lead", "might", "want", "ask", "first", "plan", "have", "back", "use", "small", "down", "mean", "on", "more", "again", "hold", "of", "need", "group", "general", "see", "consider", "which", "some", "each", "become", "from", "day", "we", "school", "show", "be", "much", "govern", "problem", "by"],
       uz: ["men", "sen", "u", "biz", "ular", "bu", "o'sha", "yaxshi", "yomon", "uy", "do'st", "kitob", "o'qish", "yozish", "o'rganish", "har", "kuni", "vaqt", "ish", "hayot", "sevgi", "do'stlik", "oil", "mashq", "o'yin", "kun", "kecha", "ertaga"]
+
     };
 
     const typingText = document.getElementById('typingText');

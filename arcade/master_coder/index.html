@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoCoder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="brand-icon"><i class="fas fa-rocket"></i></div>
+            <span class="brand-text">NeoCoder</span>
+        </div>
+        <h2 class="game-title">Django Master Coder</h2>
+        <nav class="nav-links">
+            <a href="../../index.html" style="text-decoration:none;" class="nav-btn">Bosh Sahifa</a>
+            <a href="../../lessons.html" style="text-decoration:none;" class="nav-btn">Darslar</a>
+            <a href="../../games.html" style="text-decoration:none;" class="nav-btn">Arcade</a>
+            <a href="../../profile.html" style="text-decoration:none;" class="nav-btn">Profile</a>
+        </nav>
+    </header>
+
+    <div class="editor-container">
+        <div class="file-explorer">
+            <h3>Loyiha Fayllari</h3>
+            <ul id="fileTree"></ul>
+        </div>
+        <div class="code-area">
+            <div class="code-reference">
+                <h4>Aniq Kod</h4>
+                <div class="code-wrapper">
+                    <div class="line-numbers"></div>
+                    <div class="code-display" id="codeDisplay">
+                        <div class="code-overlay-display">
+                            <div class="code-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="code-input">
+                <h4>Kod Yozish</h4>
+                <div class="code-wrapper">
+                    <div class="line-numbers"></div>
+                    <textarea id="codeInput" placeholder="Kodni shu yerga yozing..." autocomplete="off"></textarea>
+                    <div class="code-overlay">
+                        <div class="code-content"></div>
+                    </div>
+                </div>
+                <div id="statsDisplay" class="stats"></div>
+                <div class="download-icon" id="downloadBtn"><i class="fas fa-download"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
+    </footer>
+
+    <script>
+        let currentFile = null;
+        let currentCode = '';
+        let totalChars = 0;
+        let correctChars = 0;
+        let errors = 0;
+
+        const map = {
+            '&': '&',
+            '<': '<',
+            '>': '>',
+            '"': '"',
+            "'": "'"
+        };
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&<>"']/g, match => map[match] || match);
+        }
+
+        const projectTemplates = {
+            django: [
+                {
+                    name: 'manage.py',
+                    type: 'file',
+                    content: '#!/usr/bin/env python\n' +
+                        '"""Django management script."""\n' +
+                        'import os\n' +
+                        'import sys\n' +
+                        'if __name__ == "__main__":\n' +
+                        '    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")\n' +
+                        '    try:\n' +
+                        '        from django.core.management import execute_from_command_line\n' +
+                        '    except ImportError as exc:\n' +
+                        '        raise ImportError(\n' +
+                        '            "Django module topilmadi"\n' +
+                        '        ) from exc\n' +
+                        '    execute_from_command_line(sys.argv)'
+                },
+                {
+                    name: 'base',
+                    type: 'folder',
+                    children: [
+                        {
+                            name: 'utils.py',
+                            type: 'file',
+                            content: 'from django.http import HttpResponse\n' +
+                                'def custom_helper(request):\n' +
+                                '    return HttpResponse("Helper function response")'
+                        },
+                        {
+                            name: '__init__..py',
+                            type: 'file',
+                            content: ''
+                        },
+                    ]
+                },
+                {
+                    name: 'myproject',
+                    type: 'folder',
+                    children: [
+                        { name: '__init__.py', type: 'file', content: '' },
+                        {
+                            name: 'settings.py',
+                            type: 'file',
+                            content: 'from pathlib import Path\n' +
+                                'BASE_DIR = Path(__file__).resolve().parent.parent\n' +
+                                'SECRET_KEY = \'your-secret-key-here\'\n' +
+                                'DEBUG = True\n' +
+                                'ALLOWED_HOSTS = ["*"]\n' +
+                                'INSTALLED_APPS = [\n' +
+                                '    "django.contrib.admin",\n' +
+                                '    "django.contrib.auth",\n' +
+                                '    "django.contrib.contenttypes",\n' +
+                                '    "django.contrib.sessions",\n' +
+                                '    "django.contrib.messages",\n' +
+                                '    "django.contrib.staticfiles",\n' +
+                                '    "myapp",\n' +
+                                '    "payme",\n' +
+                                ']\n' +
+                                'MIDDLEWARE = [\n' +
+                                '    "django.middleware.security.SecurityMiddleware",\n' +
+                                '    "django.contrib.sessions.middleware.SessionMiddleware",\n' +
+                                '    "django.middleware.common.CommonMiddleware",\n' +
+                                '    "django.middleware.csrf.CsrfViewMiddleware",\n' +
+                                '    "myproject.middleware.AuthCheckMiddleware",\n' +
+                                '    "django.contrib.auth.middleware.AuthenticationMiddleware",\n' +
+                                '    "django.contrib.messages.middleware.MessageMiddleware",\n' +
+                                '    "django.middleware.clickjacking.XFrameOptionsMiddleware",\n' +
+                                '    "myproject.middleware.CustomLoggingMiddleware",\n' +
+                                ']\n' +
+                                'ROOT_URLCONF = "myproject.urls"\n' +
+                                'TEMPLATES = [\n' +
+                                '    {\n' +
+                                '        "BACKEND": "django.template.backends.django.DjangoTemplates",\n' +
+                                '        "DIRS": [BASE_DIR / "templates"],\n' +
+                                '        "APP_DIRS": True,\n' +
+                                '        "OPTIONS": {\n' +
+                                '            "context_processors": [\n' +
+                                '                "django.template.context_processors.debug",\n' +
+                                '                "django.template.context_processors.request",\n' +
+                                '                "django.contrib.auth.context_processors.auth",\n' +
+                                '                "django.contrib.messages.context_processors.messages",\n' +
+                                '            ],\n' +
+                                '        },\n' +
+                                '    },\n' +
+                                ']\n' +
+                                'WSGI_APPLICATION = "myproject.wsgi.application"\n' +
+                                'DATABASES = {\n' +
+                                '    "default": {\n' +
+                                '        "ENGINE": "django.db.backends.sqlite3",\n' +
+                                '        "NAME": BASE_DIR / "db.sqlite3",\n' +
+                                '    }\n' +
+                                '}\n' +
+                                'AUTH_PASSWORD_VALIDATORS = []\n' +
+                                'LANGUAGE_CODE = "en-us"\n' +
+                                'TIME_ZONE = "UTC"\n' +
+                                'USE_I18N = True\n' +
+                                'USE_TZ = True\n' +
+                                'STATIC_URL = "/static/"\n' +
+                                'DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"\n'
+                        },
+                        {
+                            name: 'urls.py',
+                            type: 'file',
+                            content: 'from django.contrib import admin\n' +
+                                'from django.urls import path, include\n' +
+                                'from myapp import views\n' +
+                                '\n' +
+                                'urlpatterns = [\n' +
+                                '    path("admin/", admin.site.urls),\n' +
+                                '    path("", include("myapp.urls")),\n' +
+                                '    path("payme/", include("payme.urls")),\n' +
+                                '    path("register/", views.register, name="register"),\n' +
+                                ']'
+                        },
+                        {
+                            name: 'wsgi.py',
+                            type: 'file',
+                            content: 'import os\n' +
+                                'from django.core.wsgi import get_wsgi_application\n' +
+                                'os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")\n' +
+                                'application = get_wsgi_application()'
+                        },
+                        {
+                            name: 'middleware.py',
+                            type: 'file',
+                            content: 'import logging\n' +
+                                'from django.http import HttpResponse\n' +
+                                'from django.utils.deprecation import MiddlewareMixin\n' +
+                                'from django.contrib.auth import authenticate, login\n' +
+                                '\n' +
+                                'logger = logging.getLogger(__name__)\n' +
+                                '\n' +
+                                'class CustomLoggingMiddleware(MiddlewareMixin):\n' +
+                                '    def process_request(self, request):\n' +
+                                '        logger.info(f"Request: {request.method} {request.path} - User: {request.user}")\n' +
+                                '    def process_response(self, request, response):\n' +
+                                '        logger.info(f"Response: {response.status_code} {request.path}")\n' +
+                                '        return response\n' +
+                                '\n' +
+                                'class AuthCheckMiddleware(MiddlewareMixin):\n' +
+                                '    def process_request(self, request):\n' +
+                                '        if request.path not in ["/admin/login/", "/register/", "/admin/logout/", "/"] and not request.user.is_authenticated:\n' +
+                                '            return HttpResponse("Iltimos, tizimga kiring!", status=403)\n' +
+                                '        return None'
+                        },
+                    ]
+                },
+                {
+                    name: 'myapp',
+                    type: 'folder',
+                    children: [
+                        { name: '__init__.py', type: 'file', content: '' },
+                        {
+                            name: 'views.py',
+                            type: 'file',
+                            content: 'from django.shortcuts import render, get_object_or_404, redirect\n' +
+                                'from django.core.paginator import Paginator\n' +
+                                'from .models import Post, Category, Comment\n' +
+                                'from .forms import RegisterForm\n' +
+                                'from django.contrib.auth.models import User\n' +
+                                'from django.contrib.auth import login, authenticate\n' +
+                                '\n' +
+                                'def home(request):\n' +
+                                '    posts = Post.objects.all().order_by("-created_at")\n' +
+                                '    paginator = Paginator(posts, 5)\n' +
+                                '    page_number = request.GET.get("page")\n' +
+                                '    page_obj = paginator.get_page(page_number)\n' +
+                                '    return render(request, "myapp/home.html", {"page_obj": page_obj})\n' +
+                                '\n' +
+                                'def about(request):\n' +
+                                '    return render(request, "myapp/about.html")\n' +
+                                '\n' +
+                                'def post_detail(request, pk):\n' +
+                                '    post = get_object_or_404(Post, pk=pk)\n' +
+                                '    if request.method == "POST":\n' +
+                                '        comment = Comment.objects.create(post=post, content=request.POST["content"], author=request.POST["author"])\n' +
+                                '        return redirect("post_detail", pk=pk)\n' +
+                                '    comments = post.comment_set.all()\n' +
+                                '    return render(request, "myapp/post_detail.html", {"post": post, "comments": comments})\n' +
+                                '\n' +
+                                'def category_posts(request, category_id):\n' +
+                                '    category = get_object_or_404(Category, id=category_id)\n' +
+                                '    posts = Post.objects.filter(category=category)\n' +
+                                '    return render(request, "myapp/category_posts.html", {"category": category, "posts": posts})\n' +
+                                '\n' +
+                                'def register(request):\n' +
+                                '    if request.method == "POST":\n' +
+                                '        form = RegisterForm(request.POST)\n' +
+                                '        if form.is_valid():\n' +
+                                '            user = form.save()\n' +
+                                '            login(request, user)\n' +
+                                '            return redirect("home")\n' +
+                                '    else:\n' +
+                                '        form = RegisterForm()\n' +
+                                '    return render(request, "myapp/register.html", {"form": form})'
+                        },
+                        {
+                            name: 'models.py',
+                            type: 'file',
+                            content: 'from django.db import models\n' +
+                                'from django.contrib.auth.models import AbstractUser\n' +
+                                'from django.dispatch import receiver\n' +
+                                'from django.db.models.signals import post_save\n' +
+                                '\n' +
+                                'class Category(models.Model):\n' +
+                                '    name = models.CharField(max_length=100)\n' +
+                                '    slug = models.SlugField(unique=True)\n' +
+                                '\n' +
+                                '    def __str__(self):\n' +
+                                '        return self.name\n' +
+                                '\n' +
+                                'class Post(models.Model):\n' +
+                                '    title = models.CharField(max_length=200)\n' +
+                                '    content = models.TextField()\n' +
+                                '    created_at = models.DateTimeField(auto_now_add=True)\n' +
+                                '    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)\n' +
+                                '\n' +
+                                '    def __str__(self):\n' +
+                                '        return self.title\n' +
+                                '\n' +
+                                'class Comment(models.Model):\n' +
+                                '    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="comments")\n' +
+                                '    content = models.TextField()\n' +
+                                '    author = models.CharField(max_length=100)\n' +
+                                '    created_at = models.DateTimeField(auto_now_add=True)\n' +
+                                '\n' +
+                                '    def __str__(self):\n' +
+                                '        return f"{self.author} - {self.post.title}"\n' +
+                                '\n' +
+                                '@receiver(post_save, sender=Post)\n' +
+                                'def post_saved(sender, instance, created, **kwargs):\n' +
+                                '    if created:\n' +
+                                '        print(f"New post created: {instance.title}")'
+                        },
+                        {
+                            name: 'forms.py',
+                            type: 'file',
+                            content: 'from django import forms\n' +
+                                'from django.contrib.auth.models import User\n' +
+                                'from django.contrib.auth.forms import UserCreationForm\n' +
+                                '\n' +
+                                'class RegisterForm(UserCreationForm):\n' +
+                                '    email = forms.EmailField(required=True)\n' +
+                                '\n' +
+                                '    class Meta:\n' +
+                                '        model = User\n' +
+                                '        fields = ["username", "email", "password1", "password2"]'
+                        },
+                        {
+                            name: 'urls.py',
+                            type: 'file',
+                            content: 'from django.urls import path\n' +
+                                'from . import views\n' +
+                                '\n' +
+                                'urlpatterns = [\n' +
+                                '    path("", views.home, name="home"),\n' +
+                                '    path("about/", views.about, name="about"),\n' +
+                                '    path("post/<int:pk>/", views.post_detail, name="post_detail"),\n' +
+                                '    path("category/<int:category_id>/", views.category_posts, name="category_posts"),\n' +
+                                ']'
+                        },
+                        {
+                            name: 'admin.py',
+                            type: 'file',
+                            content: 'from django.contrib import admin\n' +
+                                'from .models import Post, Category, Comment\n' +
+                                '\n' +
+                                '@admin.register(Post)\n' +
+                                'class PostAdmin(admin.ModelAdmin):\n' +
+                                '    list_display = ("title", "created_at", "category")\n' +
+                                '    list_filter = ("created_at", "category")\n' +
+                                '    search_fields = ("title", "content")\n' +
+                                '    date_hierarchy = "created_at"\n' +
+                                '    ordering = ("-created_at",)\n' +
+                                '\n' +
+                                '@admin.register(Category)\n' +
+                                'class CategoryAdmin(admin.ModelAdmin):\n' +
+                                '    list_display = ("name", "slug")\n' +
+                                '    prepopulated_fields = {"slug": ("name",)}\n' +
+                                '\n' +
+                                '@admin.register(Comment)\n' +
+                                'class CommentAdmin(admin.ModelAdmin):\n' +
+                                '    list_display = ("author", "post", "created_at")\n' +
+                                '    list_filter = ("created_at", "post")\n'
+                        },
+                        {
+                            name: 'templatetags',
+                            type: 'folder',
+                            children: [
+                                { name: '__init__.py', type: 'file', content: '' },
+                                {
+                                    name: 'custom_tags.py',
+                                    type: 'file',
+                                    content: 'from django import template\n' +
+                                        'from django.utils.html import escape\n' +
+                                        '\n' +
+                                        'register = template.Library()\n' +
+                                        '\n' +
+                                        '@register.filter\n' +
+                                        'def custom_filter(value):\n' +
+                                        '    return f"<strong>{escape(value)}</strong>" if value else value\n' +
+                                        '\n' +
+                                        '@register.simple_tag\n' +
+                                        'def current_time(format_string):\n' +
+                                        '    from django.utils import timezone\n' +
+                                        '    return timezone.now().strftime(format_string)'
+                                },
+                            ]
+                        },
+                    ]
+                },
+                {
+                    name: 'payme',
+                    type: 'folder',
+                    children: [
+                        { name: '__init__.py', type: 'file', content: '' },
+                        {
+                            name: 'models.py',
+                            type: 'file',
+                            content: 'from django.db import models\n' +
+                                'from django.dispatch import receiver\n' +
+                                'from django.db.models.signals import post_save, pre_save\n' +
+                                '\n' +
+                                'class Payment(models.Model):\n' +
+                                '    amount = models.DecimalField(max_digits=10, decimal_places=2)\n' +
+                                '    status = models.CharField(max_length=20, choices=[("pending", "Pending"), ("processing", "Processing"), ("completed", "Completed"), ("failed", "Failed"), ("refunded", "Refunded")], default="pending")\n' +
+                                '    transaction_id = models.CharField(max_length=100, unique=True)\n' +
+                                '    created_at = models.DateTimeField(auto_now_add=True)\n' +
+                                '    updated_at = models.DateTimeField(auto_now=True)\n' +
+                                '    user_ip = models.GenericIPAddressField(null=True, blank=True)\n' +
+                                '    payment_method = models.CharField(max_length=50, blank=True)\n' +
+                                '\n' +
+                                '    def __str__(self):\n' +
+                                '        return f"Payment {self.transaction_id} - {self.status}"\n' +
+                                '\n' +
+                                '@receiver(pre_save, sender=Payment)\n' +
+                                'def set_payment_details(sender, instance, **kwargs):\n' +
+                                '    if not instance.user_ip and hasattr(instance, \'_request\'):\n' +
+                                '        instance.user_ip = instance._request.META.get("REMOTE_ADDR")\n' +
+                                '\n' +
+                                '@receiver(post_save, sender=Payment)\n' +
+                                'def payment_status_changed(sender, instance, created, **kwargs):\n' +
+                                '    if created:\n' +
+                                '        print(f"New payment created: {instance.transaction_id}")\n' +
+                                '    if instance.status == "completed":\n' +
+                                '        print(f"Payment {instance.transaction_id} completed at {instance.updated_at}")\n' +
+                                '    elif instance.status == "failed":\n' +
+                                '        print(f"Payment {instance.transaction_id} failed at {instance.updated_at}")\n' +
+                                '    elif instance.status == "refunded":\n' +
+                                '        print(f"Payment {instance.transaction_id} refunded at {instance.updated_at}")'
+                        },
+                        {
+                            name: 'views.py',
+                            type: 'file',
+                            content: 'from django.shortcuts import render, redirect\n' +
+                                'from django.http import JsonResponse, HttpResponse\n' +
+                                'from .models import Payment\n' +
+                                'import uuid\n' +
+                                'from django.views.decorators.csrf import csrf_exempt\n' +
+                                'from django.contrib.auth.decorators import login_required\n' +
+                                '\n' +
+                                '@login_required\n' +
+                                'def initiate_payment(request):\n' +
+                                '    if request.method == "POST":\n' +
+                                '        amount = request.POST.get("amount")\n' +
+                                '        method = request.POST.get("method", "card")\n' +
+                                '        if not amount:\n' +
+                                '            return JsonResponse({"error": "Amount is required"}, status=400)\n' +
+                                '        transaction_id = str(uuid.uuid4())\n' +
+                                '        payment = Payment.objects.create(amount=amount, transaction_id=transaction_id, status="processing", payment_method=method)\n' +
+                                '        payment._request = request\n' +
+                                '        payment.save()\n' +
+                                '        return JsonResponse({"transaction_id": transaction_id, "status": "processing", "redirect_url": f"/payme/{transaction_id}/process/"}, status=200)\n' +
+                                '    return render(request, "payme/initiate.html", {"methods": ["card", "cash", "mobile"]})\n' +
+                                '\n' +
+                                '@csrf_exempt\n' +
+                                'def payment_process(request, transaction_id):\n' +
+                                '    payment = Payment.objects.filter(transaction_id=transaction_id).first()\n' +
+                                '    if not payment:\n' +
+                                '        return JsonResponse({"error": "Payment not found"}, status=404)\n' +
+                                '    if request.method == "POST":\n' +
+                                '        action = request.POST.get("action")\n' +
+                                '        if action == "complete":\n' +
+                                '            payment.status = "completed"\n' +
+                                '        elif action == "fail":\n' +
+                                '            payment.status = "failed"\n' +
+                                '        elif action == "refund":\n' +
+                                '            payment.status = "refunded"\n' +
+                                '        payment.save()\n' +
+                                '        return JsonResponse({"status": payment.status, "transaction_id": transaction_id})\n' +
+                                '    return render(request, "payme/process.html", {"payment": payment})\n' +
+                                '\n' +
+                                '@csrf_exempt\n' +
+                                'def payment_callback(request, transaction_id):\n' +
+                                '    payment = Payment.objects.filter(transaction_id=transaction_id).first()\n' +
+                                '    if not payment:\n' +
+                                '        return JsonResponse({"error": "Payment not found"}, status=404)\n' +
+                                '    if request.method == "POST":\n' +
+                                '        status = request.POST.get("status")\n' +
+                                '        if status in ["completed", "failed", "refunded"]:\n' +
+                                '            payment.status = status\n' +
+                                '            payment.save()\n' +
+                                '        return JsonResponse({"status": payment.status, "message": "Callback processed"})\n' +
+                                '    return HttpResponse("Callback endpoint", status=200)'
+                        },
+                        {
+                            name: 'urls.py',
+                            type: 'file',
+                            content: 'from django.urls import path\n' +
+                                'from . import views\n' +
+                                '\n' +
+                                'urlpatterns = [\n' +
+                                '    path("initiate/", views.initiate_payment, name="payme_initiate"),\n' +
+                                '    path("<str:transaction_id>/process/", views.payment_process, name="payme_process"),\n' +
+                                '    path("<str:transaction_id>/callback/", views.payment_callback, name="payme_callback"),\n' +
+                                ']'
+                        },
+                        {
+                            name: 'templates',
+                            type: 'folder',
+                            children: [
+                                {
+                                    name: 'initiate.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>To‘lovni boshlash</h1><form method="post">{% csrf_token %}<input type="number" name="amount" step="0.01" required placeholder="Summa (so\'m)"><select name="method" required><option value="">To‘lov usuli</option>{% for method in methods %}<option value="{{ method }}">{{ method|title }}</option>{% endfor %}</select><button type="submit">To‘lovni boshlash</button></form>{% endblock %}'
+                                },
+                                {
+                                    name: 'process.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>To‘lovni qayta ishlash</h1><p>Transaction ID: {{ payment.transaction_id }}</p><p>Summa: {{ payment.amount }} so\'m</p><p>Status: {{ payment.status }}</p><form method="post">{% csrf_token %}<select name="action"><option value="complete">Muvaffaqiyatli</option><option value="fail">Muvaffaqiyatsiz</option><option value="refund">Qaytarish</option></select><button type="submit">Tasdiqlash</button></form>{% endblock %}'
+                                },
+                            ]
+                        },
+                    ]
+                },
+                {
+                    name: 'templates',
+                    type: 'folder',
+                    children: [
+                        {
+                            name: 'myapp',
+                            type: 'folder',
+                            children: [
+                                {
+                                    name: 'base.html',
+                                    type: 'file',
+                                    content: '{% load myapp.templatetags.custom_tags %}<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{% block title %}NeoCoder{% endblock %}</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"><link rel="stylesheet" href="{% static \'css/style.css\' %}"></head><body><header class="header"><div class="logo"><div class="brand-icon"><i class="fas fa-rocket"></i></div><span class="brand-text">NeoCoder</span></div><h2 class="game-title">Dasturlash Arena</h2><nav class="nav-links">{% if user.is_authenticated %}<button class="nav-btn"><a href="#">Profil</a></button><button class="nav-btn"><a href="/admin/logout/">Chiqish</a></button>{% else %}<button class="nav-btn"><a href="/register/">Ro‘yxatdan o‘tish</a></button><button class="nav-btn"><a href="/admin/login/">Kirish</a></button>{% endif %}</nav></header><main>{% block content %}{% endblock %}<p>{% current_time "%Y-%m-%d %H:%M:%S" %}</p></main><footer class="footer">© 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a></footer></body></html>'
+                                },
+                                {
+                                    name: 'home.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}{% for post in page_obj %}<h2>{{ post.title|custom_filter }}</h2><p>{{ post.content|truncatewords:20 }}</p><p>Sana: {{ post.created_at|date:"d.m.Y" }}</p>{% endfor %}<div class="pagination">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Oldingi</a>{% endif %}<span>Sahifa {{ page_obj.number }} dan {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Keyingi</a>{% endif %}</div>{% endblock %}'
+                                },
+                                {
+                                    name: 'about.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>Haqimizda</h1><p>Biz dasturlashni o‘rgatamiz va loyiha ishlab chiqishda yordam beramiz. <br>Hoziroq boshlab ket!</p>{% endblock %}'
+                                },
+                                {
+                                    name: 'post_detail.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>{{ post.title|custom_filter }}</h1><p>{{ post.content }}</p><h3>Sharhlar</h3>{% for comment in comments %}<p><strong>{{ comment.author }}:</strong> {{ comment.content }}</p><small>{{ comment.created_at|date:"d.m.Y H:i" }}</small>{% endfor %}<form method="post">{% csrf_token %}<textarea name="content" required placeholder="Sharhingizni yozing..."></textarea><input type="text" name="author" required placeholder="Ismingiz"><button type="submit">Yuborish</button></form>{% endblock %}'
+                                },
+                                {
+                                    name: 'category_posts.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>{{ category.name|custom_filter }}</h1>{% for post in posts %}<h2>{{ post.title }}</h2><p>{{ post.content|truncatewords:15 }}</p>{% endfor %}{% endblock %}'
+                                },
+                                {
+                                    name: 'register.html',
+                                    type: 'file',
+                                    content: '{% extends "myapp/base.html" %}{% block content %}<h1>Ro‘yxatdan o‘tish</h1><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Ro‘yxatdan o‘tish</button></form>{% if form.errors %}<p style="color:red;">Xatolik: {{ form.errors }}</p>{% endif %}{% endblock %}'
+                                },
+                            ]
+                        },
+                    ]
+                },
+            ],
+        };
+
+        function updateLineNumbersDynamic(code, elementId) {
+            const lineNumbers = document.getElementById(elementId);
+            if (!lineNumbers) return;
+            const lines = (code || '').split('\n').length;
+            lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+            lineNumbers.style.height = `${lineNumbers.scrollHeight}px`;
+        }
+
+        function updateCodeDisplay(input) {
+            const codeDisplay = document.getElementById('codeDisplay');
+            const overlay = codeDisplay.querySelector('.code-overlay-display .code-content');
+            if (!codeDisplay || !overlay || !currentCode) return;
+
+            const inputChars = input.replace(/\t/g, '    ').split('');
+            const codeChars = currentCode.replace(/\t/g, '    ').split('');
+            let html = '';
+            let i = 0;
+            while (i < Math.max(inputChars.length, codeChars.length)) {
+                if (i < inputChars.length && i < codeChars.length) {
+                    if (inputChars[i] === codeChars[i]) {
+                        html += `<span class="correct">${escapeHtml(codeChars[i])}</span>`;
+                    } else {
+                        html += `<span class="error">${escapeHtml(codeChars[i])}</span>`;
+                    }
+                } else if (i < codeChars.length) {
+                    html += `<span class="default">${escapeHtml(codeChars[i])}</span>`;
+                } else {
+                    html += `<span class="error">${escapeHtml(inputChars[i])}</span>`;
+                }
+                if (codeChars[i] === '\n' || i === codeChars.length - 1) {
+                    html += '<br>';
+                }
+                i++;
+            }
+            overlay.innerHTML = html;
+        }
+
+        function updateStats() {
+            const statsDisplay = document.getElementById('statsDisplay');
+            if (!statsDisplay || !currentCode) return;
+            const codeLength = currentCode.replace(/\t/g, '    ').trim().length;
+            const accuracy = codeLength > 0 ? Math.round((correctChars / codeLength) * 100) : 0;
+            statsDisplay.innerHTML = `Aniqlik: ${accuracy}% | Xatolar: ${errors}`;
+        }
+
+        function renderFileTree(structure, parentUl, prefix = '') {
+            structure.forEach(item => {
+                const li = document.createElement('li');
+                li.className = item.type;
+                li.dataset.path = prefix ? `${prefix}/${item.name}` : item.name;
+                li.innerHTML = `${item.name}`;
+                if (item.type === 'file') {
+                    li.addEventListener('click', () => {
+                        currentFile = item;
+                        currentCode = currentFile.content;
+                        updateCodeDisplay(currentCode);
+                        document.getElementById('codeInput').value = localStorage.getItem(`code_${currentFile.name}`) || '';
+                        document.querySelectorAll('#fileTree li').forEach(el => el.classList.remove('active'));
+                        li.classList.add('active');
+                        updateLineNumbersDynamic(currentCode, 'refLineNumbers');
+                        updateLineNumbersDynamic(document.getElementById('codeInput').value, 'inputLineNumbers');
+                        updateStats();
+                        const runButton = document.querySelector('#runButton');
+                        if (runButton) runButton.disabled = document.getElementById('codeInput').value !== currentCode.replace(/\t/g, '    ').trim();
+                    });
+                }
+                if (item.type === 'folder' && item.children) {
+                    const ul = document.createElement('ul');
+                    li.appendChild(ul);
+                    renderFileTree(item.children, ul, prefix ? `${prefix}/${item.name}` : item.name);
+                }
+                parentUl.appendChild(li);
+            });
+        }
+
+        function downloadCode() {
+            if (currentFile) {
+                const blob = new Blob([document.getElementById('codeInput').value], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${currentFile.name}`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+        }
+
+        window.onload = function() {
+            const codeInput = document.getElementById('codeInput');
+            const fileTree = document.getElementById('fileTree');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            if (!codeInput || !fileTree || !downloadBtn) {
+                return;
+            }
+
+            codeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = codeInput.selectionStart;
+                    const end = codeInput.selectionEnd;
+                    codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
+                    codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+                }
+            });
+
+            codeInput.addEventListener('input', () => {
+                const input = codeInput.value.replace(/\t/g, '    ').trim();
+                totalChars = input.length;
+                correctChars = 0;
+                errors = 0;
+                const codeChars = currentCode.replace(/\t/g, '    ').split('');
+                const inputChars = input.split('');
+                for (let i = 0; i < inputChars.length && i < codeChars.length; i++) {
+                    if (inputChars[i] === codeChars[i]) {
+                        correctChars++;
+                    } else {
+                        errors++;
+                    }
+                }
+                updateCodeDisplay(input);
+                updateStats();
+                const runButton = document.querySelector('#runButton');
+                if (runButton) runButton.disabled = input !== currentCode.replace(/\t/g, '    ').trim();
+                localStorage.setItem(`code_${currentFile.name}`, codeInput.value);
+                updateLineNumbersDynamic(codeInput.value, 'inputLineNumbers');
+                codeInput.style.height = `${Math.max(codeInput.scrollHeight, 200)}px`;
+            });
+
+            downloadBtn.addEventListener('click', downloadCode);
+
+            renderFileTree(projectTemplates['django'], fileTree);
+
+            let firstFile = null;
+            function findFirstFile(structure) {
+                for (const item of structure) {
+                    if (item.type === 'file') {
+                        firstFile = item;
+                        return true;
+                    }
+                    if (item.children && findFirstFile(item.children)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            if (findFirstFile(projectTemplates['django']) && firstFile) {
+                currentFile = firstFile;
+                currentCode = currentFile.content;
+                updateCodeDisplay(currentCode);
+                codeInput.value = localStorage.getItem(`code_${currentFile.name}`) || '';
+                fileTree.querySelector(`li[data-path="${firstFile.name}"]`).classList.add('active');
+                updateLineNumbersDynamic(currentCode, 'refLineNumbers');
+                updateLineNumbersDynamic(codeInput.value, 'inputLineNumbers');
+                updateStats();
+                codeInput.style.height = `${Math.max(codeInput.scrollHeight, 200)}px`;
+            }
+        };
+    </script>
+</body>
+</html>

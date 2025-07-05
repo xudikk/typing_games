@@ -1,0 +1,514 @@
+:root {
+    --primary: #00b4d8;
+    --secondary: #f1c40f;
+    --text: #ecf0f1;
+    --bg-dark: #1a252f;
+    --bg-light: #2e4057;
+    --hover: rgba(255, 255, 255, 0.15);
+    --correct: #27ae60;
+    --error: #e74c3c;
+    --current: #E1E2E9;
+    --accent: #4a90e2;
+    --cursor: #ffffff;
+    --code-input-bg: #2c3e50;
+    --default-code: #E0E2E9;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(135deg, #1a252f 0%, #2e4057 100%);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+    animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background: rgba(46, 64, 87, 0.95);
+    border-bottom: 3px solid var(--primary);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(241, 196, 15, 0.15) 0%, transparent 70%);
+    animation: pulse 8s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.5); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.brand-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--secondary);
+    color: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.brand-icon:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.7);
+}
+
+.brand-text {
+    color: var(--secondary);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+}
+
+.game-title {
+    color: var(--accent);
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 0 10px var(--accent), 0 0 20px rgba(74, 144, 226, 0.3);
+    animation: flicker 1.5s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.9; }
+    100% { opacity: 1; }
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--text);
+    padding: 12px 25px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 180, 216, 0.3);
+    border-radius: 50%;
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.nav-btn:hover::before {
+    width: 200px;
+    height: 200px;
+    transform: translate(-50%, -50%);
+}
+
+.nav-btn a {
+    color: var(--text);
+    text-decoration: none;
+    z-index: 1;
+}
+
+.nav-btn:hover {
+    background: var(--hover);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.editor-container {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 100px);
+    background: var(--bg-light);
+    border-top: 3px solid var(--primary);
+}
+
+.file-explorer {
+    width: 350px;
+    padding: 20px;
+    background: rgba(26, 37, 47, 0.95);
+    border-right: 3px solid var(--primary);
+    overflow-y: auto;
+    height: 100%;
+}
+
+.file-explorer h3 {
+    color: var(--secondary);
+    font-size: 1.6rem;
+    margin-bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+}
+
+.file-explorer ul {
+    list-style: none;
+    padding: 0;
+}
+
+.file-explorer li {
+    padding: 15px 20px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 5px;
+}
+
+.file-explorer li.file::before,
+.file-explorer li.folder::before {
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-right: 10px;
+}
+
+.file-explorer li.file::before {
+    content: '\f15b';
+}
+
+.file-explorer li.folder::before {
+    content: '\f07b';
+}
+
+.file-explorer li:hover {
+    background: var(--hover);
+    transform: translateX(10px);
+    box-shadow: 0 0 10px rgba(0, 180, 216, 0.3);
+}
+
+.file-explorer li.active {
+    background: var(--primary);
+    color: var(--bg-dark);
+    font-weight: 700;
+}
+
+.file-explorer ul ul {
+    margin-left: 30px;
+}
+
+.code-area {
+    flex: 2;
+    display: flex;
+    padding: 20px;
+    height: 100%;
+}
+
+.code-reference,
+.code-input {
+    width: 50%;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+}
+
+.code-reference h4,
+.code-input h4 {
+    color: var(--secondary);
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(241, 196, 15, 0.5);
+}
+
+.code-wrapper {
+    display: flex;
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    border-radius: 5px;
+    overflow: hidden;
+    max-height: 600px;
+}
+
+.line-numbers-display {
+    width: 50px;
+    font-size: 1rem;
+    color: #bbb;
+    text-align: right;
+    padding-right: 10px;
+    user-select: none;
+    border-right: 2px solid var(--primary);
+    line-height: 1.6;
+    background: var(--bg-dark);
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%; /* Line numbers uchun 100% height */
+    padding-top: 0px;
+}
+
+.line-numbers {
+    width: 50px;
+    font-size: 1rem;
+    color: #bbb;
+    text-align: right;
+    padding-right: 10px;
+    user-select: none;
+    border-right: 2px solid var(--primary);
+    line-height: 1.6;
+    background: var(--bg-dark);
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%; /* Line numbers uchun 100% height */
+    padding-top: 10px;
+}
+
+.code-display {
+    flex: 1;
+    background: var(--bg-dark);
+    overflow-y: auto; /* Scroll qaytarildi */
+    border-radius: 0 5px 5px 0;
+    margin-left: 50px;
+    max-height: 600px;
+    position: relative;
+    padding-top: 10px;
+    color: var(--default-code);
+}
+
+.code-content {
+    font-size: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.2;
+    padding: 0;
+
+}
+
+.code-content span {
+    color: var(--default-code); /* Default holatda oddiy rang */
+}
+
+.code-content span.correct {
+    color: var(--correct); /* To'g'ri qismlar yashil */
+}
+
+.code-content span.error {
+    color: var(--error);
+    background-color: var(--bg-dark);
+}
+
+.code-content span.current {
+    color: var(--current);
+}
+
+.code-input {
+    border: 0px solid var(--primary);
+    background: var(--code-input-bg);
+}
+
+.code-input textarea {
+    width: 100%;
+    flex: 1;
+    font-size: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-dark);
+    color: var(--text);
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 10px;
+    line-height: 1.6;
+    margin-left: 50px;
+    z-index: 2;
+    position: relative;
+    max-height: 600px;
+    overflow-y: auto; /* Scroll qaytarildi */
+}
+
+.code-overlay-display {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: calc(100% - 50px);
+    height: 100%;
+    font-size: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+    z-index: 1;
+    max-height: 600px;
+    overflow-y: auto; /* Scroll qaytarildi */
+
+}
+
+.code-overlay {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: calc(100% - 50px);
+    height: 100%;
+    font-size: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+    pointer-events: none;
+    z-index: 3;
+    max-height: 600px;
+    overflow-y: auto; /* Scroll qaytarildi */
+
+}
+
+.code-overlay .code-content span.correct {
+    color: var(--correct);
+}
+
+.code-overlay .code-content span.error {
+    background-color: var(--bg-dark);
+    color: var(--error);
+}
+
+.code-overlay .code-content span.current {
+    color: var(--current);
+}
+
+.download-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: var(--text);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.download-icon:hover {
+    color: var(--secondary);
+    background: var(--hover);
+    transform: scale(1.1);
+}
+
+.stats {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-top: 10px;
+    text-align: right;
+    text-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+.footer {
+    padding: 20px;
+    background: rgba(46, 64, 87, 0.95);
+    border-top: 3px solid var(--primary);
+    text-align: center;
+    font-size: 1rem;
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.6);
+}
+
+.footer a {
+    color: var(--accent);
+    text-decoration: none;
+    margin: 0 15px;
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: var(--secondary);
+    text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+    .editor-container {
+        flex-direction: column;
+    }
+    .file-explorer {
+        width: 100%;
+        border-right: none;
+        border-bottom: 3px solid var(--primary);
+    }
+    .code-area {
+        flex-direction: column;
+    }
+    .code-reference,
+    .code-input {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+    }
+    .code-wrapper {
+        min-height: 0;
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 600px) {
+    .header {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .nav-links {
+        gap: 10px;
+    }
+    .brand-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+    .brand-text {
+        font-size: 2rem;
+    }
+    .game-title {
+        font-size: 2rem;
+    }
+    .file-explorer {
+        padding: 15px;
+    }
+    .code-reference,
+    .code-input {
+        height: auto;
+    }
+    .code-wrapper {
+        min-height: 0;
+        max-height: 300px;
+    }
+}
