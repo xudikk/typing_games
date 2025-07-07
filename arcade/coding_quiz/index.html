@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoCoder Programming Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Source+Sans+Pro:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0A1122;
+      --secondary: #38BDF8;
+      --accent: #34D399;
+      --highlight: #A78BFA;
+      --text: #F9FAFB;
+      --card-bg: rgba(30, 41, 59, 0.9);
+      --shadow: rgba(0, 0, 0, 0.3);
+      --gradient: linear-gradient(135deg, #0A1122, #1A2A44);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    canvas#particlesCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.7;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: var(--primary);
+      color: var(--text);
+      box-shadow: 0 2px 10px var(--shadow);
+      z-index: 10;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--highlight);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px var(--highlight);
+    }
+
+    .brand-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px var(--highlight);
+    }
+
+    .brand-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 6px var(--secondary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px 25px;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 2.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px var(--accent); opacity: 1; }
+      50% { box-shadow: 0 0 15px var(--accent); opacity: 0.9; }
+      100% { box-shadow: 0 0 10px var(--accent); opacity: 1; }
+    }
+
+    .nav-btn:hover {
+      background: var(--accent);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--accent);
+    }
+
+    .nav-btn a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .game-container {
+      width: 90%;
+      max-width: 950px;
+      padding: 35px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      margin: 90px auto 25px;
+      box-shadow: 0 6px 14px var(--shadow), 0 0 15px var(--highlight);
+      text-align: center;
+      animation: slideUp 0.5s ease-in;
+      border: 2px solid var(--highlight);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .game-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: var(--highlight);
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 10px var(--highlight);
+    }
+
+    .difficulty-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 35px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 6px 14px var(--shadow), 0 0 15px var(--secondary);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      animation: slideUp 0.4s ease-in;
+      border: 2px solid var(--highlight);
+    }
+
+    .difficulty-modal.show {
+      display: flex;
+    }
+
+    .difficulty-btn {
+      background: var(--primary);
+      border: 2px solid var(--secondary);
+      border-radius: 10px;
+      padding: 14px 35px;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--secondary);
+      animation: pulse 2.5s infinite;
+    }
+
+    .difficulty-btn:hover {
+      background: var(--secondary);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--secondary);
+    }
+
+    .progress-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+      max-width: 750px;
+      margin-left: auto;
+      margin-right: auto;
+      flex-wrap: wrap;
+    }
+
+    .progress-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--text);
+      border: 2px solid var(--highlight);
+      transition: all 0.3s ease;
+    }
+
+    .progress-circle.correct {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    .progress-circle.incorrect {
+      background: #F87171;
+      border-color: #F87171;
+      box-shadow: 0 0 12px #F87171;
+    }
+
+    .timer-bar-container {
+      width: 320px;
+      height: 35px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 25px auto;
+      position: relative;
+      display: none;
+      box-shadow: 0 3px 10px var(--shadow), 0 0 10px var(--highlight);
+      border: 2px solid var(--highlight);
+    }
+
+    .timer-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--accent), var(--secondary));
+      transition: width 1s linear;
+      border-radius: 18px 0 0 18px;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text);
+      text-shadow: 0 0 8px var(--highlight);
+    }
+
+    .word-container {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      padding: 25px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      border-radius: 12px;
+      box-shadow: 0 3px 10px var(--shadow), 0 0 15px var(--secondary);
+      line-height: 1.5;
+      animation: slideUp 0.4s ease-in;
+      color: var(--text);
+      border: 2px solid var(--highlight);
+      text-shadow: 0 0 6px var(--text);
+    }
+
+    .word-container.incorrect {
+      background: linear-gradient(45deg, #F87171, #B91C1C);
+      box-shadow: 0 0 15px #F87171;
+    }
+
+    .options-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+
+    .option-btn {
+      background: var(--primary);
+      border: 2px solid var(--secondary);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--secondary);
+      text-align: left;
+    }
+
+    .option-btn:hover {
+      background: var(--secondary);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--secondary);
+    }
+
+    .option-btn.correct {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--primary);
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    .option-btn.incorrect {
+      background: #F87171;
+      border-color: #F87171;
+      color: var(--text);
+      box-shadow: 0 0 15px #F87171;
+    }
+
+    .option-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .score-board {
+      display: none;
+      gap: 25px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 25px;
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(52, 211, 153, 0.2));
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px var(--secondary);
+      border: 2px solid var(--highlight);
+      animation: scaleIn 0.5s ease-in;
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .score-board span {
+      font-family: 'Poppins', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 0 8px var(--text);
+    }
+
+    #score {
+      color: var(--secondary);
+      font-weight: 700;
+      text-shadow: 0 0 10px var(--secondary);
+    }
+
+    #currentWord, #totalWords {
+      color: var(--accent);
+      font-weight: 700;
+      text-shadow: 0 0 10px var(--accent);
+    }
+
+    #gameOverModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 35px;
+      max-width: 550px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 6px 14px var(--shadow), 0 0 15px var(--highlight);
+      z-index: 20;
+      border: 2px solid var(--highlight);
+    }
+
+    #gameOverModal.show {
+      display: block;
+      animation: slideUp 0.4s ease-in;
+    }
+
+    #gameOverText {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      margin-bottom: 25px;
+      font-weight: 600;
+      color: var(--highlight);
+      text-shadow: 0 0 10px var(--highlight);
+    }
+
+    #restartButton {
+      background: var(--primary);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 35px;
+      color: var(--text);
+      font-size: 1.3rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 2.5s infinite;
+    }
+
+    #restartButton:hover {
+      background: var(--accent);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--accent);
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      padding: 15px;
+      background: var(--primary);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 -3px 10px var(--shadow);
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    .footer a {
+      color: var(--secondary);
+      text-decoration: none;
+      margin: 0 12px;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 6px var(--secondary);
+    }
+
+    .footer a:hover {
+      color: var(--highlight);
+      text-shadow: 0 0 10px var(--highlight);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+      .game-container { width: 95%; margin: 80px auto 20px; }
+      .game-title { font-size: 2.4rem; }
+      .word-container { font-size: 1.6rem; padding: 20px; }
+      .options-container { grid-template-columns: 1fr; }
+      .option-btn { font-size: 1.1rem; padding: 12px; }
+      .progress-bar { max-width: 650px; }
+      .progress-circle { width: 18px; height: 18px; }
+      .timer-bar-container { width: 280px; height: 30px; }
+      .timer-text { font-size: 1.2rem; }
+      .score-board { font-size: 1.3rem; padding: 15px; gap: 20px; }
+      .header { padding: 12px 25px; }
+      .brand-text { font-size: 1.8rem; }
+      .brand-icon { width: 40px; height: 40px; font-size: 1.8rem; }
+      .nav-btn { padding: 8px 18px; font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { width: 95%; margin: 70px auto 15px; }
+      .game-title { font-size: 2rem; }
+      .word-container { font-size: 1.4rem; padding: 15px; }
+      .option-btn { font-size: 1rem; padding: 10px; }
+      .progress-bar { max-width: 450px; }
+      .progress-circle { width: 16px; height: 16px; }
+      .timer-bar-container { width: 240px; height: 25px; }
+      .timer-text { font-size: 1.1rem; }
+      .score-board { font-size: 1.2rem; padding: 12px; gap: 15px; }
+      .header { padding: 10px 20px; }
+      .brand-text { font-size: 1.6rem; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
+      .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particlesCanvas"></canvas>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+        <a href="../../index.html" style="text-decoration:none;" class="nav-btn">Bosh Sahifa</a>
+        <a href="../../lessons.html" style="text-decoration:none;" class="nav-btn">Darslar</a>
+        <a href="../../games.html" style="text-decoration:none;" class="nav-btn">Arcade</a>
+        <a href="../../profile.html" style="text-decoration:none;" class="nav-btn">Profile</a>
+    </nav>
+  </header>
+
+  <div class="game-container">
+    <h1 class="game-title">NeoCoder Programming Quiz</h1>
+      <div class="difficulty-modal show" id="languageModal">
+      <h2>Select Programming Language</h2>
+      <button class="difficulty-btn" data-language="python">Python</button>
+      <button class="difficulty-btn" data-language="javascript">JavaScript</button>
+      <button class="difficulty-btn" data-language="java">Java</button>
+      <button class="difficulty-btn" data-language="cpp">C++</button>
+      <button class="difficulty-btn" data-language="php">PHP</button>
+    </div>
+    <div class="difficulty-modal" id="questionLangModal">
+      <h2>Select Question Language</h2>
+      <button class="difficulty-btn" data-lang="uz">O'zbekcha</button>
+      <button class="difficulty-btn" data-lang="en">English</button>
+    </div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="timer-bar-container" id="timerBarContainer">
+      <div class="timer-bar" id="timerBar"></div>
+      <div class="timer-text" id="timerText">30</div>
+    </div>
+    <div class="word-container" id="wordContainer"></div>
+    <div class="options-container" id="optionsContainer"></div>
+    <div class="score-board" id="scoreBoard">
+      <span>Score: <span id="score">0</span></span>
+      <span>Question: <span id="currentWord">0</span>/<span id="totalWords">20</span></span>
+    </div>
+    <div id="gameOverModal">
+      <div id="gameOverText"></div>
+      <button id="restartButton">Restart Quiz</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
+  </footer>
+
+  <script src="questions.js"></script>
+  <script>
+    const canvas = document.getElementById("particlesCanvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 3 + 1.5,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5,
+          color: ["#38BDF8", "#34D399", "#A78BFA"][Math.floor(Math.random() * 3)]
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      });
+      requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      createParticles();
+    });
+
+    resizeCanvas();
+    createParticles();
+    drawParticles();
+
+    let currentLanguage = null;
+    let currentQuestion = null;
+    let questionLanguage = null;
+    let score = 0;
+    let currentQuestionIndex = 0;
+    const totalQuestions = 20;
+    let timer = null;
+    let timeLeft = 0;
+    let usedQuestions = [];
+    let availableQuestions = [];
+
+    const languageModal = document.getElementById("languageModal");
+    const questionLangModal = document.getElementById("questionLangModal");
+    const progressBar = document.getElementById("progressBar");
+    const timerBarContainer = document.getElementById("timerBarContainer");
+    const timerBar = document.getElementById("timerBar");
+    const timerText = document.getElementById("timerText");
+    const wordContainer = document.getElementById("wordContainer");
+    const optionsContainer = document.getElementById("optionsContainer");
+    const scoreBoard = document.getElementById("scoreBoard");
+    const scoreDisplay = document.getElementById("score");
+    const currentWordDisplay = document.getElementById("currentWord");
+    const totalWordsDisplay = document.getElementById("totalWords");
+    const gameOverModal = document.getElementById("gameOverModal");
+    const gameOverText = document.getElementById("gameOverText");
+    const restartButton = document.getElementById("restartButton");
+
+    function initializeGame() {
+      document.querySelectorAll("[data-language]").forEach(button => {
+        button.addEventListener("click", () => {
+          currentLanguage = button.dataset.language;
+          languageModal.classList.remove("show");
+          questionLangModal.classList.add("show");
+        });
+      });
+
+      document.querySelectorAll("[data-lang]").forEach(button => {
+        button.addEventListener("click", () => {
+          questionLanguage = button.dataset.lang;
+          questionLangModal.classList.remove("show");
+          startGame();
+        });
+      });
+
+      restartButton.addEventListener("click", () => {
+        gameOverModal.classList.remove("show");
+        resetGame();
+      });
+    }
+
+    function startGame() {
+      score = 0;
+      currentQuestionIndex = 0;
+      usedQuestions = [];
+      availableQuestions = questions.filter(q => q.language === currentLanguage).slice(0, totalQuestions);
+
+      totalWordsDisplay.textContent = totalQuestions;
+      scoreBoard.style.display = "flex";
+      timerBarContainer.style.display = "block";
+      createProgressCircles();
+      nextQuestion();
+    }
+
+    function createProgressCircles() {
+      progressBar.innerHTML = "";
+      for (let i = 0; i < totalQuestions; i++) {
+        const circle = document.createElement("div");
+        circle.classList.add("progress-circle");
+        progressBar.appendChild(circle);
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 30;
+      timerText.textContent = timeLeft;
+      timerBar.style.width = "100%";
+      timer = setInterval(() => {
+        timeLeft--;
+        timerText.textContent = timeLeft;
+        timerBar.style.width = `${(timeLeft / 30) * 100}%`;
+        if (timeLeft <= 0) {
+          markAnswer(false);
+          showCorrectAnswer();
+          setTimeout(nextQuestion, 1500);
+        }
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      if (currentQuestionIndex >= totalQuestions || availableQuestions.length === 0) {
+        endGame();
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+      currentQuestion = availableQuestions[randomIndex];
+      usedQuestions.push(currentQuestion);
+      availableQuestions.splice(randomIndex, 1);
+
+      wordContainer.innerHTML = `<div>${questionLanguage === 'uz' ? currentQuestion.question_uz : currentQuestion.question_en}</div>`;
+      optionsContainer.innerHTML = currentQuestion.options.map((option, index) => `
+        <button class="option-btn" data-index="${index}">${option}</button>
+      `).join("");
+
+      document.querySelectorAll(".option-btn").forEach(button => {
+        button.addEventListener("click", handleOptionClick);
+      });
+
+      wordContainer.classList.remove("incorrect");
+      currentQuestionIndex++;
+      currentWordDisplay.textContent = currentQuestionIndex;
+      startTimer();
+    }
+
+    function handleOptionClick(e) {
+      const selectedIndex = parseInt(e.target.dataset.index);
+      const correctAnswer = currentQuestion.correctAnswer;
+      const isCorrect = selectedIndex === currentQuestion.options.indexOf(correctAnswer);
+
+      markAnswer(isCorrect);
+      document.querySelectorAll(".option-btn").forEach((btn, index) => {
+        btn.disabled = true;
+        if (index === currentQuestion.options.indexOf(correctAnswer)) {
+          btn.classList.add("correct");
+        } else if (index === selectedIndex) {
+          btn.classList.add("incorrect");
+        }
+      });
+
+      if (!isCorrect) {
+        showCorrectAnswer();
+      }
+
+      setTimeout(nextQuestion, 1500);
+    }
+
+    function markAnswer(isCorrect) {
+      clearInterval(timer);
+      const circles = document.querySelectorAll(".progress-circle");
+      circles[currentQuestionIndex - 1].classList.add(isCorrect ? "correct" : "incorrect");
+      if (!isCorrect) {
+        wordContainer.classList.add("incorrect");
+      }
+      if (isCorrect) score += 10;
+      scoreDisplay.textContent = score;
+    }
+
+    function showCorrectAnswer() {
+      wordContainer.innerHTML = `
+        <div>${questionLanguage === 'uz' ? currentQuestion.question_uz : currentQuestion.question_en}</div>
+        <div style="margin-top: 10px; font-size: 1.2rem; color: var(--accent);">
+          ${questionLanguage === 'uz' ? "To'g'ri javob" : "Correct Answer"}: ${currentQuestion.correctAnswer}
+        </div>
+      `;
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      timerBarContainer.style.display = "none";
+      wordContainer.textContent = "";
+      optionsContainer.innerHTML = "";
+      let resultText = `${questionLanguage === 'uz' ?
+        `O'yin tugadi! Sizning balingiz: ${score}/${totalQuestions * 10}. Siz ${currentLanguage} quizini yakunladingiz!` :
+        `Game Over! Your score: ${score} out of ${totalQuestions * 10}. You completed the ${currentLanguage} quiz!`}`;
+      gameOverText.textContent = resultText;
+      gameOverModal.classList.add("show");
+    }
+
+    function resetGame() {
+      score = 0;
+      currentQuestionIndex = 0;
+      usedQuestions = [];
+      availableQuestions = [];
+      currentLanguage = null;
+      questionLanguage = null;
+      scoreDisplay.textContent = score;
+      currentWordDisplay.textContent = "0";
+      languageModal.classList.add("show");
+      questionLangModal.classList.remove("show");
+      scoreBoard.style.display = "none";
+      timerBarContainer.style.display = "none";
+      progressBar.innerHTML = "";
+      wordContainer.textContent = "";
+      optionsContainer.innerHTML = "";
+      wordContainer.classList.remove("incorrect");
+    }
+
+    initializeGame();
+  </script>
+</body>
+</html>
