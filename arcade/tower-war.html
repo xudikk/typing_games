@@ -627,16 +627,43 @@
     const gameOverText = document.getElementById('gameOverText');
     const restartButton = document.getElementById('restartButton');
 
-    const words = [
+    const words =  [
       'kosmos', 'yulduz', 'quyosh', 'sayyora', 'galaktika', 'kema', 'lazer', 'qalqon', 'hujum', 'xavf',
       'sehr', 'xazina', 'qilich', 'jangchi', 'otash', 'chaqmoq', "bo'ron", 'sir', 'xiyonat', 'qayta',
       'tiklanish', "qirg'in", 'dahshat', "qutqaruv", 'muqaddas', "o'lim", 'hayot', 'kuch', 'sadoqat',
-      'xavfsizlik', 'qasr', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer', "do'zax"
+      'xavfsizlik', 'qasr', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer',
+
+      'yulduzcha', 'kometa', 'meteor', 'nebula', 'orbit', 'astronavt', 'raketa', 'sputnik', 'falak', 'sfera',
+      'yulduzlararo', 'qora_teshik', 'gravitatsiya', 'kosmonavt', 'uzay', 'sayohat', 'atmosfera', 'galaksi',
+      'nursa', 'plazma', 'kosmik_stansiya', 'suv_molekulasi', 'yulduz_tizimi', 'radiatsiya', 'koinot',
+
+      'afsungar', 'jodugar', 'sehrgar', 'ajdar', 'elf', 'gnom', 'sihir', 'afsona', 'ruh', 'maxluq',
+      "sovg'a", 'lanat', 'muhr', 'talisman', 'jodu', "noma'lum", 'xayol', 'sehrli_qum', 'oltar', 'xazina_topish',
+      'sehrli_qilich', 'muqaddas_javohir', 'sehrli_kitob', 'jodugar', "o'rmon", 'sirli_yulduz',
+
+      'safar', 'yovvoyi', 'jang', "qal'a", "cho'l", 'dengiz', 'tog', 'daryo', 'shahzoda', 'malika',
+      'sado', 'qutlug', 'bahodir', 'yovuzlik', 'sargardon', 'yashirin', 'xavfli_safar', 'qahramonlik', 'shon_sharaf',
+      "o'lja", 'himoya', 'qasos', 'ozodlik', 'yutuq', "g'alaba", 'qilichbazi', 'nayza', 'kamondor', "o'q",
+      'qurol', 'zirh', "dubulg'a", 'qalqonchi', 'urush', 'tinchlik', 'sulh', 'adolat', 'shavkat', 'jasorat',
+
+      "noma'lum", 'sirlilik', 'xavfli_yulduz', 'kosmik_sayohat', 'sehrli_artefakt', 'muqaddas_yer', 'abadiy',
+      "o'chmas", 'kuchli', "ulug'vo", 'epik', 'doston', 'sadoqatli', "xavfli_jo'r", 'qutqarilish', 'najot',
+      "o'zgarish", 'yuksalish', 'qaytish', 'sadoqatlik', 'xiyonatkash', 'xavfli', 'qahramoniy', 'yovuz_shahzoda',
+      'osmon_yulduzi', 'yer_shari', 'sarguzashtli', "jo'shqinlik", 'xatarli', 'muqaddaslik',
+      "o'lmaslik", 'hayotiy_kuch', 'kuch_qudrat', 'sadoqat_bayoti', 'xavfsiz_joy', 'qasr_saroy', 'sarguzasht_safar'
     ];
 
-    const bossWords = [
-      'qiyomat', 'halokat', 'apokalipsis', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik',
-      "xavflijo'r", "qonxirlik", "to'fon"
+    const bossWords =  [
+        'qiyomat', 'halokat', 'apokalipsis', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik',
+        "xavflijo'r", "qonxirlik", "to'fon",
+
+        'vayronagarchilik', 'falokat', 'xarobazar', 'dahshatkor', "o'lim_malaki", "qirg'inbosh", 'zulmat',
+        'qorqinchli', 'yirtqich', 'xavfli_ajdar', 'qonli_jang', 'tugaydi', "yo'qotish", 'xavfli_taxt', 'qahr',
+        "g'azab", 'qasoskor', 'yovuz_ruh', 'qora_sehr', 'lanatli', "o'lim_yulduzi", 'dahshatli_saroy',
+        "deadly_star", 'xavfli_sayyora', "o'lim_sayyorasi", 'yovuzlik_kuchi', 'zulmat_shahri',
+        "qonli_to'fon", 'xavfli_muhit', 'dahshatli_ajdar', "o'lim_qal'asi", "qirg'in_sayyorasi",
+        'yovvoyi_kuch', 'qora_nur', 'halokatli_yulduz', 'xavfli_zulmat', "o'lim_shohi",
+        'dahshatli_jangchi'
     ];
 
     let enemies = [];

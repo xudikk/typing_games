@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeoCoder IELTS Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Source+Sans+Pro:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0A1122;
+      --secondary: #38BDF8;
+      --accent: #34D399;
+      --highlight: #A78BFA;
+      --text: #F9FAFB;
+      --card-bg: rgba(30, 41, 59, 0.95);
+      --shadow: rgba(0, 0, 0, 0.4);
+      --gradient: linear-gradient(135deg, #0A1122, #1A2A44);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans Pro', sans-serif;
+      background: var(--gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    canvas#particlesCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.5;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: var(--primary);
+      color: var(--text);
+      box-shadow: 0 2px 10px var(--shadow);
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--highlight);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 12px var(--highlight);
+    }
+
+    .brand-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 18px var(--highlight);
+    }
+
+    .brand-text {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 5px var(--secondary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px 25px;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 8px var(--accent); }
+      50% { box-shadow: 0 0 12px var(--accent); }
+      100% { box-shadow: 0 0 8px var(--accent); }
+    }
+
+    .nav-btn:hover {
+      background: var(--accent);
+      color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    .nav-btn a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .game-container {
+      width: 90%;
+      max-width: 950px;
+      padding: 35px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      margin: 90px auto 25px;
+      box-shadow: 0 6px 14px var(--shadow);
+      text-align: center;
+      animation: slideUp 0.5s ease-in;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .game-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 600;
+      margin-bottom: 25px;
+      color: var(--highlight);
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 8px var(--highlight);
+    }
+
+    .difficulty-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 35px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 6px 14px var(--shadow);
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      gap: 18px;
+      animation: slideUp 0.4s ease-in;
+      border: 1px solid var(--highlight);
+    }
+
+    .difficulty-modal.show {
+      display: flex;
+    }
+
+    .difficulty-btn {
+      background: var(--primary);
+      border: 2px solid var(--secondary);
+      border-radius: 10px;
+      padding: 14px 35px;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 8px var(--secondary);
+      animation: pulse 2s infinite;
+    }
+
+    .difficulty-btn:hover {
+      background: var(--secondary);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--secondary);
+    }
+
+    .progress-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+      max-width: 750px;
+      margin-left: auto;
+      margin-right: auto;
+      flex-wrap: wrap;
+    }
+
+    .progress-circle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--text);
+      border: 2px solid var(--highlight);
+      transition: all 0.3s ease;
+    }
+
+    .progress-circle.correct {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .progress-circle.incorrect {
+      background: #F87171;
+      border-color: #F87171;
+      box-shadow: 0 0 10px #F87171;
+    }
+
+    .timer-bar-container {
+      width: 320px;
+      height: 35px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 25px auto;
+      position: relative;
+      display: none;
+      box-shadow: 0 3px 10px var(--shadow);
+      border: 1px solid var(--highlight);
+    }
+
+    .timer-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--accent), var(--secondary));
+      transition: width 0.5s linear;
+      border-radius: 18px 0 0 18px;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text);
+      text-shadow: 0 0 6px var(--highlight);
+    }
+
+    .question-container {
+      font-size: 1.6rem;
+      margin-bottom: 25px;
+      padding: 25px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 3px 10px var(--shadow);
+      line-height: 1.5;
+      animation: slideUp 0.4s ease-in;
+      color: var(--text);
+      border: 1px solid var(--secondary);
+    }
+
+    .options-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      max-width: 750px;
+      margin: 0 auto;
+    }
+
+    .option-btn {
+      background: var(--card-bg);
+      border: 2px solid var(--secondary);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text);
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 8px var(--secondary);
+    }
+
+    .option-btn:hover {
+      background: var(--secondary);
+      color: var(--primary);
+      transform: scale(1.03);
+      box-shadow: 0 0 12px var(--secondary);
+    }
+
+    .option-btn.correct {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--primary);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    .option-btn.incorrect {
+      background: #F87171;
+      border-color: #F87171;
+      color: var(--text);
+      box-shadow: 0 0 12px #F87171;
+    }
+
+    .score-board {
+      display: none;
+      gap: 25px;
+      font-size: 1.3rem;
+      margin-bottom: 25px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px var(--shadow);
+      border: 1px solid var(--secondary);
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .score-board span {
+      font-family: 'Poppins', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #score {
+      color: var(--secondary);
+      font-weight: 600;
+      text-shadow: 0 0 5px var(--secondary);
+    }
+
+    #currentQuestion, #totalQuestions {
+      color: var(--accent);
+      font-weight: 600;
+      text-shadow: 0 0 5px var(--accent);
+    }
+
+    #gameOverModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 35px;
+      max-width: 550px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 6px 14px var(--shadow);
+      z-index: 20;
+      border: 1px solid var(--highlight);
+    }
+
+    #gameOverModal.show {
+      display: block;
+      animation: slideUp 0.4s ease-in;
+    }
+
+    #gameOverText {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.2rem;
+      margin-bottom: 25px;
+      font-weight: 600;
+      color: var(--highlight);
+      text-shadow: 0 0 8px var(--highlight);
+    }
+
+    #restartButton {
+      background: var(--primary);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 35px;
+      color: var(--text);
+      font-size: 1.3rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    #restartButton:hover {
+      background: var(--accent);
+      color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      padding: 15px;
+      background: var(--primary);
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 500;
+      box-shadow: 0 -3px 10px var(--shadow);
+    }
+
+    .footer a {
+      color: var(--secondary);
+      text-decoration: none;
+      margin: 0 12px;
+      transition: all 0.3s ease;
+    }
+
+    .footer a:hover {
+      color: var(--highlight);
+      text-shadow: 0 0 6px var(--highlight);
+    }
+
+    @media (max-width: 768px) {
+      .game-container { width: 95%; margin: 80px auto 20px; }
+      .game-title { font-size: 2.4rem; }
+      .question-container { font-size: 1.4rem; padding: 20px; }
+      .option-btn { font-size: 1.1rem; padding: 12px; }
+      .progress-bar { max-width: 650px; }
+      .progress-circle { width: 18px; height: 18px; }
+      .timer-bar-container { width: 280px; height: 30px; }
+      .timer-text { font-size: 1.2rem; }
+      .score-board { font-size: 1.2rem; padding: 12px; gap: 20px; }
+      .header { padding: 12px 25px; }
+      .brand-text { font-size: 1.8rem; }
+      .brand-icon { width: 40px; height: 40px; font-size: 1.8rem; }
+      .nav-btn { padding: 8px 18px; font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { width: 95%; margin: 70px auto 15px; }
+      .game-title { font-size: 2rem; }
+      .question-container { font-size: 1.3rem; padding: 15px; }
+      .options-container { grid-template-columns: 1fr; }
+      .option-btn { font-size: 1rem; padding: 10px; }
+      .progress-bar { max-width: 450px; }
+      .progress-circle { width: 16px; height: 16px; }
+      .timer-bar-container { width: 240px; height: 25px; }
+      .timer-text { font-size: 1.1rem; }
+      .score-board { font-size: 1.1rem; padding: 10px; gap: 15px; }
+      .header { padding: 10px 20px; }
+      .brand-text { font-size: 1.6rem; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
+      .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particlesCanvas"></canvas>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="#">Home</a></button>
+      <button class="nav-btn"><a href="#">Lessons</a></button>
+      <button class="nav-btn"><a href="#">Quiz</a></button>
+      <button class="nav-btn"><a href="#">Profile</a></button>
+    </nav>
+  </header>
+
+  <div class="game-container">
+    <h1 class="game-title">NeoCoder IELTS Quiz</h1>
+    <div class="difficulty-modal show" id="difficultyModal">
+      <h2>Select Mode</h2>
+      <button class="difficulty-btn" data-level="beginner">Beginner</button>
+      <button class="difficulty-btn" data-level="intermediate">Intermediate</button>
+      <button class="difficulty-btn" data-level="advanced">Advanced</button>
+      <button class="difficulty-btn" data-level="assessment">Level Assessment</button>
+    </div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="timer-bar-container" id="timerBarContainer">
+      <div class="timer-bar" id="timerBar"></div>
+      <div class="timer-text" id="timerText">25</div>
+    </div>
+    <div class="question-container" id="questionContainer"></div>
+    <div class="options-container" id="optionsContainer"></div>
+    <div class="score-board" id="scoreBoard">
+      <span>Score: <span id="score">0</span></span>
+      <span>Question: <span id="currentQuestion">0</span>/<span id="totalQuestions">20</span></span>
+    </div>
+    <div id="gameOverModal">
+      <div id="gameOverText"></div>
+      <button id="restartButton">Restart Quiz</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
+  </footer>
+
+  <script>
+    const questions = [
+      // Beginner Level (60 quiz questions)
+      { level: "beginner", type: "quiz", question: "Choose the correct article: ___ apple is on the table.", options: ["A", "An", "The", "No article needed"], answer: "An" },
+      { level: "beginner", type: "quiz", question: "What is the plural form of 'child'?", options: ["Childs", "Children", "Childes", "Childers"], answer: "Children" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'happy'?", options: ["Sad", "Joyful", "Angry", "Tired"], answer: "Joyful" },
+      { level: "beginner", type: "quiz", question: "Complete: She ___ to school every day.", options: ["go", "goes", "going", "gone"], answer: "goes" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'big'?", options: ["Large", "Small", "Huge", "Tall"], answer: "Small" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: He ___ a car.", options: ["drive", "drives", "driving", "driven"], answer: "drives" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'book'?", options: ["Books", "Bookes", "Bookies", "Book"], answer: "Books" },
+      { level: "beginner", type: "quiz", question: "Which is a color?", options: ["Table", "Blue", "Chair", "Run"], answer: "Blue" },
+      { level: "beginner", type: "quiz", question: "Complete: I ___ hungry.", options: ["am", "is", "are", "be"], answer: "am" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'hot'?", options: ["Warm", "Cold", "Big", "Fast"], answer: "Cold" },
+      { level: "beginner", type: "quiz", question: "Choose the correct article: ___ sun is bright.", options: ["A", "An", "The", "No article needed"], answer: "The" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'man'?", options: ["Mans", "Men", "Manes", "Mennes"], answer: "Men" },
+      { level: "beginner", type: "quiz", question: "Which word means 'fast'?", options: ["Slow", "Quick", "Heavy", "Big"], answer: "Quick" },
+      { level: "beginner", type: "quiz", question: "Complete: They ___ happy.", options: ["is", "are", "am", "be"], answer: "are" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'up'?", options: ["Down", "Left", "Right", "High"], answer: "Down" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: I ___ a student.", options: ["am", "is", "are", "be"], answer: "am" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'dog'?", options: ["Dogs", "Doges", "Doggies", "Dog"], answer: "Dogs" },
+      { level: "beginner", type: "quiz", question: "Which is a fruit?", options: ["Car", "Apple", "Book", "Pen"], answer: "Apple" },
+      { level: "beginner", type: "quiz", question: "Complete: He ___ football.", options: ["play", "plays", "playing", "played"], answer: "plays" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'new'?", options: ["Old", "Young", "Big", "Fast"], answer: "Old" },
+      { level: "beginner", type: "quiz", question: "Choose the correct article: ___ cat is sleeping.", options: ["A", "An", "The", "No article needed"], answer: "The" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'woman'?", options: ["Womans", "Women", "Womanes", "Wommen"], answer: "Women" },
+      { level: "beginner", type: "quiz", question: "Which word means 'sad'?", options: ["Happy", "Unhappy", "Big", "Fast"], answer: "Unhappy" },
+      { level: "beginner", type: "quiz", question: "Complete: We ___ to the park.", options: ["go", "goes", "going", "gone"], answer: "go" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'long'?", options: ["Short", "Tall", "Big", "Wide"], answer: "Short" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: She ___ a song.", options: ["sing", "sings", "singing", "sung"], answer: "sings" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'car'?", options: ["Cars", "Cares", "Caries", "Car"], answer: "Cars" },
+      { level: "beginner", type: "quiz", question: "Which is an animal?", options: ["Tree", "Dog", "Book", "Pen"], answer: "Dog" },
+      { level: "beginner", type: "quiz", question: "Complete: I ___ a teacher.", options: ["am", "is", "are", "be"], answer: "am" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'day'?", options: ["Night", "Morning", "Evening", "Sun"], answer: "Night" },
+      { level: "beginner", type: "quiz", question: "Choose the correct article: ___ elephant is big.", options: ["A", "An", "The", "No article needed"], answer: "An" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'box'?", options: ["Boxs", "Boxes", "Boxies", "Boxen"], answer: "Boxes" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'open'?", options: ["Shut", "Close", "Locked", "Wide"], answer: "Close" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: I ___ happy.", options: ["am", "is", "are", "be"], answer: "am" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'baby'?", options: ["Babys", "Babies", "Babes", "Babyes"], answer: "Babies" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'big'?", options: ["Small", "Large", "Tiny", "Short"], answer: "Large" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'foot'?", options: ["Foots", "Feet", "Feets", "Footes"], answer: "Feet" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'fast'?", options: ["Quick", "Slow", "Rapid", "Speedy"], answer: "Slow" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: She ___ well.", options: ["sing", "sings", "singing", "sung"], answer: "sings" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'happy'?", options: ["Sad", "Cheerful", "Angry", "Tired"], answer: "Cheerful" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'bus'?", options: ["Buss", "Buses", "Busies", "Buseses"], answer: "Buses" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'high'?", options: ["Low", "Tall", "Big", "Wide"], answer: "Low" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: They ___ students.", options: ["is", "are", "am", "be"], answer: "are" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'knife'?", options: ["Knifes", "Knives", "Knifs", "Knive"], answer: "Knives" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'small'?", options: ["Big", "Tiny", "Large", "Huge"], answer: "Tiny" },
+      { level: "beginner", type: "quiz", question: "Choose the correct article: ___ moon is bright.", options: ["A", "An", "The", "No article needed"], answer: "The" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'tooth'?", options: ["Tooths", "Teeth", "Teethes", "Toothen"], answer: "Teeth" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'in'?", options: ["Out", "Up", "Down", "Inside"], answer: "Out" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: He ___ soccer.", options: ["play", "plays", "playing", "played"], answer: "plays" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'good'?", options: ["Bad", "Great", "Poor", "Weak"], answer: "Great" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'house'?", options: ["Houses", "Housen", "Housies", "Hous"], answer: "Houses" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'light'?", options: ["Bright", "Dark", "Heavy", "Shiny"], answer: "Dark" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: We ___ to the zoo.", options: ["go", "goes", "going", "gone"], answer: "go" },
+      { level: "beginner", type: "quiz", question: "Which is a vegetable?", options: ["Banana", "Carrot", "Apple", "Orange"], answer: "Carrot" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'city'?", options: ["Citys", "Cities", "Cityes", "Cites"], answer: "Cities" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'early'?", options: ["Late", "Soon", "Fast", "Quick"], answer: "Late" },
+      { level: "beginner", type: "quiz", question: "Choose the correct verb: She ___ a letter.", options: ["write", "writes", "writing", "written"], answer: "writes" },
+      { level: "beginner", type: "quiz", question: "Which word is a synonym for 'nice'?", options: ["Mean", "Kind", "Rude", "Angry"], answer: "Kind" },
+      { level: "beginner", type: "quiz", question: "What is the plural of 'tree'?", options: ["Trees", "Treess", "Treees", "Tre"], answer: "Trees" },
+      { level: "beginner", type: "quiz", question: "What is the opposite of 'wet'?", options: ["Dry", "Cold", "Hot", "Warm"], answer: "Dry" },
+      // Intermediate Level (60 quiz questions)
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She is good ___ singing.", options: ["at", "in", "on", "with"], answer: "at" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect tense of 'go'?", options: ["Went", "Gone", "Had gone", "Was going"], answer: "Had gone" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The meeting was ___ due to rain.", options: ["delayed", "postponed", "rescheduled", "halted"], answer: "cancelled" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If I ___ rich, I would travel the world.", options: ["am", "was", "were", "be"], answer: "were" },
+      { level: "intermediate", type: "quiz", question: "What does 'ubiquitous' mean?", options: ["Rare", "Everywhere", "Hidden", "Expensive"], answer: "Everywhere" },
+      { level: "intermediate", type: "quiz", question: "Complete: She ___ the book before the exam.", options: ["read", "reads", "had read", "reading"], answer: "had read" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: He is interested ___ history.", options: ["at", "in", "on", "with"], answer: "in" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'write'?", options: ["Wrote", "Written", "Had written", "Was writing"], answer: "Had written" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The event was ___ due to lack of funds.", options: ["delayed", "rescheduled", "postponed", "halted"], answer: "postponed" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If we ___ earlier, we wouldn’t be late.", options: ["leave", "left", "had left", "leaving"], answer: "had left" },
+      { level: "intermediate", type: "quiz", question: "What does 'meticulous' mean?", options: ["Careless", "Detailed", "Quick", "Simple"], answer: "Detailed" },
+      { level: "intermediate", type: "quiz", question: "Complete: He ___ the project last week.", options: ["finish", "finishes", "finished", "finishing"], answer: "finished" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She depends ___ her friends.", options: ["at", "in", "on", "with"], answer: "on" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'see'?", options: ["Saw", "Seen", "Had seen", "Was seeing"], answer: "Had seen" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The plan was ___ carefully.", options: ["executed", "performed", "conducted", "implemented"], answer: "executed" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If I ___ you, I would apologize.", options: ["am", "was", "were", "be"], answer: "were" },
+      { level: "intermediate", type: "quiz", question: "What does 'resilient' mean?", options: ["Weak", "Strong", "Slow", "Expensive"], answer: "Strong" },
+      { level: "intermediate", type: "quiz", question: "Complete: They ___ to the meeting yesterday.", options: ["go", "goes", "went", "going"], answer: "went" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: He is afraid ___ spiders.", options: ["of", "at", "in", "on"], answer: "of" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'take'?", options: ["Took", "Taken", "Had taken", "Was taking"], answer: "Had taken" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The task was ___ successfully.", options: ["finished", "completed", "ended", "done"], answer: "completed" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If she ___ harder, she would pass.", options: ["study", "studies", "studied", "studying"], answer: "studied" },
+      { level: "intermediate", type: "quiz", question: "What does 'prolific' mean?", options: ["Unproductive", "Productive", "Slow", "Expensive"], answer: "Productive" },
+      { level: "intermediate", type: "quiz", question: "Complete: He ___ the email before lunch.", options: ["send", "sends", "sent", "sending"], answer: "sent" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She is excited ___ the trip.", options: ["about", "at", "in", "on"], answer: "about" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'eat'?", options: ["Ate", "Eaten", "Had eaten", "Was eating"], answer: "Had eaten" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The lecture was ___ informative.", options: ["high", "highly", "higher", "highest"], answer: "highly" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If we ___ time, we would visit.", options: ["have", "had", "having", "has"], answer: "had" },
+      { level: "intermediate", type: "quiz", question: "What does 'ambiguous' mean?", options: ["Clear", "Unclear", "Simple", "Fast"], answer: "Unclear" },
+      { level: "intermediate", type: "quiz", question: "Complete: She ___ the book last night.", options: ["read", "reads", "reading", "readed"], answer: "read" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: He is proud ___ his work.", options: ["of", "at", "in", "on"], answer: "of" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'buy'?", options: ["Bought", "Boughten", "Had bought", "Was buying"], answer: "Had bought" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The decision was ___ by the team.", options: ["made", "done", "taken", "chosen"], answer: "made" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If he ___ now, he would arrive on time.", options: ["leave", "leaves", "left", "leaving"], answer: "left" },
+      { level: "intermediate", type: "quiz", question: "What does 'pragmatic' mean?", options: ["Idealistic", "Practical", "Complex", "Abstract"], answer: "Practical" },
+      { level: "intermediate", type: "quiz", question: "Complete: They ___ the movie last night.", options: ["watch", "watches", "watched", "watching"], answer: "watched" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She is allergic ___ cats.", options: ["to", "at", "in", "on"], answer: "to" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'drink'?", options: ["Drank", "Drunk", "Had drunk", "Was drinking"], answer: "Had drunk" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The project was ___ on time.", options: ["finished", "completed", "ended", "done"], answer: "completed" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If we ___ more, we would win.", options: ["practice", "practices", "practiced", "practicing"], answer: "practiced" },
+      { level: "intermediate", type: "quiz", question: "What does 'innovative' mean?", options: ["Traditional", "Creative", "Old", "Simple"], answer: "Creative" },
+      { level: "intermediate", type: "quiz", question: "Complete: He ___ the letter yesterday.", options: ["write", "writes", "wrote", "writing"], answer: "wrote" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She is fond ___ music.", options: ["of", "at", "in", "on"], answer: "of" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'run'?", options: ["Ran", "Run", "Had run", "Was running"], answer: "Had run" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The task was ___ with care.", options: ["done", "performed", "executed", "completed"], answer: "performed" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If I ___ earlier, I would have met her.", options: ["arrive", "arrives", "arrived", "had arrived"], answer: "had arrived" },
+      { level: "intermediate", type: "quiz", question: "What does 'coherent' mean?", options: ["Confusing", "Logical", "Complex", "Vague"], answer: "Logical" },
+      { level: "intermediate", type: "quiz", question: "Complete: She ___ the song beautifully.", options: ["sing", "sings", "sang", "singing"], answer: "sang" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: He is responsible ___ the project.", options: ["for", "at", "in", "on"], answer: "for" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'give'?", options: ["Gave", "Given", "Had given", "Was giving"], answer: "Had given" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The presentation was ___ prepared.", options: ["well", "good", "better", "best"], answer: "well" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If they ___ harder, they would succeed.", options: ["work", "works", "worked", "working"], answer: "worked" },
+      { level: "intermediate", type: "quiz", question: "What does 'versatile' mean?", options: ["Limited", "Flexible", "Rigid", "Simple"], answer: "Flexible" },
+      { level: "intermediate", type: "quiz", question: "Complete: He ___ to the party last night.", options: ["go", "goes", "went", "going"], answer: "went" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct preposition: She is keen ___ learning.", options: ["on", "at", "in", "with"], answer: "on" },
+      { level: "intermediate", type: "quiz", question: "What is the past perfect of 'speak'?", options: ["Spoke", "Spoken", "Had spoken", "Was speaking"], answer: "Had spoken" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct word: The report was ___ accurate.", options: ["high", "highly", "higher", "highest"], answer: "highly" },
+      { level: "intermediate", type: "quiz", question: "Choose the correct conditional: If we ___ the train, we would be there.", options: ["catch", "catches", "caught", "catching"], answer: "caught" },
+      { level: "intermediate", type: "quiz", question: "What does 'authentic' mean?", options: ["Fake", "Genuine", "Old", "Simple"], answer: "Genuine" },
+      { level: "intermediate", type: "quiz", question: "Complete: They ___ the game yesterday.", options: ["play", "plays", "played", "playing"], answer: "played" },
+      // Advanced Level (60 quiz questions)
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s feeling under the ___ today.", options: ["weather", "sky", "moon", "stars"], answer: "weather" },
+      { level: "advanced", type: "quiz", question: "What is the meaning of 'ephemeral'?", options: ["Lasting a short time", "Permanent", "Complex", "Ancient"], answer: "Lasting a short time" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Neither of the boys ___ to the party.", options: ["is coming", "are coming", "comes", "come"], answer: "is coming" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'mitigate'?", options: ["Worsen", "Alleviate", "Ignore", "Complicate"], answer: "Alleviate" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: She ___ her old clothes.", options: ["gave up", "gave away", "gave in", "gave out"], answer: "gave away" },
+      { level: "advanced", type: "quiz", question: "What does 'ameliorate' mean?", options: ["Worsen", "Improve", "Ignore", "Complicate"], answer: "Improve" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: It’s raining ___ and dogs.", options: ["cats", "birds", "fish", "mice"], answer: "cats" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Each of the students ___ a book.", options: ["has", "have", "having", "had"], answer: "has" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'obstinate'?", options: ["Flexible", "Stubborn", "Calm", "Simple"], answer: "Stubborn" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: He ___ the challenge.", options: ["took up", "took away", "took in", "took out"], answer: "took up" },
+      { level: "advanced", type: "quiz", question: "What does 'profound' mean?", options: ["Shallow", "Deep", "Simple", "Fast"], answer: "Deep" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: She’s the apple of his ___.", options: ["eye", "heart", "mind", "soul"], answer: "eye" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Either of the options ___ acceptable.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'elucidate'?", options: ["Confuse", "Explain", "Ignore", "Hide"], answer: "Explain" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: They ___ the meeting.", options: ["called off", "called up", "called in", "called out"], answer: "called off" },
+      { level: "advanced", type: "quiz", question: "What does 'tenuous' mean?", options: ["Strong", "Weak", "Clear", "Fast"], answer: "Weak" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s barking up the ___ tree.", options: ["wrong", "right", "big", "tall"], answer: "wrong" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Neither of the teams ___ ready.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'ubiquitous'?", options: ["Rare", "Common", "Hidden", "Expensive"], answer: "Common" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: She ___ her fears.", options: ["got over", "got up", "got in", "got out"], answer: "got over" },
+      { level: "advanced", type: "quiz", question: "What does 'candid' mean?", options: ["Dishonest", "Honest", "Complex", "Slow"], answer: "Honest" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s in hot ___.", options: ["water", "air", "fire", "earth"], answer: "water" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: None of the information ___ reliable.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'disparate'?", options: ["Similar", "Different", "Equal", "Simple"], answer: "Different" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: He ___ the truth.", options: ["found out", "found up", "found in", "found off"], answer: "found out" },
+      { level: "advanced", type: "quiz", question: "What does 'superfluous' mean?", options: ["Necessary", "Unnecessary", "Important", "Fast"], answer: "Unnecessary" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: She’s on cloud ___.", options: ["nine", "seven", "five", "three"], answer: "nine" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Each of the books ___ new.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'ameliorate'?", options: ["Worsen", "Improve", "Ignore", "Complicate"], answer: "Improve" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: They ___ the plan.", options: ["carried out", "carried up", "carried in", "carried off"], answer: "carried out" },
+      { level: "advanced", type: "quiz", question: "What does 'transient' mean?", options: ["Permanent", "Temporary", "Complex", "Stable"], answer: "Temporary" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He hit the nail on the ___.", options: ["head", "wall", "floor", "door"], answer: "head" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'articulate'?", options: ["Confusing", "Eloquent", "Silent", "Vague"], answer: "Eloquent" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: She ___ the offer.", options: ["turned down", "turned up", "turned in", "turned out"], answer: "turned down" },
+      { level: "advanced", type: "quiz", question: "What does 'obscure' mean?", options: ["Clear", "Unknown", "Famous", "Bright"], answer: "Unknown" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s pulling your ___.", options: ["leg", "arm", "hair", "foot"], answer: "leg" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Neither of the options ___ suitable.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'scrutinize'?", options: ["Ignore", "Examine", "Avoid", "Simplify"], answer: "Examine" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: They ___ the problem.", options: ["sorted out", "sorted up", "sorted in", "sorted off"], answer: "sorted out" },
+      { level: "advanced", type: "quiz", question: "What does 'pristine' mean?", options: ["Dirty", "Clean", "Old", "Broken"], answer: "Clean" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: She’s burning the candle at both ___.", options: ["ends", "sides", "tops", "bottoms"], answer: "ends" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Each of the members ___ present.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'fortuitous'?", options: ["Unlucky", "Lucky", "Planned", "Expected"], answer: "Lucky" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: He ___ the competition.", options: ["stood out", "stood up", "stood in", "stood off"], answer: "stood out" },
+      { level: "advanced", type: "quiz", question: "What does 'redundant' mean?", options: ["Necessary", "Unnecessary", "Important", "Useful"], answer: "Unnecessary" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s in the same ___.", options: ["boat", "car", "house", "room"], answer: "boat" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: None of the answers ___ correct.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'vibrant'?", options: ["Dull", "Lively", "Calm", "Quiet"], answer: "Lively" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: She ___ the mistake.", options: ["pointed out", "pointed up", "pointed in", "pointed off"], answer: "pointed out" },
+      { level: "advanced", type: "quiz", question: "What does 'meticulous' mean?", options: ["Careless", "Careful", "Quick", "Simple"], answer: "Careful" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: He’s over the ___.", options: ["moon", "sun", "stars", "sky"], answer: "moon" },
+      { level: "advanced", type: "quiz", question: "Correct the sentence: Either of the choices ___ fine.", options: ["is", "are", "be", "being"], answer: "is" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'expedite'?", options: ["Delay", "Hasten", "Stop", "Slow"], answer: "Hasten" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: They ___ the event.", options: ["put off", "put up", "put in", "put out"], answer: "put off" },
+      { level: "advanced", type: "quiz", question: "What does 'intricate' mean?", options: ["Simple", "Complex", "Clear", "Easy"], answer: "Complex" },
+      { level: "advanced", type: "quiz", question: "Choose the correct idiom: She’s a chip off the old ___.", options: ["block", "tree", "stone", "wood"], answer: "block" },
+      { level: "advanced", type: "quiz", question: "Which word is a synonym for 'resilient'?", options: ["Weak", "Strong", "Fragile", "Slow"], answer: "Strong" },
+      { level: "advanced", type: "quiz", question: "Choose the correct phrasal verb: He ___ the opportunity.", options: ["seized up", "seized on", "seized in", "seized off"], answer: "seized on" },
+      { level: "advanced", type: "quiz", question: "What does 'cohesive' mean?", options: ["Divided", "United", "Broken", "Separate"], answer: "United" }
+    ];
+
+    const canvas = document.getElementById("particlesCanvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function createParticles() {
+      particles = [];
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2.5 + 1,
+          vx: (Math.random() - 0.5) * 1,
+          vy: (Math.random() - 0.5) * 1,
+          color: ["#38BDF8", "#34D399", "#A78BFA"][Math.floor(Math.random() * 3)]
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
+        if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+      });
+      requestAnimationFrame(drawParticles);
+    }
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      createParticles();
+    });
+    resizeCanvas();
+    createParticles();
+    drawParticles();
+
+    const difficultyModal = document.getElementById("difficultyModal");
+    const progressBar = document.getElementById("progressBar");
+    const timerBarContainer = document.getElementById("timerBarContainer");
+    const timerBar = document.getElementById("timerBar");
+    const timerText = document.getElementById("timerText");
+    const questionContainer = document.getElementById("questionContainer");
+    const optionsContainer = document.getElementById("optionsContainer");
+    const scoreBoard = document.getElementById("scoreBoard");
+    const scoreDisplay = document.getElementById("score");
+    const currentQuestionDisplay = document.getElementById("currentQuestion");
+    const totalQuestionsDisplay = document.getElementById("totalQuestions");
+    const gameOverModal = document.getElementById("gameOverModal");
+    const gameOverText = document.getElementById("gameOverText");
+    const restartButton = document.getElementById("restartButton");
+
+    let currentLevel = "";
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerInterval;
+    let timeLeft = 25;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function startQuiz(level) {
+      currentLevel = level;
+      console.log("Selected mode: " + level);
+      if (level === "assessment") {
+        currentQuestions = shuffle([
+          ...questions.filter(q => q.level === "beginner").slice(0, 17),
+          ...questions.filter(q => q.level === "intermediate").slice(0, 17),
+          ...questions.filter(q => q.level === "advanced").slice(0, 16)
+        ]).slice(0, 50);
+        totalQuestionsDisplay.textContent = "50";
+      } else {
+        currentQuestions = shuffle(questions.filter(q => q.level === level)).slice(0, 20);
+        totalQuestionsDisplay.textContent = "20";
+      }
+      console.log("Filtered questions: ", currentQuestions);
+      if (currentQuestions.length === 0) {
+        console.error("No questions found for mode: " + level);
+        alert("No questions available for this mode. Please try another mode.");
+        return;
+      }
+      currentQuestionIndex = 0;
+      score = 0;
+      difficultyModal.classList.remove("show");
+      difficultyModal.style.display = "none"; // Ensure modal is hidden
+      timerBarContainer.style.display = "block";
+      scoreBoard.style.display = "flex";
+      progressBar.innerHTML = "";
+      const totalQuestions = level === "assessment" ? 50 : 20;
+      for (let i = 0; i < totalQuestions; i++) {
+        const circle = document.createElement("div");
+        circle.classList.add("progress-circle");
+        progressBar.appendChild(circle);
+      }
+      displayQuestion();
+      startTimer();
+    }
+
+    function displayQuestion() {
+      if (currentQuestionIndex >= currentQuestions.length) {
+        endQuiz();
+        return;
+      }
+      const question = currentQuestions[currentQuestionIndex];
+      questionContainer.textContent = question.question;
+      optionsContainer.innerHTML = "";
+      shuffle(question.options).forEach(option => {
+        const btn = document.createElement("button");
+        btn.classList.add("option-btn");
+        btn.textContent = option;
+        btn.addEventListener("click", () => checkAnswer(option));
+        optionsContainer.appendChild(btn);
+      });
+      currentQuestionDisplay.textContent = currentQuestionIndex + 1;
+      scoreDisplay.textContent = score;
+      timeLeft = 25;
+      timerText.textContent = timeLeft;
+      timerBar.style.width = "100%";
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        timerText.textContent = Math.ceil(timeLeft);
+        timerBar.style.width = `${(timeLeft / 25) * 100}%`;
+        if (timeLeft <= 0) {
+          checkAnswer(null);
+        }
+      }, 100);
+    }
+
+    function checkAnswer(selected) {
+      clearInterval(timerInterval);
+      const correctAnswer = currentQuestions[currentQuestionIndex].answer;
+      const circle = progressBar.children[currentQuestionIndex];
+      const isCorrect = selected === correctAnswer;
+      if (isCorrect) {
+        score += currentLevel === "assessment" ? 2 : 10;
+        circle.classList.add("correct");
+      } else {
+        circle.classList.add("incorrect");
+      }
+      Array.from(optionsContainer.children).forEach(btn => {
+        if (btn.textContent === correctAnswer) {
+          btn.classList.add("correct");
+        } else if (btn.textContent === selected) {
+          btn.classList.add("incorrect");
+        }
+        btn.disabled = true;
+      });
+      setTimeout(() => {
+        currentQuestionIndex++;
+        displayQuestion();
+        startTimer();
+      }, 1000);
+    }
+
+    function endQuiz() {
+      clearInterval(timerInterval);
+      timerBarContainer.style.display = "none";
+      scoreBoard.style.display = "none";
+      questionContainer.textContent = "";
+      optionsContainer.innerHTML = "";
+      gameOverModal.classList.add("show");
+      let resultText = `Quiz Over! Your Score: ${score}/${currentLevel === "assessment" ? 100 : 200}`;
+      if (currentLevel === "assessment") {
+        const percentage = (score / 100) * 100;
+        let ieltsLevel = "";
+        if (percentage <= 20) {
+          ieltsLevel = "IELTS 3.0–4.0 (Beginner)";
+        } else if (percentage <= 40) {
+          ieltsLevel = "IELTS 4.5–5.5 (Elementary to Pre-Intermediate)";
+        } else if (percentage <= 60) {
+          ieltsLevel = "IELTS 6.0–6.5 (Intermediate)";
+        } else if (percentage <= 80) {
+          ieltsLevel = "IELTS 7.0–7.5 (Upper-Intermediate)";
+        } else {
+          ieltsLevel = "IELTS 8.0–9.0 (Advanced)";
+        }
+        resultText += `\nYour Estimated IELTS Level: ${ieltsLevel}`;
+      }
+      gameOverText.textContent = resultText;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      difficultyModal.classList.add("show");
+      difficultyModal.style.display = "flex"; // Ensure modal is visible on load
+    });
+
+    document.querySelectorAll(".difficulty-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        startQuiz(btn.dataset.level);
+      });
+    });
+
+    restartButton.addEventListener("click", () => {
+      gameOverModal.classList.remove("show");
+      difficultyModal.classList.add("show");
+      difficultyModal.style.display = "flex"; // Show modal on restart
+    });
+  </script>
+</body>
+</html>

@@ -565,10 +565,10 @@
       <h2 class="game-title">Zombi Himoya O'yini</h2>
       <h3 class="skills-title">Qobiliyatlar</h3>
       <div class="skills-bar">
-        <button class="skill-card" id="rainShotBtn">O'qlar Yomg'iri (30)<div class="progress"></div></button>
-        <button class="skill-card" id="bombardBtn">Bombardimon (40)<div class="progress"></div></button>
-        <button class="skill-card" id="healBtn">Heal (35)<div class="progress"></div></button>
-        <button class="skill-card" id="slowTimeBtn">Slow Time (25)<div class="progress"></div></button>
+        <button class="skill-card" id="rainShotBtn">O'qlar Yomg'iri (60)<div class="progress"></div></button>
+        <button class="skill-card" id="bombardBtn">Bombardimon (75)<div class="progress"></div></button>
+        <button class="skill-card" id="healBtn">Heal (50)<div class="progress"></div></button>
+        <button class="skill-card" id="slowTimeBtn">Slow Time (40)<div class="progress"></div></button>
       </div>
       <div class="game-area" id="gameArea">
         <div class="player" style="top: 10%;">🪖</div>
@@ -611,17 +611,45 @@
     const restartButton = document.getElementById('restartButton');
     const players = document.querySelectorAll('.player');
 
-    const words = [
-      'zombi', 'xavf', 'qorongu', 'oqibat', 'sher', 'qilich', 'sehr', 'jodu', 'xazina', 'yirtqich',
-      'olma', 'quyon', 'yulduz', 'oy', 'qum', 'tog', 'daryo', 'oq', 'qora', 'yashil',
-      'jangchi', 'qalqon', 'otash', 'shiddat', 'chaqmoq', "bo'ron", 'sir', 'xiyonat', 'qayta', 'tiklanish',
-      "qirg'in", 'dahshat', "qutqaruv", 'muqaddas', 'lanat', "o'lim", 'hayot', 'kuch', 'sadoqat', 'xavfsizlik',
-      'qasr', 'qabriston', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer', "do'zax"
+        const words =  [
+      'kosmos', 'yulduz', 'quyosh', 'sayyora', 'galaktika', 'kema', 'lazer', 'qalqon', 'hujum', 'xavf',
+      'sehr', 'xazina', 'qilich', 'jangchi', 'otash', 'chaqmoq', "bo'ron", 'sir', 'xiyonat', 'qayta',
+      'tiklanish', "qirg'in", 'dahshat', "qutqaruv", 'muqaddas', "o'lim", 'hayot', 'kuch', 'sadoqat',
+      'xavfsizlik', 'qasr', 'sarguzasht', "jo'shqin", 'xatar', 'qahramon', 'yovuz', 'osmon', 'yer',
+
+      'yulduzcha', 'kometa', 'meteor', 'nebula', 'orbit', 'astronavt', 'raketa', 'sputnik', 'falak', 'sfera',
+      'yulduzlararo', 'qora_teshik', 'gravitatsiya', 'kosmonavt', 'uzay', 'sayohat', 'atmosfera', 'galaksi',
+      'nursa', 'plazma', 'kosmik_stansiya', 'suv_molekulasi', 'yulduz_tizimi', 'radiatsiya', 'koinot',
+
+      'afsungar', 'jodugar', 'sehrgar', 'ajdar', 'elf', 'gnom', 'sihir', 'afsona', 'ruh', 'maxluq',
+      "sovg'a", 'lanat', 'muhr', 'talisman', 'jodu', "noma'lum", 'xayol', 'sehrli_qum', 'oltar', 'xazina_topish',
+      'sehrli_qilich', 'muqaddas_javohir', 'sehrli_kitob', 'jodugar', "o'rmon", 'sirli_yulduz',
+
+      'safar', 'yovvoyi', 'jang', "qal'a", "cho'l", 'dengiz', 'tog', 'daryo', 'shahzoda', 'malika',
+      'sado', 'qutlug', 'bahodir', 'yovuzlik', 'sargardon', 'yashirin', 'xavfli_safar', 'qahramonlik', 'shon_sharaf',
+      "o'lja", 'himoya', 'qasos', 'ozodlik', 'yutuq', "g'alaba", 'qilichbazi', 'nayza', 'kamondor', "o'q",
+      'qurol', 'zirh', "dubulg'a", 'qalqonchi', 'urush', 'tinchlik', 'sulh', 'adolat', 'shavkat', 'jasorat',
+
+      "noma'lum", 'sirlilik', 'xavfli_yulduz', 'kosmik_sayohat', 'sehrli_artefakt', 'muqaddas_yer', 'abadiy',
+      "o'chmas", 'kuchli', "ulug'vo", 'epik', 'doston', 'sadoqatli', "xavfli_jo'r", 'qutqarilish', 'najot',
+      "o'zgarish", 'yuksalish', 'qaytish', 'sadoqatlik', 'xiyonatkash', 'xavfli', 'qahramoniy', 'yovuz_shahzoda',
+      'osmon_yulduzi', 'yer_shari', 'sarguzashtli', "jo'shqinlik", 'xatarli', 'muqaddaslik',
+      "o'lmaslik", 'hayotiy_kuch', 'kuch_qudrat', 'sadoqat_bayoti', 'xavfsiz_joy', 'qasr_saroy', 'sarguzasht_safar'
     ];
 
-    const bossWords = [
-      'apokalipsis', 'qiyomat', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik', "xavflijo'r", "qonxirlik", "to'fon", 'halokat'
+    const bossWords =  [
+        'qiyomat', 'halokat', 'apokalipsis', 'dahshatli', "o'limguzar", "qirg'inchilik", 'yovvoyilik',
+        "xavflijo'r", "qonxirlik", "to'fon",
+
+        'vayronagarchilik', 'falokat', 'xarobazar', 'dahshatkor', "o'lim_malaki", "qirg'inbosh", 'zulmat',
+        'qorqinchli', 'yirtqich', 'xavfli_ajdar', 'qonli_jang', 'tugaydi', "yo'qotish", 'xavfli_taxt', 'qahr',
+        "g'azab", 'qasoskor', 'yovuz_ruh', 'qora_sehr', 'lanatli', "o'lim_yulduzi", 'dahshatli_saroy',
+        "deadly_star", 'xavfli_sayyora', "o'lim_sayyorasi", 'yovuzlik_kuchi', 'zulmat_shahri',
+        "qonli_to'fon", 'xavfli_muhit', 'dahshatli_ajdar', "o'lim_qal'asi", "qirg'in_sayyorasi",
+        'yovvoyi_kuch', 'qora_nur', 'halokatli_yulduz', 'xavfli_zulmat', "o'lim_shohi",
+        'dahshatli_jangchi'
     ];
+
 
     let zombies = [];
     let score = 0;
@@ -882,8 +910,8 @@
     });
 
     rainShotBtn.addEventListener('click', () => {
-      if (mana >= 30 && rainShotCooldown <= 0) {
-        mana -= 30;
+      if (mana >= 60 && rainShotCooldown <= 0) {
+        mana -= 60;
         updateMana();
         zombies.forEach(zombie => {
           if (zombie.active) {
@@ -900,8 +928,8 @@
     });
 
     bombardBtn.addEventListener('click', () => {
-      if (mana >= 40 && bombardCooldown <= 0) {
-        mana -= 40;
+      if (mana >= 75 && bombardCooldown <= 0) {
+        mana -= 75;
         updateMana();
         zombies.forEach(zombie => {
           if (zombie.active) {
@@ -918,8 +946,8 @@
     });
 
     healBtn.addEventListener('click', () => {
-      if (mana >= 35 && healCooldown <= 0 && health < 5) {
-        mana -= 35;
+      if (mana >= 50 && healCooldown <= 0 && health < 5) {
+        mana -= 50;
         health = Math.min(5, health + 1);
         healthDisplay.innerText = '❤️'.repeat(health);
         const gameArea = document.getElementById('gameArea');
@@ -941,8 +969,8 @@
     });
 
     slowTimeBtn.addEventListener('click', () => {
-      if (mana >= 25 && slowTimeCooldown <= 0) {
-        mana -= 25;
+      if (mana >= 40 && slowTimeCooldown <= 0) {
+        mana -= 40;
         slowTimeActive = true;
         setTimeout(() => slowTimeActive = false, 5000);
         updateMana();
