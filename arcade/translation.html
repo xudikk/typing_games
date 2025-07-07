@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeoCoder Translation Game</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Source+Sans+Pro:wght@400;500&display=swap" rel="stylesheet">
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoCoder Translation Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Source+Sans+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <style>
     :root {
       --primary: #0A1122;
       --secondary: #38BDF8;
@@ -500,337 +500,336 @@
   </style>
 </head>
 <body>
-  <canvas id="particlesCanvas"></canvas>
-  <header class="header">
+<canvas id="particlesCanvas"></canvas>
+<header class="header">
     <div class="logo">
-      <div class="brand-icon">N</div>
-      <span class="brand-text">NeoCoder</span>
+        <div class="brand-icon">N</div>
+        <span class="brand-text">NeoCoder</span>
     </div>
     <nav class="nav-links">
-        <a href="../index.html" style="text-decoration:none;" class="nav-btn">Bosh Sahifa</a>
+       <a href="../index.html" style="text-decoration:none;" class="nav-btn">Bosh Sahifa</a>
         <a href="../lessons.html" style="text-decoration:none;" class="nav-btn">Darslar</a>
         <a href="../games.html" style="text-decoration:none;" class="nav-btn">Arcade</a>
         <a href="../profile.html" style="text-decoration:none;" class="nav-btn">Profile</a>
     </nav>
-  </header>
+</header>
 
-  <div class="game-container">
+<div class="game-container">
     <h1 class="game-title">NeoCoder Translation Game</h1>
     <div class="difficulty-modal show" id="difficultyModal">
-      <h2>Select Mode</h2>
-      <button class="difficulty-btn" data-level="beginner">Beginner</button>
-      <button class="difficulty-btn" data-level="intermediate">Intermediate</button>
-      <button class="difficulty-btn" data-level="advanced">Advanced</button>
-      <button class="difficulty-btn" data-level="assessment">Level Assessment</button>
+        <h2>Select Mode</h2>
+        <button class="difficulty-btn" data-level="beginner">Beginner</button>
+        <button class="difficulty-btn" data-level="intermediate">Intermediate</button>
+        <button class="difficulty-btn" data-level="advanced">Advanced</button>
+        <button class="difficulty-btn" data-level="assessment">Level Assessment</button>
     </div>
     <div class="progress-bar" id="progressBar"></div>
     <div class="timer-bar-container" id="timerBarContainer">
-      <div class="timer-bar" id="timerBar"></div>
-      <div class="timer-text" id="timerText">30</div>
+        <div class="timer-bar" id="timerBar"></div>
+        <div class="timer-text" id="timerText">30</div>
     </div>
     <div class="word-container" id="wordContainer"></div>
     <div class="input-container" id="inputContainer">
-      <input type="text" class="answer-input" id="answerInput" placeholder="Enter translation">
-      <button class="submit-btn" id="submitButton">Submit</button>
+        <input type="text" class="answer-input" id="answerInput" placeholder="Enter translation">
+        <button class="submit-btn" id="submitButton">Submit</button>
     </div>
     <div class="score-board" id="scoreBoard">
-      <span>Score: <span id="score">0</span></span>
-      <span>Word: <span id="currentWord">0</span>/<span id="totalWords">50</span></span>
+        <span>Score: <span id="score">0</span></span>
+        <span>Word: <span id="currentWord">0</span>/<span id="totalWords">50</span></span>
     </div>
     <div id="gameOverModal">
-      <div id="gameOverText"></div>
-      <button id="restartButton">Restart Game</button>
+        <div id="gameOverText"></div>
+        <button id="restartButton">Restart Game</button>
     </div>
-  </div>
+</div>
 
-  <footer class="footer">
+<footer class="footer">
     <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
-  </footer>
+</footer>
 
-  <script>
-    // So'zlar bazasi (300 ta namuna so'z, har darajada 100 ta, to'liq 3000+ ga kengaytirilishi mumkin)
+<script>
+    // So'zlar bazasi (300 ta namuna so'z, har darajada 100 ta, sinonimlar kengaytirildi)
     const words = [
       // Beginner Level (100 so'z)
-      { level: "beginner", word: "book", translations: ["kitob"], synonyms: ["kitobcha", "deftar"] },
-      { level: "beginner", word: "kitob", translations: ["book"], synonyms: ["notebook", "textbook"] },
-      { level: "beginner", word: "house", translations: ["uy"], synonyms: ["xona", "hovli"] },
-      { level: "beginner", word: "uy", translations: ["house"], synonyms: ["home", "residence"] },
-      { level: "beginner", word: "car", translations: ["mashina"], synonyms: ["avtomobil"] },
-      { level: "beginner", word: "mashina", translations: ["car"], synonyms: ["vehicle", "automobile"] },
-      { level: "beginner", word: "dog", translations: ["it"], synonyms: ["kuchuk"] },
-      { level: "beginner", word: "it", translations: ["dog"], synonyms: ["puppy"] },
-      { level: "beginner", word: "cat", translations: ["mushuk"], synonyms: ["mushukcha"] },
-      { level: "beginner", word: "mushuk", translations: ["cat"], synonyms: ["kitten"] },
-      { level: "beginner", word: "tree", translations: ["daraxt"], synonyms: ["yog'och"] },
-      { level: "beginner", word: "daraxt", translations: ["tree"], synonyms: ["plant"] },
-      { level: "beginner", word: "water", translations: ["suv"], synonyms: ["suvli"] },
-      { level: "beginner", word: "suv", translations: ["water"], synonyms: ["liquid"] },
-      { level: "beginner", word: "sun", translations: ["quyosh"], synonyms: ["oftob"] },
-      { level: "beginner", word: "quyosh", translations: ["sun"], synonyms: ["solar"] },
-      { level: "beginner", word: "food", translations: ["ovqat"], synonyms: ["taom"] },
-      { level: "beginner", word: "ovqat", translations: ["food"], synonyms: ["meal"] },
-      { level: "beginner", word: "school", translations: ["maktab"], synonyms: ["o'quv"] },
-      { level: "beginner", word: "maktab", translations: ["school"], synonyms: ["academy"] },
-      { level: "beginner", word: "pen", translations: ["ruchka"], synonyms: ["qalam"] },
-      { level: "beginner", word: "ruchka", translations: ["pen"], synonyms: ["pencil"] },
-      { level: "beginner", word: "table", translations: ["stol"], synonyms: ["dasturxon"] },
-      { level: "beginner", word: "stol", translations: ["table"], synonyms: ["desk"] },
-      { level: "beginner", word: "chair", translations: ["stul"], synonyms: ["kreslo"] },
-      { level: "beginner", word: "stul", translations: ["chair"], synonyms: ["seat"] },
-      { level: "beginner", word: "door", translations: ["eshik"], synonyms: ["darvoza"] },
-      { level: "beginner", word: "eshik", translations: ["door"], synonyms: ["gate"] },
-      { level: "beginner", word: "window", translations: ["deraza"], synonyms: ["oyna"] },
-      { level: "beginner", word: "deraza", translations: ["window"], synonyms: ["pane"] },
-      { level: "beginner", word: "friend", translations: ["do'st"], synonyms: ["o'rtoq"] },
-      { level: "beginner", word: "do'st", translations: ["friend"], synonyms: ["buddy"] },
-      { level: "beginner", word: "day", translations: ["kun"], synonyms: ["ruz"] },
-      { level: "beginner", word: "kun", translations: ["day"], synonyms: ["date"] },
-      { level: "beginner", word: "night", translations: ["tun"], synonyms: ["kecha"] },
-      { level: "beginner", word: "tun", translations: ["night"], synonyms: ["evening"] },
-      { level: "beginner", word: "mother", translations: ["ona"], synonyms: ["mama"] },
-      { level: "beginner", word: "ona", translations: ["mother"], synonyms: ["mom"] },
-      { level: "beginner", word: "father", translations: ["ota"], synonyms: ["dada"] },
-      { level: "beginner", word: "ota", translations: ["father"], synonyms: ["dad"] },
-      { level: "beginner", word: "child", translations: ["bola"], synonyms: ["farzand"] },
-      { level: "beginner", word: "bola", translations: ["child"], synonyms: ["kid"] },
-      { level: "beginner", word: "apple", translations: ["olma"], synonyms: ["meva"] },
-      { level: "beginner", word: "olma", translations: ["apple"], synonyms: ["fruit"] },
-      { level: "beginner", word: "bread", translations: ["non"], synonyms: ["patir"] },
-      { level: "beginner", word: "non", translations: ["bread"], synonyms: ["loaf"] },
-      { level: "beginner", word: "milk", translations: ["sut"], synonyms: ["suvli ichimlik"] },
-      { level: "beginner", word: "sut", translations: ["milk"], synonyms: ["dairy"] },
-      { level: "beginner", word: "sky", translations: ["osmon"], synonyms: ["falak"] },
-      { level: "beginner", word: "osmon", translations: ["sky"], synonyms: ["heaven"] },
-      { level: "beginner", word: "hand", translations: ["qo'l"], synonyms: ["kaft"] },
-      { level: "beginner", word: "qo'l", translations: ["hand"], synonyms: ["palm"] },
-      { level: "beginner", word: "foot", translations: ["oyoq"], synonyms: ["poy"] },
-      { level: "beginner", word: "oyoq", translations: ["foot"], synonyms: ["leg"] },
-      { level: "beginner", word: "eye", translations: ["ko'z"], synonyms: ["nazar"] },
-      { level: "beginner", word: "ko'z", translations: ["eye"], synonyms: ["vision"] },
-      { level: "beginner", word: "heart", translations: ["yurak"], synonyms: ["dil"] },
-      { level: "beginner", word: "yurak", translations: ["heart"], synonyms: ["core"] },
-      { level: "beginner", word: "flower", translations: ["gul"], synonyms: ["chaman"] },
-      { level: "beginner", word: "gul", translations: ["flower"], synonyms: ["bloom"] },
-      { level: "beginner", word: "bird", translations: ["qush"], synonyms: ["parinda"] },
-      { level: "beginner", word: "qush", translations: ["bird"], synonyms: ["fowl"] },
-      { level: "beginner", word: "fish", translations: ["baliq"], synonyms: ["suv hayvoni"] },
-      { level: "beginner", word: "baliq", translations: ["fish"], synonyms: ["sea creature"] },
-      { level: "beginner", word: "moon", translations: ["oy"], synonyms: ["mahtob"] },
-      { level: "beginner", word: "oy", translations: ["moon"], synonyms: ["lunar"] },
-      { level: "beginner", word: "star", translations: ["yulduz"], synonyms: ["sitora"] },
-      { level: "beginner", word: "yulduz", translations: ["star"], synonyms: ["aster"] },
-      { level: "beginner", word: "cloud", translations: ["bulut"], synonyms: ["havo"] },
-      { level: "beginner", word: "bulut", translations: ["cloud"], synonyms: ["mist"] },
-      { level: "beginner", word: "road", translations: ["yo'l"], synonyms: ["trassa"] },
-      { level: "beginner", word: "yo'l", translations: ["road"], synonyms: ["path"] },
-      { level: "beginner", word: "river", translations: ["daryo"], synonyms: ["oqim"] },
-      { level: "beginner", word: "daryo", translations: ["river"], synonyms: ["stream"] },
-      { level: "beginner", word: "fire", translations: ["olov"], synonyms: ["yong'in"] },
-      { level: "beginner", word: "olov", translations: ["fire"], synonyms: ["flame"] },
-      { level: "beginner", word: "wind", translations: ["shamol"], synonyms: ["yel"] },
-      { level: "beginner", word: "shamol", translations: ["wind"], synonyms: ["breeze"] },
-      { level: "beginner", word: "rain", translations: ["yomg'ir"], synonyms: ["suv"] },
-      { level: "beginner", word: "yomg'ir", translations: ["rain"], synonyms: ["shower"] },
-      { level: "beginner", word: "snow", translations: ["qor"], synonyms: ["barf"] },
-      { level: "beginner", word: "qor", translations: ["snow"], synonyms: ["frost"] },
-      { level: "beginner", word: "home", translations: ["uy"], synonyms: ["xonadon"] },
-      { level: "beginner", word: "uy", translations: ["home"], synonyms: ["house"] },
-      { level: "beginner", word: "food", translations: ["taom"], synonyms: ["ovqat"] },
-      { level: "beginner", word: "taom", translations: ["food"], synonyms: ["meal"] },
-      { level: "beginner", word: "book", translations: ["adabiyot"], synonyms: ["kitob"] },
-      { level: "beginner", word: "adabiyot", translations: ["book"], synonyms: ["literature"] },
-      { level: "beginner", word: "pen", translations: ["qalam"], synonyms: ["ruchka"] },
-      { level: "beginner", word: "qalam", translations: ["pen"], synonyms: ["pencil"] },
-      { level: "beginner", word: "paper", translations: ["qog'oz"], synonyms: ["varaq"] },
-      { level: "beginner", word: "qog'oz", translations: ["paper"], synonyms: ["sheet"] },
-      { level: "beginner", word: "room", translations: ["xona"], synonyms: ["hujra"] },
-      { level: "beginner", word: "xona", translations: ["room"], synonyms: ["space"] },
-      { level: "beginner", word: "street", translations: ["ko'cha"], synonyms: ["yo'l"] },
-      { level: "beginner", word: "ko'cha", translations: ["street"], synonyms: ["avenue"] },
-      { level: "beginner", word: "city", translations: ["shahar"], synonyms: ["qishloq"] },
-      { level: "beginner", word: "shahar", translations: ["city"], synonyms: ["town"] },
+      { level: "beginner", word: "book", translations: ["kitob"], synonyms: ["kitobcha", "deftar", "nashr", "adabiyot"] },
+      { level: "beginner", word: "kitob", translations: ["book"], synonyms: ["textbook", "manual", "publication", "volume"] },
+      { level: "beginner", word: "house", translations: ["uy"], synonyms: ["xonadon", "hovli", "bino", "qasr"] },
+      { level: "beginner", word: "uy", translations: ["house"], synonyms: ["home", "residence", "building", "mansion"] },
+      { level: "beginner", word: "car", translations: ["mashina"], synonyms: ["avtomobil", "transport", "vaz", "yengil mashina"] },
+      { level: "beginner", word: "mashina", translations: ["car"], synonyms: ["vehicle", "automobile", "transport", "motor"] },
+      { level: "beginner", word: "dog", translations: ["it"], synonyms: ["kuchuk", "qutur", "hayvon", "ov it"] },
+      { level: "beginner", word: "it", translations: ["dog"], synonyms: ["puppy", "canine", "hound", "pet"] },
+      { level: "beginner", word: "cat", translations: ["mushuk"], synonyms: ["mushukcha", "felis", "yirtqich", "uy hayvoni"] },
+      { level: "beginner", word: "mushuk", translations: ["cat"], synonyms: ["kitten", "feline", "pet", "tabby"] },
+      { level: "beginner", word: "tree", translations: ["daraxt"], synonyms: ["yog'och", "buta", "o'simlik", "shox"] },
+      { level: "beginner", word: "daraxt", translations: ["tree"], synonyms: ["plant", "shrub", "timber", "branch"] },
+      { level: "beginner", word: "water", translations: ["suv"], synonyms: ["suvli", "oqim", "buloq", "suv ombori"] },
+      { level: "beginner", word: "suv", translations: ["water"], synonyms: ["liquid", "fluid", "spring", "stream"] },
+      { level: "beginner", word: "sun", translations: ["quyosh"], synonyms: ["oftob", "nur", "yorug'lik", "quyosh nuri"] },
+      { level: "beginner", word: "quyosh", translations: ["sun"], synonyms: ["solar", "light", "star", "sunlight"] },
+      { level: "beginner", word: "food", translations: ["ovqat"], synonyms: ["taom", "nonushta", "gazak", "xamir"] },
+      { level: "beginner", word: "ovqat", translations: ["food"], synonyms: ["meal", "dish", "snack", "cuisine"] },
+      { level: "beginner", word: "school", translations: ["maktab"], synonyms: ["o'quv", "ta'lim muassasasi", "akademiya", "litsey"] },
+      { level: "beginner", word: "maktab", translations: ["school"], synonyms: ["academy", "institute", "college", "classroom"] },
+      { level: "beginner", word: "pen", translations: ["ruchka"], synonyms: ["qalam", "yozuv asbobi", "stilus", "kallam"] },
+      { level: "beginner", word: "ruchka", translations: ["pen"], synonyms: ["pencil", "writing tool", "stylus", "marker"] },
+      { level: "beginner", word: "table", translations: ["stol"], synonyms: ["dasturxon", "mebel", "yuz", "stolcha"] },
+      { level: "beginner", word: "stol", translations: ["table"], synonyms: ["desk", "furniture", "surface", "board"] },
+      { level: "beginner", word: "chair", translations: ["stul"], synonyms: ["kreslo", "o'rindiq", "mebel", "stulcha"] },
+      { level: "beginner", word: "stul", translations: ["chair"], synonyms: ["seat", "armchair", "stool", "furniture"] },
+      { level: "beginner", word: "door", translations: ["eshik"], synonyms: ["darvoza", "kirish", "yo'lak", "qopqoq"] },
+      { level: "beginner", word: "eshik", translations: ["door"], synonyms: ["gate", "entrance", "portal", "hatch"] },
+      { level: "beginner", word: "window", translations: ["deraza"], synonyms: ["oyna", "ko'zgu", "ventilyatsiya", "teshik"] },
+      { level: "beginner", word: "deraza", translations: ["window"], synonyms: ["pane", "glass", "vent", "opening"] },
+      { level: "beginner", word: "friend", translations: ["do'st"], synonyms: ["o'rtoq", "sherik", "rafiq", "hamroh"] },
+      { level: "beginner", word: "do'st", translations: ["friend"], synonyms: ["buddy", "pal", "companion", "mate"] },
+      { level: "beginner", word: "day", translations: ["kun"], synonyms: ["ruz", "sana", "vaqt", "hafta kuni"] },
+      { level: "beginner", word: "kun", translations: ["day"], synonyms: ["date", "time", "weekday", "sunrise"] },
+      { level: "beginner", word: "night", translations: ["tun"], synonyms: ["kecha", "qorong'ulik", "tun vaqti", "oy nuri"] },
+      { level: "beginner", word: "tun", translations: ["night"], synonyms: ["evening", "darkness", "nighttime", "moonlight"] },
+      { level: "beginner", word: "mother", translations: ["ona"], synonyms: ["mama", "oyim", "valida", "ayol"] },
+      { level: "beginner", word: "ona", translations: ["mother"], synonyms: ["mom", "parent", "mama", "lady"] },
+      { level: "beginner", word: "father", translations: ["ota"], synonyms: ["dada", "bobom", "valida", "erkak"] },
+      { level: "beginner", word: "ota", translations: ["father"], synonyms: ["dad", "parent", "papa", "man"] },
+      { level: "beginner", word: "child", translations: ["bola"], synonyms: ["farzand", "o'g'il", "qiz", "yosh"] },
+      { level: "beginner", word: "bola", translations: ["child"], synonyms: ["kid", "son", "daughter", "youngster"] },
+      { level: "beginner", word: "apple", translations: ["olma"], synonyms: ["meva", "yong'oq", "olmaxon", "nok"] },
+      { level: "beginner", word: "olma", translations: ["apple"], synonyms: ["fruit", "nut", "pom", "pear"] },
+      { level: "beginner", word: "bread", translations: ["non"], synonyms: ["patir", "xamir", "kulcha", "tandir non"] },
+      { level: "beginner", word: "non", translations: ["bread"], synonyms: ["loaf", "bun", "roll", "baguette"] },
+      { level: "beginner", word: "milk", translations: ["sut"], synonyms: ["suvli ichimlik", "yog'", "qaymoq", "ayron"] },
+      { level: "beginner", word: "sut", translations: ["milk"], synonyms: ["dairy", "cream", "yogurt", "liquid"] },
+      { level: "beginner", word: "sky", translations: ["osmon"], synonyms: ["falak", "ko'k", "havo", "samo"] },
+      { level: "beginner", word: "osmon", translations: ["sky"], synonyms: ["heaven", "blue", "air", "space"] },
+      { level: "beginner", word: "hand", translations: ["qo'l"], synonyms: ["kaft", "panja", "bilak", "yod"] },
+      { level: "beginner", word: "qo'l", translations: ["hand"], synonyms: ["palm", "wrist", "fist", "arm"] },
+      { level: "beginner", word: "foot", translations: ["oyoq"], synonyms: ["poy", "to'piq", "qadam", "panja"] },
+      { level: "beginner", word: "oyoq", translations: ["foot"], synonyms: ["leg", "ankle", "step", "sole"] },
+      { level: "beginner", word: "eye", translations: ["ko'z"], synonyms: ["nazar", "chaqmoq", "ko'rish", "did"] },
+      { level: "beginner", word: "ko'z", translations: ["eye"], synonyms: ["vision", "sight", "glance", "gaze"] },
+      { level: "beginner", word: "heart", translations: ["yurak"], synonyms: ["dil", "ko'ngil", "vujud", "qalb"] },
+      { level: "beginner", word: "yurak", translations: ["heart"], synonyms: ["core", "soul", "mind", "spirit"] },
+      { level: "beginner", word: "flower", translations: ["gul"], synonyms: ["chaman", "lola", "atirgul", "o't"] },
+      { level: "beginner", word: "gul", translations: ["flower"], synonyms: ["bloom", "rose", "tulip", "plant"] },
+      { level: "beginner", word: "bird", translations: ["qush"], synonyms: ["parinda", "kabutar", "chumchuq", "lochin"] },
+      { level: "beginner", word: "qush", translations: ["bird"], synonyms: ["fowl", "pigeon", "sparrow", "hawk"] },
+      { level: "beginner", word: "fish", translations: ["baliq"], synonyms: ["suv hayvoni", "sazan", "losos", "qizilbaliq"] },
+      { level: "beginner", word: "baliq", translations: ["fish"], synonyms: ["sea creature", "salmon", "carp", "trout"] },
+      { level: "beginner", word: "moon", translations: ["oy"], synonyms: ["mahtob", "hilol", "nur", "oy nuri"] },
+      { level: "beginner", word: "oy", translations: ["moon"], synonyms: ["lunar", "crescent", "light", "moonlight"] },
+      { level: "beginner", word: "star", translations: ["yulduz"], synonyms: ["sitora", "najm", "chaqmoq", "nur"] },
+      { level: "beginner", word: "yulduz", translations: ["star"], synonyms: ["aster", "nova", "light", "twinkle"] },
+      { level: "beginner", word: "cloud", translations: ["bulut"], synonyms: ["havo", "tuman", "qatlam", "parcha"] },
+      { level: "beginner", word: "bulut", translations: ["cloud"], synonyms: ["mist", "fog", "vapor", "sky"] },
+      { level: "beginner", word: "road", translations: ["yo'l"], synonyms: ["trassa", "ko'cha", "magistral", "suv yo'li"] },
+      { level: "beginner", word: "yo'l", translations: ["road"], synonyms: ["path", "street", "highway", "trail"] },
+      { level: "beginner", word: "river", translations: ["daryo"], synonyms: ["oqim", "suv", "kanal", "ariq"] },
+      { level: "beginner", word: "daryo", translations: ["river"], synonyms: ["stream", "water", "channel", "flow"] },
+      { level: "beginner", word: "fire", translations: ["olov"], synonyms: ["yong'in", "alanga", "issiq", "otash"] },
+      { level: "beginner", word: "olov", translations: ["fire"], synonyms: ["flame", "blaze", "heat", "spark"] },
+      { level: "beginner", word: "wind", translations: ["shamol"], synonyms: ["yel", "bo'ron", "tepa", "esinti"] },
+      { level: "beginner", word: "shamol", translations: ["wind"], synonyms: ["breeze", "storm", "gust", "air"] },
+      { level: "beginner", word: "rain", translations: ["yomg'ir"], synonyms: ["suv", "tomchi", "sel", "yomg'irlilik"] },
+      { level: "beginner", word: "yomg'ir", translations: ["rain"], synonyms: ["shower", "drop", "downpour", "drizzle"] },
+      { level: "beginner", word: "snow", translations: ["qor"], synonyms: ["barf", "muz", "qor bo'roni", "qor yog'ishi"] },
+      { level: "beginner", word: "qor", translations: ["snow"], synonyms: ["frost", "ice", "snowstorm", "flake"] },
+      { level: "beginner", word: "home", translations: ["uy"], synonyms: ["xonadon", "boshpana", "qarorgoh", "maskan"] },
+      { level: "beginner", word: "uy", translations: ["home"], synonyms: ["house", "shelter", "residence", "abode"] },
+      { level: "beginner", word: "food", translations: ["taom"], synonyms: ["ovqat", "nonushta", "gazak", "xamir"] },
+      { level: "beginner", word: "taom", translations: ["food"], synonyms: ["meal", "dish", "snack", "cuisine"] },
+      { level: "beginner", word: "book", translations: ["adabiyot"], synonyms: ["kitob", "deftar", "nashr", "jurnal"] },
+      { level: "beginner", word: "adabiyot", translations: ["book"], synonyms: ["literature", "publication", "journal", "text"] },
+      { level: "beginner", word: "pen", translations: ["qalam"], synonyms: ["ruchka", "yozuv", "stilus", "kallam"] },
+      { level: "beginner", word: "qalam", translations: ["pen"], synonyms: ["pencil", "marker", "stylus", "writer"] },
+      { level: "beginner", word: "paper", translations: ["qog'oz"], synonyms: ["varaq", "list", "karton", "sahifa"] },
+      { level: "beginner", word: "qog'oz", translations: ["paper"], synonyms: ["sheet", "page", "cardboard", "leaflet"] },
+      { level: "beginner", word: "room", translations: ["xona"], synonyms: ["hujra", "bo'lim", "joy", "makon"] },
+      { level: "beginner", word: "xona", translations: ["room"], synonyms: ["space", "chamber", "area", "place"] },
+      { level: "beginner", word: "street", translations: ["ko'cha"], synonyms: ["yo'l", "trassa", "xiyobon", "magistral"] },
+      { level: "beginner", word: "ko'cha", translations: ["street"], synonyms: ["avenue", "road", "lane", "boulevard"] },
+      { level: "beginner", word: "city", translations: ["shahar"], synonyms: ["qishloq", "poytaxt", "markaz", "metropol"] },
+      { level: "beginner", word: "shahar", translations: ["city"], synonyms: ["town", "capital", "urban", "metropolis"] },
       // Intermediate Level (100 so'z)
-      { level: "intermediate", word: "quick", translations: ["tezkor"], synonyms: ["tez", "tezda"] },
-      { level: "intermediate", word: "tezkor", translations: ["quick"], synonyms: ["fast", "swift"] },
-      { level: "intermediate", word: "happy", translations: ["baxtli"], synonyms: ["xursand", "quvonchli"] },
-      { level: "intermediate", word: "baxtli", translations: ["happy"], synonyms: ["joyful", "cheerful"] },
-      { level: "intermediate", word: "work", translations: ["ish"], synonyms: ["vazifa", "mehnat"] },
-      { level: "intermediate", word: "ish", translations: ["work"], synonyms: ["job", "task"] },
-      { level: "intermediate", word: "beautiful", translations: ["chiroyli"], synonyms: ["go'zal"] },
-      { level: "intermediate", word: "chiroyli", translations: ["beautiful"], synonyms: ["pretty", "lovely"] },
-      { level: "intermediate", word: "time", translations: ["vaqt"], synonyms: ["soat"] },
-      { level: "intermediate", word: "vaqt", translations: ["time"], synonyms: ["hour", "moment"] },
-      { level: "intermediate", word: "learn", translations: ["o'rganmoq"], synonyms: ["ta'lim"] },
-      { level: "intermediate", word: "o'rganmoq", translations: ["learn"], synonyms: ["study", "acquire"] },
-      { level: "intermediate", word: "city", translations: ["shahar"], synonyms: ["qishloq"] },
-      { level: "intermediate", word: "shahar", translations: ["city"], synonyms: ["town", "urban"] },
-      { level: "intermediate", word: "effort", translations: ["harakat"], synonyms: ["sa'y"] },
-      { level: "intermediate", word: "harakat", translations: ["effort"], synonyms: ["try", "attempt"] },
-      { level: "intermediate", word: "decision", translations: ["qaror"], synonyms: ["tanlov"] },
-      { level: "intermediate", word: "qaror", translations: ["decision"], synonyms: ["choice", "resolution"] },
-      { level: "intermediate", word: "knowledge", translations: ["bilim"], synonyms: ["ilm"] },
-      { level: "intermediate", word: "bilim", translations: ["knowledge"], synonyms: ["information", "learning"] },
-      { level: "intermediate", word: "help", translations: ["yordam"], synonyms: ["ko'mak"] },
-      { level: "intermediate", word: "yordam", translations: ["help"], synonyms: ["aid", "support"] },
-      { level: "intermediate", word: "success", translations: ["muvaffaqiyat"], synonyms: ["yutuq"] },
-      { level: "intermediate", word: "muvaffaqiyat", translations: ["success"], synonyms: ["achievement", "victory"] },
-      { level: "intermediate", word: "idea", translations: ["fikr"], synonyms: ["g'oya"] },
-      { level: "intermediate", word: "fikr", translations: ["idea"], synonyms: ["thought", "concept"] },
-      { level: "intermediate", word: "problem", translations: ["muammo"], synonyms: ["masala"] },
-      { level: "intermediate", word: "muammo", translations: ["problem"], synonyms: ["issue", "trouble"] },
-      { level: "intermediate", word: "question", translations: ["savol"], synonyms: ["so'roq"] },
-      { level: "intermediate", word: "savol", translations: ["question"], synonyms: ["query", "inquiry"] },
-      { level: "intermediate", word: "love", translations: ["sevgi"], synonyms: ["muhabbat"] },
-      { level: "intermediate", word: "sevgi", translations: ["love"], synonyms: ["affection", "passion"] },
-      { level: "intermediate", word: "health", translations: ["salomatlik"], synonyms: ["sog'lik"] },
-      { level: "intermediate", word: "salomatlik", translations: ["health"], synonyms: ["wellness", "fitness"] },
-      { level: "intermediate", word: "money", translations: ["pul"], synonyms: ["naqd"] },
-      { level: "intermediate", word: "pul", translations: ["money"], synonyms: ["cash", "currency"] },
-      { level: "intermediate", word: "family", translations: ["oila"], synonyms: ["xonadon"] },
-      { level: "intermediate", word: "oila", translations: ["family"], synonyms: ["household", "kin"] },
-      { level: "intermediate", word: "job", translations: ["kasb"], synonyms: ["ish joyi"] },
-      { level: "intermediate", word: "kasb", translations: ["job"], synonyms: ["occupation", "profession"] },
-      { level: "intermediate", word: "nature", translations: ["tabiat"], synonyms: ["olam"] },
-      { level: "intermediate", word: "tabiat", translations: ["nature"], synonyms: ["environment", "wild"] },
-      { level: "intermediate", word: "travel", translations: ["sayohat"], synonyms: ["safar"] },
-      { level: "intermediate", word: "sayohat", translations: ["travel"], synonyms: ["journey", "trip"] },
-      { level: "intermediate", word: "music", translations: ["musiqa"], synonyms: ["saz"] },
-      { level: "intermediate", word: "musiqa", translations: ["music"], synonyms: ["melody", "tune"] },
-      { level: "intermediate", word: "dream", translations: ["orzu"], synonyms: ["xayol"] },
-      { level: "intermediate", word: "orzu", translations: ["dream"], synonyms: ["wish", "hope"] },
-      { level: "intermediate", word: "goal", translations: ["maqsad"], synonyms: ["nishon"] },
-      { level: "intermediate", word: "maqsad", translations: ["goal"], synonyms: ["aim", "objective"] },
-      { level: "intermediate", word: "plan", translations: ["reja"], synonyms: ["tadbir"] },
-      { level: "intermediate", word: "reja", translations: ["plan"], synonyms: ["strategy", "scheme"] },
-      { level: "intermediate", word: "life", translations: ["hayot"], synonyms: ["umr"] },
-      { level: "intermediate", word: "hayot", translations: ["life"], synonyms: ["existence", "living"] },
-      { level: "intermediate", word: "world", translations: ["dunya"], synonyms: ["jahon"] },
-      { level: "intermediate", word: "dunya", translations: ["world"], synonyms: ["globe", "earth"] },
-      { level: "intermediate", word: "peace", translations: ["tinchlik"], synonyms: ["osoyishtalik"] },
-      { level: "intermediate", word: "tinchlik", translations: ["peace"], synonyms: ["calm", "tranquility"] },
-      { level: "intermediate", word: "hope", translations: ["umid"], synonyms: ["ishonch"] },
-      { level: "intermediate", word: "umid", translations: ["hope"], synonyms: ["expectation", "wish"] },
-      { level: "intermediate", word: "fear", translations: ["qo'rquv"], synonyms: ["xavotir"] },
-      { level: "intermediate", word: "qo'rquv", translations: ["fear"], synonyms: ["anxiety", "dread"] },
-      { level: "intermediate", word: "strength", translations: ["kuch"], synonyms: ["quvvat"] },
-      { level: "intermediate", word: "kuch", translations: ["strength"], synonyms: ["power", "force"] },
-      { level: "intermediate", word: "mind", translations: ["aql"], synonyms: ["idrok"] },
-      { level: "intermediate", word: "aql", translations: ["mind"], synonyms: ["intellect", "brain"] },
-      { level: "intermediate", word: "beauty", translations: ["go'zallik"], synonyms: ["chiroy"] },
-      { level: "intermediate", word: "go'zallik", translations: ["beauty"], synonyms: ["charm", "elegance"] },
-      { level: "intermediate", word: "truth", translations: ["haqiqat"], synonyms: ["rostlik"] },
-      { level: "intermediate", word: "haqiqat", translations: ["truth"], synonyms: ["reality", "fact"] },
-      { level: "intermediate", word: "freedom", translations: ["erkinlik"], synonyms: ["ozodlik"] },
-      { level: "intermediate", word: "erkinlik", translations: ["freedom"], synonyms: ["liberty", "independence"] },
-      { level: "intermediate", word: "culture", translations: ["madaniyat"], synonyms: ["an'ana"] },
-      { level: "intermediate", word: "madaniyat", translations: ["culture"], synonyms: ["tradition", "heritage"] },
-      { level: "intermediate", word: "education", translations: ["ta'lim"], synonyms: ["o'qish"] },
-      { level: "intermediate", word: "ta'lim", translations: ["education"], synonyms: ["learning", "study"] },
-      { level: "intermediate", word: "science", translations: ["ilm-fan"], synonyms: ["fan"] },
-      { level: "intermediate", word: "ilm-fan", translations: ["science"], synonyms: ["knowledge", "research"] },
-      { level: "intermediate", word: "history", translations: ["tarix"], synonyms: ["o'tmish"] },
-      { level: "intermediate", word: "tarix", translations: ["history"], synonyms: ["past", "heritage"] },
-      { level: "intermediate", word: "art", translations: ["san'at"], synonyms: ["ijod"] },
-      { level: "intermediate", word: "san'at", translations: ["art"], synonyms: ["creation", "craft"] },
-      { level: "intermediate", word: "sport", translations: ["sport"], synonyms: ["mashq"] },
-      { level: "intermediate", word: "sport", translations: ["sport"], synonyms: ["exercise", "game"] },
-      { level: "intermediate", word: "team", translations: ["jamoa"], synonyms: ["guruh"] },
-      { level: "intermediate", word: "jamoa", translations: ["team"], synonyms: ["group", "squad"] },
-      { level: "intermediate", word: "project", translations: ["loyiha"], synonyms: ["rejasi"] },
-      { level: "intermediate", word: "loyiha", translations: ["project"], synonyms: ["plan", "initiative"] },
-      { level: "intermediate", word: "skill", translations: ["mahorat"], synonyms: ["ko'nikma"] },
-      { level: "intermediate", word: "mahorat", translations: ["skill"], synonyms: ["ability", "talent"] },
-      { level: "intermediate", word: "future", translations: ["kelajak"], synonyms: ["istiqbol"] },
-      { level: "intermediate", word: "kelajak", translations: ["future"], synonyms: ["tomorrow", "prospect"] },
+      { level: "intermediate", word: "quick", translations: ["tezkor"], synonyms: ["tez", "shoshilinch", "chaqqon", "zudlik bilan"] },
+      { level: "intermediate", word: "tezkor", translations: ["quick"], synonyms: ["fast", "swift", "prompt", "rapid"] },
+      { level: "intermediate", word: "happy", translations: ["baxtli"], synonyms: ["xursand", "quvonchli", "shod", "mamnun"] },
+      { level: "intermediate", word: "baxtli", translations: ["happy"], synonyms: ["joyful", "cheerful", "delighted", "content"] },
+      { level: "intermediate", word: "work", translations: ["ish"], synonyms: ["vazifa", "mehnat", "kasb", "xizmat"] },
+      { level: "intermediate", word: "ish", translations: ["work"], synonyms: ["job", "task", "labor", "duty"] },
+      { level: "intermediate", word: "beautiful", translations: ["chiroyli"], synonyms: ["go'zal", "muhtasham", "nafis", "ajoyib"] },
+      { level: "intermediate", word: "chiroyli", translations: ["beautiful"], synonyms: ["pretty", "gorgeous", "elegant", "lovely"] },
+      { level: "intermediate", word: "time", translations: ["vaqt"], synonyms: ["soat", "davom", "muddat", "pallat"] },
+      { level: "intermediate", word: "vaqt", translations: ["time"], synonyms: ["hour", "duration", "moment", "period"] },
+      { level: "intermediate", word: "learn", translations: ["o'rganmoq"], synonyms: ["ta'lim", "bilmoq", "egallamoq", "o'zlashtirmoq"] },
+      { level: "intermediate", word: "o'rganmoq", translations: ["learn"], synonyms: ["study", "acquire", "master", "grasp"] },
+      { level: "intermediate", word: "city", translations: ["shahar"], synonyms: ["qishloq", "poytaxt", "markaz", "metropol"] },
+      { level: "intermediate", word: "shahar", translations: ["city"], synonyms: ["town", "capital", "urban", "metropolis"] },
+      { level: "intermediate", word: "effort", translations: ["harakat"], synonyms: ["sa'y", "tirishqoqlik", "kuch", "intilish"] },
+      { level: "intermediate", word: "harakat", translations: ["effort"], synonyms: ["try", "attempt", "endeavor", "struggle"] },
+      { level: "intermediate", word: "decision", translations: ["qaror"], synonyms: ["tanlov", "xulosa", "hukm", "yechim"] },
+      { level: "intermediate", word: "qaror", translations: ["decision"], synonyms: ["choice", "resolution", "judgment", "verdict"] },
+      { level: "intermediate", word: "knowledge", translations: ["bilim"], synonyms: ["ilm", "ma'lumot", "donish", "xabar"] },
+      { level: "intermediate", word: "bilim", translations: ["knowledge"], synonyms: ["information", "learning", "wisdom", "insight"] },
+      { level: "intermediate", word: "help", translations: ["yordam"], synonyms: ["ko'mak", "yordamchi", "xizmat", "qutqarish"] },
+      { level: "intermediate", word: "yordam", translations: ["help"], synonyms: ["aid", "support", "assistance", "relief"] },
+      { level: "intermediate", word: "success", translations: ["muvaffaqiyat"], synonyms: ["yutuq", "zafar", "natija", "muvaffaq"] },
+      { level: "intermediate", word: "muvaffaqiyat", translations: ["success"], synonyms: ["achievement", "victory", "triumph", "win"] },
+      { level: "intermediate", word: "idea", translations: ["fikr"], synonyms: ["g'oya", "tushuncha", "xayol", "tasavvur"] },
+      { level: "intermediate", word: "fikr", translations: ["idea"], synonyms: ["thought", "concept", "notion", "vision"] },
+      { level: "intermediate", word: "problem", translations: ["muammo"], synonyms: ["masala", "to'siq", "qiyinchilik", "xato"] },
+      { level: "intermediate", word: "muammo", translations: ["problem"], synonyms: ["issue", "trouble", "obstacle", "difficulty"] },
+      { level: "intermediate", word: "question", translations: ["savol"], synonyms: ["so'roq", "masala", "tushuncha", "talab"] },
+      { level: "intermediate", word: "savol", translations: ["question"], synonyms: ["query", "inquiry", "doubt", "request"] },
+      { level: "intermediate", word: "love", translations: ["sevgi"], synonyms: ["muhabbat", "ishq", "mehr", "o'zgacha tuyg'u"] },
+      { level: "intermediate", word: "sevgi", translations: ["love"], synonyms: ["affection", "passion", "devotion", "adoration"] },
+      { level: "intermediate", word: "health", translations: ["salomatlik"], synonyms: ["sog'lik", "farovonlik", "quvvat", "sihat"] },
+      { level: "intermediate", word: "salomatlik", translations: ["health"], synonyms: ["wellness", "fitness", "vitality", "well-being"] },
+      { level: "intermediate", word: "money", translations: ["pul"], synonyms: ["naqd", "mablag'", "valyuta", "sarmoya"] },
+      { level: "intermediate", word: "pul", translations: ["money"], synonyms: ["cash", "currency", "funds", "wealth"] },
+      { level: "intermediate", word: "family", translations: ["oila"], synonyms: ["xonadon", "qarindosh", "urug'", "ahli ayol"] },
+      { level: "intermediate", word: "oila", translations: ["family"], synonyms: ["household", "kin", "relatives", "clan"] },
+      { level: "intermediate", word: "job", translations: ["kasb"], synonyms: ["ish joyi", "vazifa", "xizmat", "hunarmandchilik"] },
+      { level: "intermediate", word: "kasb", translations: ["job"], synonyms: ["occupation", "profession", "career", "trade"] },
+      { level: "intermediate", word: "nature", translations: ["tabiat"], synonyms: ["olam", "atmosfera", "muhit", "ekologiya"] },
+      { level: "intermediate", word: "tabiat", translations: ["nature"], synonyms: ["environment", "wild", "ecology", "landscape"] },
+      { level: "intermediate", word: "travel", translations: ["sayohat"], synonyms: ["safar", "sayr", "ekskursiya", "sayyohlik"] },
+      { level: "intermediate", word: "sayohat", translations: ["travel"], synonyms: ["journey", "trip", "tour", "excursion"] },
+      { level: "intermediate", word: "music", translations: ["musiqa"], synonyms: ["saz", "ohang", "nagma", "kuy"] },
+      { level: "intermediate", word: "musiqa", translations: ["music"], synonyms: ["melody", "tune", "song", "harmony"] },
+      { level: "intermediate", word: "dream", translations: ["orzu"], synonyms: ["xayol", "tush", "maqsad", "istak"] },
+      { level: "intermediate", word: "orzu", translations: ["dream"], synonyms: ["wish", "hope", "aspiration", "vision"] },
+      { level: "intermediate", word: "goal", translations: ["maqsad"], synonyms: ["nishon", "intilish", "reja", "orzu"] },
+      { level: "intermediate", word: "maqsad", translations: ["goal"], synonyms: ["aim", "objective", "target", "purpose"] },
+      { level: "intermediate", word: "plan", translations: ["reja"], synonyms: ["tadbir", "strategiya", "sxema", "loyixa"] },
+      { level: "intermediate", word: "reja", translations: ["plan"], synonyms: ["strategy", "scheme", "project", "blueprint"] },
+      { level: "intermediate", word: "life", translations: ["hayot"], synonyms: ["umr", "tirikchilik", "vujud", "yashash"] },
+      { level: "intermediate", word: "hayot", translations: ["life"], synonyms: ["existence", "living", "being", "lifestyle"] },
+      { level: "intermediate", word: "world", translations: ["dunya"], synonyms: ["jahon", "olam", "yer", "koinot"] },
+      { level: "intermediate", word: "dunya", translations: ["world"], synonyms: ["globe", "earth", "universe", "planet"] },
+      { level: "intermediate", word: "peace", translations: ["tinchlik"], synonyms: ["osoyishtalik", "xotirjamlik", "barqarorlik", "sukut"] },
+      { level: "intermediate", word: "tinchlik", translations: ["peace"], synonyms: ["calm", "tranquility", "stability", "silence"] },
+      { level: "intermediate", word: "hope", translations: ["umid"], synonyms: ["ishonch", "orzu", "niyat", "tayanch"] },
+      { level: "intermediate", word: "umid", translations: ["hope"], synonyms: ["expectation", "wish", "confidence", "trust"] },
+      { level: "intermediate", word: "fear", translations: ["qo'rquv"], synonyms: ["xavotir", "vahima", "dahshat", "tashvish"] },
+      { level: "intermediate", word: "qo'rquv", translations: ["fear"], synonyms: ["anxiety", "dread", "panic", "worry"] },
+      { level: "intermediate", word: "strength", translations: ["kuch"], synonyms: ["quvvat", "zo'r", "bardosh", "mustaqillik"] },
+      { level: "intermediate", word: "kuch", translations: ["strength"], synonyms: ["power", "force", "endurance", "might"] },
+      { level: "intermediate", word: "mind", translations: ["aql"], synonyms: ["idrok", "zehin", "ong", "tafakkur"] },
+      { level: "intermediate", word: "aql", translations: ["mind"], synonyms: ["intellect", "brain", "consciousness", "thought"] },
+      { level: "intermediate", word: "beauty", translations: ["go'zallik"], synonyms: ["chiroy", "nafislik", "muhtashamlik", "joziba"] },
+      { level: "intermediate", word: "go'zallik", translations: ["beauty"], synonyms: ["charm", "elegance", "grace", "allure"] },
+      { level: "intermediate", word: "truth", translations: ["haqiqat"], synonyms: ["rostlik", "sadoqat", "aniqlik", "to'g'rilik"] },
+      { level: "intermediate", word: "haqiqat", translations: ["truth"], synonyms: ["reality", "fact", "honesty", "authenticity"] },
+      { level: "intermediate", word: "freedom", translations: ["erkinlik"], synonyms: ["ozodlik", "mustaqillik", "hurriyat", "bo'shlik"] },
+      { level: "intermediate", word: "erkinlik", translations: ["freedom"], synonyms: ["liberty", "independence", "autonomy", "freewill"] },
+      { level: "intermediate", word: "culture", translations: ["madaniyat"], synonyms: ["an'ana", "meros", "uslub", "tamaddun"] },
+      { level: "intermediate", word: "madaniyat", translations: ["culture"], synonyms: ["tradition", "heritage", "custom", "civilization"] },
+      { level: "intermediate", word: "education", translations: ["ta'lim"], synonyms: ["o'qish", "bilim", "tarbiya", "ma'rifat"] },
+      { level: "intermediate", word: "ta'lim", translations: ["education"], synonyms: ["learning", "study", "training", "instruction"] },
+      { level: "intermediate", word: "science", translations: ["ilm-fan"], synonyms: ["fan", "bilim", "izlanish", "tadqiqot"] },
+      { level: "intermediate", word: "ilm-fan", translations: ["science"], synonyms: ["knowledge", "research", "study", "discipline"] },
+      { level: "intermediate", word: "history", translations: ["tarix"], synonyms: ["o'tmish", "sana", "voqea", "yilnoma"] },
+      { level: "intermediate", word: "tarix", translations: ["history"], synonyms: ["past", "heritage", "annals", "chronicle"] },
+      { level: "intermediate", word: "art", translations: ["san'at"], synonyms: ["ijod", "hunarmandchilik", "tasvir", "estetika"] },
+      { level: "intermediate", word: "san'at", translations: ["art"], synonyms: ["creation", "craft", "painting", "aesthetics"] },
+      { level: "intermediate", word: "sport", translations: ["sport"], synonyms: ["mashq", "o'yin", "musobaqa", "jismoniy tarbiya"] },
+      { level: "intermediate", word: "sport", translations: ["sport"], synonyms: ["exercise", "game", "competition", "athletics"] },
+      { level: "intermediate", word: "team", translations: ["jamoa"], synonyms: ["guruh", "ansambl", "birlik", "hamkorlik"] },
+      { level: "intermediate", word: "jamoa", translations: ["team"], synonyms: ["group", "squad", "crew", "unit"] },
+      { level: "intermediate", word: "project", translations: ["loyiha"], synonyms: ["reja", "tadbir", "ish", "tashabbus"] },
+      { level: "intermediate", word: "loyiha", translations: ["project"], synonyms: ["plan", "initiative", "task", "venture"] },
+      { level: "intermediate", word: "skill", translations: ["mahorat"], synonyms: ["ko'nikma", "qobiliyat", "hunarmandchilik", "tajriba"] },
+      { level: "intermediate", word: "mahorat", translations: ["skill"], synonyms: ["ability", "talent", "expertise", "craft"] },
+      { level: "intermediate", word: "future", translations: ["kelajak"], synonyms: ["istiqbol", "ertaga", "keyingi", "oldindan"] },
+      { level: "intermediate", word: "kelajak", translations: ["future"], synonyms: ["tomorrow", "prospect", "forthcoming", "destiny"] },
       // Advanced Level (100 so'z)
-      { level: "advanced", word: "ubiquitous", translations: ["hamma joyda"], synonyms: ["har yerde", "umumiy"] },
-      { level: "advanced", word: "hamma joyda", translations: ["ubiquitous"], synonyms: ["everywhere", "omnipresent"] },
-      { level: "advanced", word: "resilient", translations: ["bardoshli"], synonyms: ["mustahkam"] },
-      { level: "advanced", word: "bardoshli", translations: ["resilient"], synonyms: ["buoyant", "adaptable"] },
-      { level: "advanced", word: "meticulous", translations: ["ehtiyotkor"], synonyms: ["sinchkov"] },
-      { level: "advanced", word: "ehtiyotkor", translations: ["meticulous"], synonyms: ["careful", "precise"] },
-      { level: "advanced", word: "ephemeral", translations: ["vaqtinchalik"], synonyms: ["qisqa muddatli"] },
-      { level: "advanced", word: "vaqtinchalik", translations: ["ephemeral"], synonyms: ["temporary", "transient"] },
-      { level: "advanced", word: "articulate", translations: ["aniq ifodalamoq"], synonyms: ["ravon"] },
-      { level: "advanced", word: "aniq ifodalamoq", translations: ["articulate"], synonyms: ["eloquent", "fluent"] },
-      { level: "advanced", word: "cohesive", translations: ["birlashtiruvchi"], synonyms: ["yaxlit"] },
-      { level: "advanced", word: "birlashtiruvchi", translations: ["cohesive"], synonyms: ["united", "integrated"] },
-      { level: "advanced", word: "pristine", translations: ["toza"], synonyms: ["pok"] },
-      { level: "advanced", word: "toza", translations: ["pristine"], synonyms: ["clean", "pure"] },
-      { level: "advanced", word: "scrutinize", translations: ["sinchiklab tekshirish"], synonyms: ["ko'zdan kechirmoq"] },
-      { level: "advanced", word: "sinchiklab tekshirish", translations: ["scrutinize"], synonyms: ["examine", "inspect"] },
-      { level: "advanced", word: "fortuitous", translations: ["tasodifiy"], synonyms: ["kutilmagan"] },
-      { level: "advanced", word: "tasodifiy", translations: ["fortuitous"], synonyms: ["accidental", "lucky"] },
-      { level: "advanced", word: "redundant", translations: ["ortiqcha"], synonyms: ["foydasiz"] },
-      { level: "advanced", word: "ortiqcha", translations: ["redundant"], synonyms: ["unnecessary", "excess"] },
-      { level: "advanced", word: "vibrant", translations: ["jonli"], synonyms: ["tirik"] },
-      { level: "advanced", word: "jonli", translations: ["vibrant"], synonyms: ["lively", "dynamic"] },
-      { level: "advanced", word: "intricate", translations: ["murakkab"], synonyms: ["chigal"] },
-      { level: "advanced", word: "murakkab", translations: ["intricate"], synonyms: ["complex", "complicated"] },
-      { level: "advanced", word: "expedite", translations: ["tezlashtirmoq"], synonyms: ["joriy qilmoq"] },
-      { level: "advanced", word: "tezlashtirmoq", translations: ["expedite"], synonyms: ["hasten", "accelerate"] },
-      { level: "advanced", word: "obscure", translations: ["noaniq"], synonyms: ["tushunarsiz"] },
-      { level: "advanced", word: "noaniq", translations: ["obscure"], synonyms: ["unclear", "vague"] },
-      { level: "advanced", word: "ameliorate", translations: ["yaxshilamoq"], synonyms: ["takomillashtirmoq"] },
-      { level: "advanced", word: "yaxshilamoq", translations: ["ameliorate"], synonyms: ["improve", "enhance"] },
-      { level: "advanced", word: "transient", translations: ["o'tkinchi"], synonyms: ["muvaqqat"] },
-      { level: "advanced", word: "o'tkinchi", translations: ["transient"], synonyms: ["temporary", "fleeting"] },
-      { level: "advanced", word: "candid", translations: ["samimiy"], synonyms: ["ochiq"] },
-      { level: "advanced", word: "samimiy", translations: ["candid"], synonyms: ["honest", "frank"] },
-      { level: "advanced", word: "superfluous", translations: ["ortiqcha"], synonyms: ["keraksiz"] },
-      { level: "advanced", word: "ortiqcha", translations: ["superfluous"], synonyms: ["unnecessary", "excessive"] },
-      { level: "advanced", word: "elucidate", translations: ["tushuntirmoq"], synonyms: ["aniqlashtirmoq"] },
-      { level: "advanced", word: "tushuntirmoq", translations: ["elucidate"], synonyms: ["explain", "clarify"] },
-      { level: "advanced", word: "tenuous", translations: ["nozik"], synonyms: ["zaif"] },
-      { level: "advanced", word: "nozik", translations: ["tenuous"], synonyms: ["weak", "fragile"] },
-      { level: "advanced", word: "profound", translations: ["chuqur"], synonyms: ["teran"] },
-      { level: "advanced", word: "chuqur", translations: ["profound"], synonyms: ["deep", "significant"] },
-      { level: "advanced", word: "obstinate", translations: ["qaysar"], synonyms: ["o'jar"] },
-      { level: "advanced", word: "qaysar", translations: ["obstinate"], synonyms: ["stubborn", "inflexible"] },
-      { level: "advanced", word: "mitigate", translations: ["yumshatmoq"], synonyms: ["kamaytirmoq"] },
-      { level: "advanced", word: "yumshatmoq", translations: ["mitigate"], synonyms: ["alleviate", "reduce"] },
-      { level: "advanced", word: "pervasive", translations: ["keng tarqalgan"], synonyms: ["umumiy"] },
-      { level: "advanced", word: "keng tarqalgan", translations: ["pervasive"], synonyms: ["widespread", "common"] },
-      { level: "advanced", word: "disparate", translations: ["turlicha"], synonyms: ["farqli"] },
-      { level: "advanced", word: "turlicha", translations: ["disparate"], synonyms: ["different", "diverse"] },
-      { level: "advanced", word: "epiphany", translations: ["vahi"], synonyms: ["tushuncha"] },
-      { level: "advanced", word: "vahi", translations: ["epiphany"], synonyms: ["revelation", "insight"] },
-      { level: "advanced", word: "ubiquity", translations: ["hamma joyda bo'lish"], synonyms: ["umumiy tarqalish"] },
-      { level: "advanced", word: "hamma joyda bo'lish", translations: ["ubiquity"], synonyms: ["omnipresence", "prevalence"] },
-      { level: "advanced", word: "altruistic", translations: ["fidokor"], synonyms: ["saxiy"] },
-      { level: "advanced", word: "fidokor", translations: ["altruistic"], synonyms: ["selfless", "generous"] },
-      { level: "advanced", word: "ambiguous", translations: ["noaniq"], synonyms: ["tushunarsiz"] },
-      { level: "advanced", word: "noaniq", translations: ["ambiguous"], synonyms: ["vague", "unclear"] },
-      { level: "advanced", word: "anomaly", translations: ["anomalya"], synonyms: ["chetlanish"] },
-      { level: "advanced", word: "anomalya", translations: ["anomaly"], synonyms: ["abnormality", "irregularity"] },
-      { level: "advanced", word: "benevolent", translations: ["mehribon"], synonyms: ["xayrixoh"] },
-      { level: "advanced", word: "mehribon", translations: ["benevolent"], synonyms: ["kind", "compassionate"] },
-      { level: "advanced", word: "cogent", translations: ["ishonarli"], synonyms: ["aniq"] },
-      { level: "advanced", word: "ishonarli", translations: ["cogent"], synonyms: ["convincing", "compelling"] },
-      { level: "advanced", word: "dearth", translations: ["yetishmaslik"], synonyms: ["kamchilik"] },
-      { level: "advanced", word: "yetishmaslik", translations: ["dearth"], synonyms: ["scarcity", "lack"] },
-      { level: "advanced", word: "efficacy", translations: ["samaradorlik"], synonyms: ["foydalilik"] },
-      { level: "advanced", word: "samaradorlik", translations: ["efficacy"], synonyms: ["effectiveness", "potency"] },
-      { level: "advanced", word: "foster", translations: ["rivojlantirmoq"], synonyms: ["tarbiyalamoq"] },
-      { level: "advanced", word: "rivojlantirmoq", translations: ["foster"], synonyms: ["promote", "nurture"] },
-      { level: "advanced", word: "gregarious", translations: ["do'stona"], synonyms: ["xushmuomala"] },
-      { level: "advanced", word: "do'stona", translations: ["gregarious"], synonyms: ["sociable", "friendly"] },
-      { level: "advanced", word: "impeccable", translations: ["mukammal"], synonyms: ["benuqson"] },
-      { level: "advanced", word: "mukammal", translations: ["impeccable"], synonyms: ["perfect", "flawless"] },
-      { level: "advanced", word: "juxtapose", translations: ["yonma-yon qo'ymoq"], synonyms: ["solishtirmoq"] },
-      { level: "advanced", word: "yonma-yon qo'ymoq", translations: ["juxtapose"], synonyms: ["compare", "contrast"] },
-      { level: "advanced", word: "lucid", translations: ["aniq"], synonyms: ["tushunarli"] },
-      { level: "advanced", word: "aniq", translations: ["lucid"], synonyms: ["clear", "transparent"] },
-      { level: "advanced", word: "mundane", translations: ["odatiy"], synonyms: ["zerikarli"] },
-      { level: "advanced", word: "odatiy", translations: ["mundane"], synonyms: ["ordinary", "routine"] },
-      { level: "advanced", word: "nuance", translations: ["nozik farq"], synonyms: ["xususiyat"] },
-      { level: "advanced", word: "nozik farq", translations: ["nuance"], synonyms: ["subtlety", "shade"] },
-      { level: "advanced", word: "paradox", translations: ["paradoks"], synonyms: ["ziddiyat"] },
-      { level: "advanced", word: "paradoks", translations: ["paradox"], synonyms: ["contradiction", "anomaly"] }
-      // To'liq 3000+ so'zga kengaytirish uchun shu formatda qo'shimcha so'zlar qo'shilishi mumkin
+      { level: "advanced", word: "ubiquitous", translations: ["hamma joyda"], synonyms: ["har yerde", "umumiy", "keng tarqalgan", "doimiy"] },
+      { level: "advanced", word: "hamma joyda", translations: ["ubiquitous"], synonyms: ["everywhere", "omnipresent", "widespread", "universal"] },
+      { level: "advanced", word: "resilient", translations: ["bardoshli"], synonyms: ["mustahkam", "qaytuvchan", "moslashuvchan", "chida"] },
+      { level: "advanced", word: "bardoshli", translations: ["resilient"], synonyms: ["buoyant", "adaptable", "flexible", "durable"] },
+      { level: "advanced", word: "meticulous", translations: ["ehtiyotkor"], synonyms: ["sinchkov", "aniq", "puxta", "diqqatli"] },
+      { level: "advanced", word: "ehtiyotkor", translations: ["meticulous"], synonyms: ["careful", "precise", "thorough", "attentive"] },
+      { level: "advanced", word: "ephemeral", translations: ["vaqtinchalik"], synonyms: ["qisqa muddatli", "o'tkinchi", "bir lahzalik", "noaniq"] },
+      { level: "advanced", word: "vaqtinchalik", translations: ["ephemeral"], synonyms: ["temporary", "transient", "fleeting", "momentary"] },
+      { level: "advanced", word: "articulate", translations: ["aniq ifodalamoq"], synonyms: ["ravon", "so'zlashuvchan", "tushunarli", "aniq"] },
+      { level: "advanced", word: "aniq ifodalamoq", translations: ["articulate"], synonyms: ["eloquent", "fluent", "expressive", "clear"] },
+      { level: "advanced", word: "cohesive", translations: ["birlashtiruvchi"], synonyms: ["yaxlit", "bog'langan", "uyushgan", "mustahkam"] },
+      { level: "advanced", word: "birlashtiruvchi", translations: ["cohesive"], synonyms: ["united", "integrated", "connected", "coherent"] },
+      { level: "advanced", word: "pristine", translations: ["toza"], synonyms: ["pok", "sof", "benuqson", "o'zgarmagan"] },
+      { level: "advanced", word: "toza", translations: ["pristine"], synonyms: ["clean", "pure", "immaculate", "untouched"] },
+      { level: "advanced", word: "scrutinize", translations: ["sinchiklab tekshirish"], synonyms: ["ko'zdan kechirmoq", "tahlil qilmoq", "tekshirmoq", "o'rganmoq"] },
+      { level: "advanced", word: "sinchiklab tekshirish", translations: ["scrutinize"], synonyms: ["examine", "inspect", "analyze", "study"] },
+      { level: "advanced", word: "fortuitous", translations: ["tasodifiy"], synonyms: ["kutilmagan", "omadli", "befarq", "tasodifan"] },
+      { level: "advanced", word: "tasodifiy", translations: ["fortuitous"], synonyms: ["accidental", "lucky", "chance", "random"] },
+      { level: "advanced", word: "redundant", translations: ["ortiqcha"], synonyms: ["keraksiz", "foydasiz", "qo'shimcha", "hadiksiz"] },
+      { level: "advanced", word: "ortiqcha", translations: ["redundant"], synonyms: ["unnecessary", "excess", "surplus", "extra"] },
+      { level: "advanced", word: "vibrant", translations: ["jonli"], synonyms: ["tirik", "rang-barang", "faol", "quvnoq"] },
+      { level: "advanced", word: "jonli", translations: ["vibrant"], synonyms: ["lively", "dynamic", "colorful", "energetic"] },
+      { level: "advanced", word: "intricate", translations: ["murakkab"], synonyms: ["chigal", "nozik", "tushunarsiz", "detalli"] },
+      { level: "advanced", word: "murakkab", translations: ["intricate"], synonyms: ["complex", "complicated", "detailed", "elaborate"] },
+      { level: "advanced", word: "expedite", translations: ["tezlashtirmoq"], synonyms: ["joriy qilmoq", "tezkorlashtirmoq", "surtmoq", "oldinga siljitmoq"] },
+      { level: "advanced", word: "tezlashtirmoq", translations: ["expedite"], synonyms: ["hasten", "accelerate", "speed up", "facilitate"] },
+      { level: "advanced", word: "obscure", translations: ["noaniq"], synonyms: ["tushunarsiz", "xira", "yashirin", "qorong'i"] },
+      { level: "advanced", word: "noaniq", translations: ["obscure"], synonyms: ["unclear", "vague", "hidden", "ambiguous"] },
+      { level: "advanced", word: "ameliorate", translations: ["yaxshilamoq"], synonyms: ["takomillashtirmoq", "o'nglamoq", "yuksaltirmoq", "isloh qilmoq"] },
+      { level: "advanced", word: "yaxshilamoq", translations: ["ameliorate"], synonyms: ["improve", "enhance", "better", "upgrade"] },
+      { level: "advanced", word: "transient", translations: ["o'tkinchi"], synonyms: ["muvaqqat", "vaqtinchalik", "qisqa muddatli", "tez o'tadigan"] },
+      { level: "advanced", word: "o'tkinchi", translations: ["transient"], synonyms: ["temporary", "fleeting", "brief", "short-lived"] },
+      { level: "advanced", word: "candid", translations: ["samimiy"], synonyms: ["ochiq", "rostgo'y", "to'g'ri", "sodda"] },
+      { level: "advanced", word: "samimiy", translations: ["candid"], synonyms: ["honest", "frank", "open", "sincere"] },
+      { level: "advanced", word: "superfluous", translations: ["ortiqcha"], synonyms: ["keraksiz", "foydasiz", "hadiksiz", "qo'shimcha"] },
+      { level: "advanced", word: "ortiqcha", translations: ["superfluous"], synonyms: ["unnecessary", "excessive", "redundant", "surplus"] },
+      { level: "advanced", word: "elucidate", translations: ["tushuntirmoq"], synonyms: ["aniqlashtirmoq", "ravshanlashtirmoq", "o'rgatmoq", "tavsiflamoq"] },
+      { level: "advanced", word: "tushuntirmoq", translations: ["elucidate"], synonyms: ["explain", "clarify", "illustrate", "interpret"] },
+      { level: "advanced", word: "tenuous", translations: ["nozik"], synonyms: ["zaif", "noziklik", "noqulay", "noaniq"] },
+      { level: "advanced", word: "nozik", translations: ["tenuous"], synonyms: ["weak", "fragile", "slight", "delicate"] },
+      { level: "advanced", word: "profound", translations: ["chuqur"], synonyms: ["teran", "jiddiy", "muhim", "keng"] },
+      { level: "advanced", word: "chuqur", translations: ["profound"], synonyms: ["deep", "significant", "serious", "extensive"] },
+      { level: "advanced", word: "obstinate", translations: ["qaysar"], synonyms: ["o'jar", "qattiqqo'l", "mustaqil", "qat'iy"] },
+      { level: "advanced", word: "qaysar", translations: ["obstinate"], synonyms: ["stubborn", "inflexible", "unyielding", "resolute"] },
+      { level: "advanced", word: "mitigate", translations: ["yumshatmoq"], synonyms: ["kamaytirmoq", "engillashtirmoq", "pasaytirmoq", "osonlashtirmoq"] },
+      { level: "advanced", word: "yumshatmoq", translations: ["mitigate"], synonyms: ["alleviate", "reduce", "lessen", "ease"] },
+      { level: "advanced", word: "pervasive", translations: ["keng tarqalgan"], synonyms: ["umumiy", "hamma joyda", "yoyilgan", "keng"] },
+      { level: "advanced", word: "keng tarqalgan", translations: ["pervasive"], synonyms: ["widespread", "common", "prevalent", "ubiquitous"] },
+      { level: "advanced", word: "disparate", translations: ["turlicha"], synonyms: ["farqli", "xilma-xil", "turli", "nomutanosib"] },
+      { level: "advanced", word: "turlicha", translations: ["disparate"], synonyms: ["different", "diverse", "varied", "distinct"] },
+      { level: "advanced", word: "epiphany", translations: ["vahi"], synonyms: ["tushuncha", "ilhom", "kashfiyot", "o'zgarish"] },
+      { level: "advanced", word: "vahi", translations: ["epiphany"], synonyms: ["revelation", "insight", "realization", "breakthrough"] },
+      { level: "advanced", word: "ubiquity", translations: ["hamma joyda bo'lish"], synonyms: ["umumiy tarqalish", "keng yoyilish", "doimiylik", "hammaboplik"] },
+      { level: "advanced", word: "hamma joyda bo'lish", translations: ["ubiquity"], synonyms: ["omnipresence", "prevalence", "universality", "everywhere"] },
+      { level: "advanced", word: "altruistic", translations: ["fidokor"], synonyms: ["saxiy", "o'ziga xos", "mehrbon", "bexatar"] },
+      { level: "advanced", word: "fidokor", translations: ["altruistic"], synonyms: ["selfless", "generous", "kind", "benevolent"] },
+      { level: "advanced", word: "ambiguous", translations: ["noaniq"], synonyms: ["tushunarsiz", "xira", "qorong'i", "ikkinchi ma'noli"] },
+      { level: "advanced", word: "noaniq", translations: ["ambiguous"], synonyms: ["vague", "unclear", "obscure", "equivocal"] },
+      { level: "advanced", word: "anomaly", translations: ["anomalya"], synonyms: ["chetlanish", "g'ayritabiiy", "noto'g'ri", "xato"] },
+      { level: "advanced", word: "anomalya", translations: ["anomaly"], synonyms: ["abnormality", "irregularity", "deviation", "exception"] },
+      { level: "advanced", word: "benevolent", translations: ["mehribon"], synonyms: ["xayrixoh", "saxiy", "yordamchi", "oqko'ngil"] },
+      { level: "advanced", word: "mehribon", translations: ["benevolent"], synonyms: ["kind", "compassionate", "generous", "gracious"] },
+      { level: "advanced", word: "cogent", translations: ["ishonarli"], synonyms: ["aniq", "qat'iy", "dalilli", "muhim"] },
+      { level: "advanced", word: "ishonarli", translations: ["cogent"], synonyms: ["convincing", "compelling", "persuasive", "logical"] },
+      { level: "advanced", word: "dearth", translations: ["yetishmaslik"], synonyms: ["kamchilik", "tanqislik", "yo'qlik", "kemtiklik"] },
+      { level: "advanced", word: "yetishmaslik", translations: ["dearth"], synonyms: ["scarcity", "lack", "shortage", "deficiency"] },
+      { level: "advanced", word: "efficacy", translations: ["samaradorlik"], synonyms: ["foydalilik", "natija", "muvaffaqiyat", "kuch"] },
+      { level: "advanced", word: "samaradorlik", translations: ["efficacy"], synonyms: ["effectiveness", "potency", "success", "impact"] },
+      { level: "advanced", word: "foster", translations: ["rivojlantirmoq"], synonyms: ["tarbiyalamoq", "o'zlashtirmoq", "yuksaltirmoq", "qo'llab-quvvatlamoq"] },
+      { level: "advanced", word: "rivojlantirmoq", translations: ["foster"], synonyms: ["promote", "nurture", "cultivate", "encourage"] },
+      { level: "advanced", word: "gregarious", translations: ["do'stona"], synonyms: ["xushmuomala", "suhbatdosh", "ochiq", "jamiyatsevar"] },
+      { level: "advanced", word: "do'stona", translations: ["gregarious"], synonyms: ["sociable", "friendly", "outgoing", "convivial"] },
+      { level: "advanced", word: "impeccable", translations: ["mukammal"], synonyms: ["benuqson", "ideal", "to'g'ri", "aybsiz"] },
+      { level: "advanced", word: "mukammal", translations: ["impeccable"], synonyms: ["perfect", "flawless", "faultless", "ideal"] },
+      { level: "advanced", word: "juxtapose", translations: ["yonma-yon qo'ymoq"], synonyms: ["solishtirmoq", "qarama-qarshi qo'ymoq", "taqqoslamoq", "birlashtirmoq"] },
+      { level: "advanced", word: "yonma-yon qo'ymoq", translations: ["juxtapose"], synonyms: ["compare", "contrast", "align", "place side by side"] },
+      { level: "advanced", word: "lucid", translations: ["aniq"], synonyms: ["tushunarli", "ravshan", "ochiq", "sof"] },
+      { level: "advanced", word: "aniq", translations: ["lucid"], synonyms: ["clear", "transparent", "intelligible", "coherent"] },
+      { level: "advanced", word: "mundane", translations: ["odatiy"], synonyms: ["zerikarli", "kundalik", "oddiy", "doimiy"] },
+      { level: "advanced", word: "odatiy", translations: ["mundane"], synonyms: ["ordinary", "routine", "common", "everyday"] },
+      { level: "advanced", word: "nuance", translations: ["nozik farq"], synonyms: ["xususiyat", "detal", "farq", "noziklik"] },
+      { level: "advanced", word: "nozik farq", translations: ["nuance"], synonyms: ["subtlety", "shade", "distinction", "detail"] },
+      { level: "advanced", word: "paradox", translations: ["paradoks"], synonyms: ["ziddiyat", "qarama-qarshilik", "muammo", "tushunarsizlik"] },
+      { level: "advanced", word: "paradoks", translations: ["paradox"], synonyms: ["contradiction", "anomaly", "inconsistency", "puzzle"] }
     ];
 
-    const canvas = document.getElementById("particlesCanvas");
+     const canvas = document.getElementById("particlesCanvas");
     const ctx = canvas.getContext("2d");
     let particles = [];
 
@@ -841,7 +840,7 @@
 
     function createParticles() {
       particles = [];
-      for (let i = 0; i < 150; i++) { // Zarralar sonini 100 dan 150 ga oshirish
+      for (let i = 0; i < 150; i++) {
         particles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -862,8 +861,8 @@
         ctx.fill();
         p.x += p.vx;
         p.y += p.vy;
-        if (p.x < 0 || p.x > canvas.width) p.vx = -p.vx;
-        if (p.y < 0 || p.y > canvas.height) p.vy = -p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
       });
       requestAnimationFrame(drawParticles);
     }
@@ -872,9 +871,22 @@
       resizeCanvas();
       createParticles();
     });
+
     resizeCanvas();
     createParticles();
     drawParticles();
+
+    let currentLevel = null;
+    let currentWord = null;
+    let score = 0;
+    let currentWordIndex = 0;
+    let totalWords = 50;
+    let timer = null;
+    let timeLeft = 0;
+    let usedWords = [];
+    let availableWords = [];
+    let assessmentWords = [];
+    let assessmentCorrect = 0;
 
     const difficultyModal = document.getElementById("difficultyModal");
     const progressBar = document.getElementById("progressBar");
@@ -882,7 +894,6 @@
     const timerBar = document.getElementById("timerBar");
     const timerText = document.getElementById("timerText");
     const wordContainer = document.getElementById("wordContainer");
-    const inputContainer = document.getElementById("inputContainer");
     const answerInput = document.getElementById("answerInput");
     const submitButton = document.getElementById("submitButton");
     const scoreBoard = document.getElementById("scoreBoard");
@@ -893,174 +904,183 @@
     const gameOverText = document.getElementById("gameOverText");
     const restartButton = document.getElementById("restartButton");
 
-    let currentLevel = "";
-    let currentWords = [];
-    let currentWordIndex = 0;
-    let score = 0;
-    let timerInterval;
-    let timeLeft = 30;
-    let usedWords = []; // Ishlatilgan so'zlarni saqlash
+    function initializeGame() {
+      document.querySelectorAll(".difficulty-btn").forEach(button => {
+        button.addEventListener("click", () => {
+          currentLevel = button.dataset.level;
+          difficultyModal.classList.remove("show");
+          startGame();
+        });
+      });
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+      submitButton.addEventListener("click", checkAnswer);
+      answerInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") checkAnswer();
+      });
+
+      restartButton.addEventListener("click", () => {
+        gameOverModal.classList.remove("show");
+        resetGame();
+      });
     }
 
-    function startGame(level) {
-      currentLevel = level;
-      console.log("Selected mode: " + level);
-      let availableWords = words.filter(w => w.level === level && !usedWords.includes(w.word));
-      if (level === "assessment") {
-        availableWords = [
-          ...words.filter(w => w.level === "beginner" && !usedWords.includes(w.word)).slice(0, 17),
-          ...words.filter(w => w.level === "intermediate" && !usedWords.includes(w.word)).slice(0, 17),
-          ...words.filter(w => w.level === "advanced" && !usedWords.includes(w.word)).slice(0, 16)
-        ];
-      }
-      currentWords = shuffle(availableWords).slice(0, 50);
-      totalWordsDisplay.textContent = "50";
-      console.log("Filtered words: ", currentWords);
-      if (currentWords.length < 50) {
-        console.error("Not enough unique words for mode: " + level);
-        alert("Not enough unique words available. Please reset used words or try another mode.");
-        return;
-      }
-      currentWords.forEach(w => usedWords.push(w.word)); // Ishlatilgan so'zlarni qo'shish
-      currentWordIndex = 0;
+    function startGame() {
       score = 0;
-      difficultyModal.classList.remove("show");
-      difficultyModal.style.display = "none";
-      timerBarContainer.style.display = "block";
+      currentWordIndex = 0;
+      usedWords = [];
+      assessmentWords = [];
+      assessmentCorrect = 0;
+
+      if (currentLevel === "assessment") {
+        totalWords = 20;
+        availableWords = [];
+        const levels = ["beginner", "intermediate", "advanced"];
+        levels.forEach(level => {
+          const levelWords = words.filter(w => w.level === level);
+          for (let i = 0; i < 7; i++) {
+            const randomIndex = Math.floor(Math.random() * levelWords.length);
+            availableWords.push(levelWords[randomIndex]);
+            levelWords.splice(randomIndex, 1);
+          }
+        });
+        availableWords = availableWords.sort(() => Math.random() - 0.5);
+      } else {
+        totalWords = 50;
+        availableWords = words.filter(w => w.level === currentLevel);
+      }
+
+      totalWordsDisplay.textContent = totalWords;
       scoreBoard.style.display = "flex";
-      inputContainer.style.display = "flex";
+      timerBarContainer.style.display = "block";
+      createProgressCircles();
+      nextWord();
+    }
+
+    function createProgressCircles() {
       progressBar.innerHTML = "";
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < totalWords; i++) {
         const circle = document.createElement("div");
         circle.classList.add("progress-circle");
         progressBar.appendChild(circle);
       }
-      displayWord();
-      startTimer();
-    }
-
-    function displayWord() {
-      if (currentWordIndex >= currentWords.length) {
-        endGame();
-        return;
-      }
-      const wordObj = currentWords[currentWordIndex];
-      const isEnglish = Math.random() < 0.5;
-      wordContainer.textContent = isEnglish ? wordObj.word : wordObj.translations[0];
-      wordContainer.dataset.isEnglish = isEnglish;
-      answerInput.value = "";
-      answerInput.classList.remove("correct", "incorrect");
-      answerInput.focus();
-      currentWordDisplay.textContent = currentWordIndex + 1;
-      scoreDisplay.textContent = score;
-      timeLeft = 30;
-      timerText.textContent = timeLeft;
-      timerBar.style.width = "100%";
     }
 
     function startTimer() {
-      clearInterval(timerInterval);
-      timeLeft = 30;
-      timerInterval = setInterval(() => {
+      clearInterval(timer);
+      timeLeft = currentLevel === "beginner" ? 30 : currentLevel === "intermediate" ? 20 : currentLevel === "advanced" ? 15 : 10;
+      timerText.textContent = timeLeft;
+      timerBar.style.width = "100%";
+      timer = setInterval(() => {
         timeLeft--;
         timerText.textContent = timeLeft;
-        timerBar.style.width = `${(timeLeft / 30) * 100}%`;
+        timerBar.style.width = `${(timeLeft / (currentLevel === "beginner" ? 30 : currentLevel === "intermediate" ? 20 : currentLevel === "advanced" ? 15 : 10)) * 100}%`;
         if (timeLeft <= 0) {
-          checkAnswer("");
+          markAnswer(false);
+          showCorrectAnswer();
+          nextWord();
         }
       }, 1000);
     }
 
-    function checkAnswer(input) {
-      clearInterval(timerInterval);
-      const wordObj = currentWords[currentWordIndex];
-      const isEnglish = wordContainer.dataset.isEnglish === "true";
-      const correctAnswers = isEnglish
-        ? [...wordObj.translations, ...wordObj.synonyms]
-        : [wordObj.word, ...wordObj.synonyms];
-      const isCorrect = input.trim().toLowerCase() !== "" && correctAnswers.map(a => a.toLowerCase()).includes(input.trim().toLowerCase());
-      const circle = progressBar.children[currentWordIndex];
-      if (isCorrect) {
-        score += 2;
-        circle.classList.add("correct");
-        answerInput.classList.add("correct");
-      } else {
-        circle.classList.add("incorrect");
-        answerInput.classList.add("incorrect");
-        wordContainer.textContent = `Correct: ${isEnglish ? wordObj.translations[0] : wordObj.word}`;
+    function nextWord() {
+      if (currentWordIndex >= totalWords) {
+        endGame();
+        return;
       }
-      answerInput.disabled = true;
-      submitButton.disabled = true;
-      setTimeout(() => {
-        answerInput.disabled = false;
-        submitButton.disabled = false;
-        currentWordIndex++;
-        displayWord();
-        startTimer();
-      }, 1000);
+
+      if (availableWords.length === 0) {
+        endGame();
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      currentWord = availableWords[randomIndex];
+      usedWords.push(currentWord);
+      availableWords.splice(randomIndex, 1);
+
+      wordContainer.textContent = currentWord.word;
+      answerInput.value = "";
+      answerInput.classList.remove("correct", "incorrect");
+      wordContainer.classList.remove("incorrect");
+      currentWordIndex++;
+      currentWordDisplay.textContent = currentWordIndex;
+      startTimer();
+    }
+
+    function checkAnswer() {
+      const userAnswer = answerInput.value.trim().toLowerCase();
+      const correctAnswer = currentWord.translations[0].toLowerCase();
+      const isCorrect = userAnswer === correctAnswer || currentWord.synonyms.some(syn => syn.toLowerCase() === userAnswer);
+
+      markAnswer(isCorrect);
+      if (!isCorrect) {
+        showCorrectAnswer();
+      }
+      if (currentLevel === "assessment") {
+        assessmentWords.push({ word: currentWord.word, correct: isCorrect });
+        if (isCorrect) assessmentCorrect++;
+      }
+
+      setTimeout(nextWord, 1500); // To'g'ri javob ko'rsatilishi uchun biroz ko'proq vaqt
+    }
+
+    function markAnswer(isCorrect) {
+      clearInterval(timer);
+      const circles = document.querySelectorAll(".progress-circle");
+      circles[currentWordIndex - 1].classList.add(isCorrect ? "correct" : "incorrect");
+      answerInput.classList.add(isCorrect ? "correct" : "incorrect");
+      if (!isCorrect) {
+        wordContainer.classList.add("incorrect");
+      }
+      if (isCorrect) score += 10;
+      scoreDisplay.textContent = score;
+    }
+
+    function showCorrectAnswer() {
+      wordContainer.textContent = `${currentWord.word} → ${currentWord.translations[0]}, [${currentWord.synonyms.join(", ")}]`;
     }
 
     function endGame() {
-      clearInterval(timerInterval);
+      clearInterval(timer);
       timerBarContainer.style.display = "none";
-      scoreBoard.style.display = "none";
-      inputContainer.style.display = "none";
       wordContainer.textContent = "";
-      gameOverModal.classList.add("show");
-      let resultText = `Game Over! Your Score: ${score}/100`;
+      answerInput.value = "";
+      answerInput.disabled = true;
+      submitButton.disabled = true;
+
+      let resultText = `Game Over! Your score: ${score} out of ${totalWords * 10}. `;
       if (currentLevel === "assessment") {
-        const percentage = (score / 100) * 100;
-        let ieltsLevel = "";
-        if (percentage <= 20) {
-          ieltsLevel = "IELTS 3.0–4.0 (Beginner)";
-        } else if (percentage <= 40) {
-          ieltsLevel = "IELTS 4.5–5.5 (Elementary to Pre-Intermediate)";
-        } else if (percentage <= 60) {
-          ieltsLevel = "IELTS 6.0–6.5 (Intermediate)";
-        } else if (percentage <= 80) {
-          ieltsLevel = "IELTS 7.0–7.5 (Upper-Intermediate)";
-        } else {
-          ieltsLevel = "IELTS 8.0–9.0 (Advanced)";
-        }
-        resultText += `\nYour Estimated IELTS Level: ${ieltsLevel}`;
+        const level = assessmentCorrect >= 18 ? "Advanced" : assessmentCorrect >= 12 ? "Intermediate" : "Beginner";
+        resultText += `Recommended level: ${level}. Correct answers: ${assessmentCorrect}/20.`;
+      } else {
+        resultText += `You completed the ${currentLevel} level!`;
       }
+
       gameOverText.textContent = resultText;
+      gameOverModal.classList.add("show");
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    function resetGame() {
+      score = 0;
+      currentWordIndex = 0;
+      usedWords = [];
+      availableWords = [];
+      assessmentWords = [];
+      assessmentCorrect = 0;
+      answerInput.disabled = false;
+      submitButton.disabled = false;
+      scoreDisplay.textContent = score;
+      currentWordDisplay.textContent = "0";
       difficultyModal.classList.add("show");
-      difficultyModal.style.display = "flex";
-    });
+      scoreBoard.style.display = "none";
+      timerBarContainer.style.display = "none";
+      progressBar.innerHTML = "";
+      wordContainer.textContent = "";
+      answerInput.classList.remove("correct", "incorrect");
+      wordContainer.classList.remove("incorrect");
+    }
 
-    document.querySelectorAll(".difficulty-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        startGame(btn.dataset.level);
-      });
-    });
-
-    submitButton.addEventListener("click", () => {
-      checkAnswer(answerInput.value);
-    });
-
-    answerInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        checkAnswer(answerInput.value);
-      }
-    });
-
-    restartButton.addEventListener("click", () => {
-      gameOverModal.classList.remove("show");
-      difficultyModal.classList.add("show");
-      difficultyModal.style.display = "flex";
-      usedWords = []; // O'yin qayta boshlanganda ishlatilgan so'zlarni tozalash
-    });
-  </script>
+    initializeGame();
+    </script>
 </body>
 </html>
