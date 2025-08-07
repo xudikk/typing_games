@@ -237,6 +237,7 @@
       overflow: hidden;
       animation: cardPop 0.8s ease forwards;
       transform: perspective(600px) rotateX(0deg) rotateY(0deg);
+
     }
 
     .game-card.disabled {
@@ -455,6 +456,21 @@
       0% { transform: scale(0.9); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
+
+
+    .badge {
+      position: center;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(45deg, var(--secondary), #facc15, var(--success));
+      color: white;
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
   </style>
 </head>
 <body>
@@ -586,6 +602,19 @@
               <p>Dasturlash oid bilimingiz sinab ko'ring</p>
               <a href="arcade/coding_quiz/index.html" class="game-link">O‘ynash</a>
             </div>
+
+            <div class="game-card">
+              <span class="badge">Yangi</span> <!-- Badge qo'shildi -->
+              <span class="card-icon"><i class="fas fa-th"></i></span>
+              <svg class="progress-ring" viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="16" />
+              </svg>
+              <h3>X va 0</h3>
+              <p>Tic Tac Toe Qog'ozlardagi eski Do'stona o'yin</p>
+              <a href="arcade/x0.html" class="game-link">O‘ynash</a>
+            </div>
+
+
           </div>
         </div>
         <div class="category">

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XO O'yini</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --secondary: #f59e0b;
+      --accent: #a5b4fc;
+      --text: #ffffff;
+      --bg-dark: #0f172a;
+      --bg-light: #1e293b;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .hero-background {
+      position: relative;
+      width: 100%;
+      min-height: calc(100vh - 80px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+    }
+
+    .starfield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(2px 2px at 20px 30px, var(--accent) 1.5px, transparent 0),
+                       radial-gradient(1.5px 1.5px at 50px 60px, var(--secondary) 1px, transparent 0),
+                       radial-gradient(1.8px 1.8px at 80px 90px, var(--text) 1.2px, transparent 0);
+      background-size: 120px 120px;
+      background-repeat: repeat;
+      animation: twinkle 4s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes twinkle {
+      0% { transform: translate(0, 0); opacity: 0.9; }
+      100% { transform: translate(-40px, -40px); opacity: 0.9; }
+    }
+
+    .floating-elements {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .floating-icon {
+      position: absolute;
+      font-size: 1.6rem;
+      color: var(--accent);
+      opacity: 0.6;
+      animation: float 3.5s ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+
+    .floating-icon:nth-child(1) { top: 10%; left: 15%; --delay: 0s; }
+    .floating-icon:nth-child(2) { top: 50%; right: 10%; --delay: 0.7s; }
+    .floating-icon:nth-child(3) { top: 35%; right: 20%; --delay: 0.3s; }
+    .floating-icon:nth-child(4) { bottom: 25%; left: 20%; --delay: 1.1s; }
+    .floating-icon:nth-child(5) { bottom: 10%; left: 45%; --delay: 1.5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-15px) scale(1.15); }
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+      z-index: 4;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--secondary);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      transition: transform 0.5s ease, box-shadow 0.3s ease;
+    }
+
+    .brand-icon:hover {
+      transform: rotate(360deg);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+    }
+
+    .brand-text {
+      color: var(--accent);
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-btn {
+      background: linear-gradient(45deg, var(--primary), #7c3aed);
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .nav-btn a {
+      color: var(--text);
+      text-decoration: none;
+      display: block;
+    }
+
+    .nav-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
+    }
+
+    .game-container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 40px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      transition: box-shadow 0.3s ease;
+      min-height: 800px;
+    }
+
+    .game-container:hover {
+      box-shadow: 0 12px 30px rgba(165, 180, 252, 0.5);
+    }
+
+    .game-title {
+      color: var(--accent);
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      text-shadow: 0 0 15px rgba(165, 180, 252, 0.8);
+      animation: glowPulse 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes glowPulse {
+      0% { text-shadow: 0 0 12px rgba(165, 180, 252, 0.8); }
+      100% { text-shadow: 0 0 25px rgba(165, 180, 252, 1); }
+    }
+
+    .board {
+      display: grid;
+      gap: 8px;
+      background: rgba(79, 70, 229, 0.35);
+      border: 3px solid var(--accent);
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      margin: 30px auto;
+      padding: 15px;
+      width: fit-content;
+      transition: transform 0.3s ease;
+    }
+
+    .board:hover {
+      transform: scale(1.02);
+    }
+
+    .cell {
+      width: 90px;
+      height: 90px;
+      background: var(--bg-light);
+      border: 3px solid var(--secondary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .cell:hover {
+      background: var(--primary);
+      transform: scale(1.1);
+      box-shadow: 0 6px 15px rgba(79, 70, 229, 0.5);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-top: 30px;
+      background: rgba(79, 70, 229, 0.15);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .stats span {
+      border: 2px solid var(--accent);
+      padding: 10px 20px;
+      border-radius: 10px;
+      animation: popIn 0.6s ease forwards;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stats span:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 15px rgba(165, 180, 252, 0.4);
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      padding: 30px;
+      border-radius: 16px;
+      text-align: center;
+      color: var(--text);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border: 3px solid #facc15;
+      width: 90%;
+      max-width: 500px;
+      animation: glowFade 0.5s ease-in;
+      backdrop-filter: blur(8px);
+    }
+
+    @keyframes glowFade {
+      from { opacity: 0; transform: scale(0.85); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+      to { opacity: 1; transform: scale(1); box-shadow: 0 10px 25px rgba(245, 158, 11, 0.6); }
+    }
+
+    .modal-content h2 {
+      color: var(--accent);
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
+    }
+
+    .mode-buttons, .size-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 15px 0;
+    }
+
+    .mode-btn, .size-btn {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: 2px solid var(--secondary);
+      background: linear-gradient(45deg, var(--secondary), #facc15);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .mode-btn:hover, .size-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .mode-btn.active, .size-btn.active {
+      background: linear-gradient(45deg, var(--primary), #7c3aed);
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .modal-content button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: 2px solid var(--secondary);
+      background: linear-gradient(45deg, var(--secondary), #facc15);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin: 15px 0;
+      width: 100%;
+    }
+
+    .modal-content button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .modal-content button::after {
+      content: "✨";
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      font-size: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .modal-content button:hover::after {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+
+    .result-container {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+      border: 2px solid #facc15;
+      animation: glowFade 0.5s ease-in;
+    }
+
+    .result-container h2 {
+      color: var(--accent);
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
+    }
+
+    .result-container p {
+      font-size: 1.2rem;
+      color: var(--text);
+    }
+
+    .result-container button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 2px solid var(--secondary);
+      background: linear-gradient(45deg, var(--secondary), #facc15);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .result-container button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 15px;
+      background: linear-gradient(45deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+      color: #e0f2fe;
+      font-size: 1rem;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      margin: 0 8px;
+      transition: text-shadow 0.3s ease;
+    }
+
+    .footer a:hover {
+      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 1200px) {
+      .game-container { max-width: 900px; min-height: 700px; }
+      .game-title { font-size: 2.8rem; }
+      .stats { font-size: 1.1rem; }
+      .header { padding: 16px 24px; }
+      .brand-icon { width: 44px; height: 44px; font-size: 1.6rem; }
+      .brand-text { font-size: 1.7rem; }
+      .nav-btn { padding: 12px 20px; font-size: 1.1rem; }
+      .cell { width: 80px; height: 80px; font-size: 2.8rem; }
+    }
+
+    @media (max-width: 900px) {
+      .game-container { padding: 30px; min-height: 650px; }
+      .game-title { font-size: 2.5rem; }
+      .cell { width: 70px; height: 70px; font-size: 2.5rem; }
+      .header { padding: 14px 20px; }
+      .brand-icon { width: 40px; height: 40px; font-size: 1.5rem; }
+      .brand-text { font-size: 1.6rem; }
+      .nav-btn { padding: 10px 18px; font-size: 1rem; }
+      .nav-btn:hover { transform: none; box-shadow: 0 6px 12px rgba(79, 70, 229, 0.5); }
+    }
+
+    @media (max-width: 768px) {
+      .game-container { padding: 25px; min-height: 600px; }
+      .game-title { font-size: 2.2rem; }
+      .cell { width: 60px; height: 60px; font-size: 2.2rem; }
+      .stats { flex-direction: column; gap: 15px; font-size: 1rem; }
+      .stats span:hover { transform: none; box-shadow: 0 6px 12px rgba(165, 180, 252, 0.4); }
+      .header { padding: 12px 16px; }
+      .nav-links { flex-direction: column; gap: 12px; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1.4rem; }
+      .brand-text { font-size: 1.5rem; }
+      .nav-btn { padding: 8px 16px; font-size: 0.95rem; }
+      .modal-content { max-width: 450px; }
+      .mode-btn, .size-btn, .modal-content button { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .game-container { padding: 20px; min-height: 550px; }
+      .game-title { font-size: 2rem; }
+      .cell { width: 50px; height: 50px; font-size: 2rem; }
+      .stats { font-size: 0.95rem; }
+      .modal-content { padding: 20px; }
+      .modal-content h2 { font-size: 2rem; }
+      .result-container h2 { font-size: 1.8rem; }
+      .result-container p { font-size: 1.1rem; }
+      .header { padding: 10px 12px; }
+      .brand-icon { width: 32px; height: 32px; font-size: 1.3rem; }
+      .brand-text { font-size: 1.4rem; }
+      .nav-btn { padding: 6px 12px; font-size: 0.9rem; }
+      .mode-btn, .size-btn, .modal-content button { font-size: 0.95rem; }
+      .mode-btn:hover, .size-btn:hover, .modal-content button:hover { transform: none; box-shadow: 0 6px 12px rgba(245, 158, 11, 0.5); }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="starfield"></div>
+    <div class="floating-elements">
+      <div class="floating-icon">🌟</div>
+      <div class="floating-icon">✨</div>
+      <div class="floating-icon">⚡</div>
+      <div class="floating-icon">🌠</div>
+      <div class="floating-icon">💫</div>
+    </div>
+    <div class="game-container">
+      <h2 class="game-title">XO O'yini</h2>
+      <div class="stats">
+        <span>X ochkosi: <span id="xScore">0</span></span>
+        <span>O ochkosi: <span id="oScore">0</span></span>
+      </div>
+      <div id="board" class="board"></div>
+      <div id="resultContainer" class="result-container">
+        <h2 id="resultText">O'yin tugadi!</h2>
+        <p id="winnerText"></p>
+        <button id="restartGame">Qayta boshlash</button>
+      </div>
+      <div class="modal" id="startGame">
+        <div class="modal-content">
+          <h2>O'yin sozlamalari</h2>
+          <p>O'yin rejimini tanlang:</p>
+          <div class="mode-buttons">
+            <button class="mode-btn active" data-mode="human">Odam bilan</button>
+            <button class="mode-btn" data-mode="bot">Bot bilan</button>
+          </div>
+          <p>Taxta hajmini tanlang:</p>
+          <div class="size-buttons">
+            <button class="size-btn active" data-size="3">3x3</button>
+            <button class="size-btn" data-size="4">4x4</button>
+            <button class="size-btn" data-size="5">5x5</button>
+          </div>
+          <button id="startGameBtn">Boshlash</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    const boardElement = document.getElementById("board");
+    const xScoreDisplay = document.getElementById("xScore");
+    const oScoreDisplay = document.getElementById("oScore");
+    const startGameScreen = document.getElementById("startGame");
+    const resultContainer = document.getElementById("resultContainer");
+    const resultText = document.getElementById("resultText");
+    const winnerText = document.getElementById("winnerText");
+    const startGameBtn = document.getElementById("startGameBtn");
+    const restartGameBtn = document.getElementById("restartGame");
+    const modeButtons = document.querySelectorAll(".mode-btn");
+    const sizeButtons = document.querySelectorAll(".size-btn");
+
+    let board = [];
+    let currentPlayer = "X";
+    let gameOver = false;
+    let gameMode = "human";
+    let boardSize = 3;
+    let xScore = 0;
+    let oScore = 0;
+
+    function initializeBoard(size) {
+      board = Array(size).fill().map(() => Array(size).fill(""));
+      boardElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      boardElement.innerHTML = "";
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+          cell.addEventListener("click", () => handleCellClick(i, j));
+          boardElement.appendChild(cell);
+        }
+      }
+    }
+
+    function handleCellClick(row, col) {
+      if (gameOver || board[row][col] !== "") return;
+
+      board[row][col] = currentPlayer;
+      document.querySelector(`[data-row="${row}"][data-col="${col}"]`).textContent = currentPlayer;
+
+      if (checkWin(currentPlayer)) {
+        gameOver = true;
+        updateScore(currentPlayer);
+        showResult(`${currentPlayer} yutdi!`);
+        return;
+      }
+      if (checkDraw()) {
+        gameOver = true;
+        showResult("Durrang!");
+        return;
+      }
+
+      currentPlayer = currentPlayer === "X" ? "O" : "X";
+      if (gameMode === "bot" && currentPlayer === "O" && !gameOver) {
+        setTimeout(botMove, 500);
+      }
+    }
+
+    function checkWin(player) {
+      const size = boardSize;
+      const winCount = size === 3 ? 3 : size === 4 ? 4 : 5;
+
+      // Check rows
+      for (let i = 0; i < size; i++) {
+        let count = 0;
+        for (let j = 0; j < size; j++) {
+          if (board[i][j] === player) count++;
+          else count = 0;
+          if (count >= winCount) return true;
+        }
+      }
+
+      // Check columns
+      for (let j = 0; j < size; j++) {
+        let count = 0;
+        for (let i = 0; i < size; i++) {
+          if (board[i][j] === player) count++;
+          else count = 0;
+          if (count >= winCount) return true;
+        }
+      }
+
+      // Check main diagonal
+      for (let i = 0; i <= size - winCount; i++) {
+        for (let j = 0; j <= size - winCount; j++) {
+          let count = 0;
+          for (let k = 0; k < winCount; k++) {
+            if (board[i + k][j + k] === player) count++;
+            else break;
+            if (count >= winCount) return true;
+          }
+        }
+      }
+
+      // Check anti-diagonal
+      for (let i = 0; i <= size - winCount; i++) {
+        for (let j = winCount - 1; j < size; j++) {
+          let count = 0;
+          for (let k = 0; k < winCount; k++) {
+            if (board[i + k][j - k] === player) count++;
+            else break;
+            if (count >= winCount) return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function checkDraw() {
+      return board.every(row => row.every(cell => cell !== ""));
+    }
+
+    function updateScore(player) {
+      if (player === "X") {
+        xScore++;
+        xScoreDisplay.textContent = xScore;
+      } else if (player === "O") {
+        oScore++;
+        oScoreDisplay.textContent = oScore;
+      }
+    }
+
+    function showResult(message) {
+      resultText.textContent = "O'yin tugadi!";
+      winnerText.textContent = message;
+      resultContainer.style.display = "block";
+      boardElement.style.opacity = "0.5";
+    }
+
+    function minimax(board, depth, isMaximizing, alpha, beta) {
+      if (checkWin("O")) return { score: 10 - depth };
+      if (checkWin("X")) return { score: depth - 10 };
+      if (checkDraw()) return { score: 0 };
+
+      if (isMaximizing) {
+        let bestScore = -Infinity;
+        let move = null;
+        for (let i = 0; i < boardSize; i++) {
+          for (let j = 0; j < boardSize; j++) {
+            if (board[i][j] === "") {
+              board[i][j] = "O";
+              let result = minimax(board, depth + 1, false, alpha, beta);
+              board[i][j] = "";
+              if (result.score > bestScore) {
+                bestScore = result.score;
+                move = [i, j];
+              }
+              alpha = Math.max(alpha, bestScore);
+              if (beta <= alpha) break;
+            }
+          }
+        }
+        return { score: bestScore, move };
+      } else {
+        let bestScore = Infinity;
+        let move = null;
+        for (let i = 0; i < boardSize; i++) {
+          for (let j = 0; j < boardSize; j++) {
+            if (board[i][j] === "") {
+              board[i][j] = "X";
+              let result = minimax(board, depth + 1, true, alpha, beta);
+              board[i][j] = "";
+              if (result.score < bestScore) {
+                bestScore = result.score;
+                move = [i, j];
+              }
+              beta = Math.min(beta, bestScore);
+              if (beta <= alpha) break;
+            }
+          }
+        }
+        return { score: bestScore, move };
+      }
+    }
+
+    function botMove() {
+      let bestMove = minimax(board, 0, true, -Infinity, Infinity).move;
+      if (bestMove) {
+        handleCellClick(bestMove[0], bestMove[1]);
+      } else {
+        let emptyCells = [];
+        for (let i = 0; i < boardSize; i++) {
+          for (let j = 0; j < boardSize; j++) {
+            if (board[i][j] === "") emptyCells.push([i, j]);
+          }
+        }
+        if (emptyCells.length > 0) {
+          const [row, col] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+          handleCellClick(row, col);
+        }
+      }
+    }
+
+    modeButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        modeButtons.forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        gameMode = button.dataset.mode;
+      });
+    });
+
+    sizeButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        sizeButtons.forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        boardSize = parseInt(button.dataset.size);
+      });
+    });
+
+    startGameBtn.addEventListener("click", () => {
+      startGameScreen.style.display = "none";
+      resultContainer.style.display = "none";
+      boardElement.style.opacity = "1";
+      initializeBoard(boardSize);
+      currentPlayer = "X";
+      gameOver = false;
+      if (gameMode === "bot" && currentPlayer === "O") {
+        setTimeout(botMove, 500);
+      }
+    });
+
+    restartGameBtn.addEventListener("click", () => {
+      resultContainer.style.display = "none";
+      boardElement.style.opacity = "1";
+      initializeBoard(boardSize);
+      currentPlayer = "X";
+      gameOver = false;
+      if (gameMode === "bot" && currentPlayer === "O") {
+        setTimeout(botMove, 500);
+      }
+    });
+
+    startGameScreen.style.display = "flex";
+  </script>
+</body>
+</html>
