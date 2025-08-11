@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Shaxmat O'yini</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <style>
+    :root{
+      --primary:#6366f1;--secondary:#f59e0b;--accent:#a5b4fc;--text:#ffffff;
+      --bg-dark:#0f172a;--bg-light:#1e293b;--success:#22c55e;--error:#ef4444;
+      --light-square:#f0d9b5;--dark-square:#b58863;--selected:#ffff00;
+      --possible-move:#00ff00;--capture:#ff0000;--check:#ff0000;
+      --white-turn:#ffffff;--black-turn:#000000;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,var(--bg-dark) 0%,var(--bg-light) 100%);color:var(--text);min-height:100vh;overflow-x:hidden}
+    .hero-background{position:relative;width:100%;min-height:calc(100vh - 80px);overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0}
+    .starfield{position:absolute;top:0;left:0;width:100%;height:100%;
+      background-image:radial-gradient(2px 2px at 20px 30px,var(--accent) 1.5px,transparent 0),
+                       radial-gradient(1.5px 1.5px at 50px 60px,var(--secondary) 1px,transparent 0),
+                       radial-gradient(1.8px 1.8px at 80px 90px,var(--text) 1.2px,transparent 0);
+      background-size:120px 120px;background-repeat:repeat;animation:twinkle 4s linear infinite;z-index:1}
+    @keyframes twinkle{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(-40px,-40px);opacity:.9}}
+    .floating-elements{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
+    .floating-icon{position:absolute;font-size:1.6rem;color:var(--accent);opacity:.6;animation:float 3.5s ease-in-out infinite;animation-delay:var(--delay,0s)}
+    .floating-icon:nth-child(1){top:10%;left:15%;--delay:0s}
+    .floating-icon:nth-child(2){top:50%;right:10%;--delay:.7s}
+    .floating-icon:nth-child(3){top:35%;right:20%;--delay:.3s}
+    .floating-icon:nth-child(4){bottom:25%;left:20%;--delay:1.1s}
+    .floating-icon:nth-child(5){bottom:10%;left:45%;--delay:1.5s}
+    @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-15px) scale(1.15)}}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:linear-gradient(45deg,rgba(15,23,42,.98),rgba(30,41,59,.98));box-shadow:0 6px 15px rgba(0,0,0,.4);z-index:4}
+    .logo{display:flex;align-items:center;gap:12px}
+    .brand-icon{width:48px;height:48px;background:var(--secondary);color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:1.8rem;font-weight:700;transition:transform .5s ease,box-shadow .3s ease}
+    .brand-icon:hover{transform:rotate(360deg);box-shadow:0 0 15px rgba(245,158,11,.6)}
+    .brand-text{color:var(--accent);font-size:1.8rem;font-weight:700;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .nav-links{display:flex;gap:15px}
+    .nav-btn{background:linear-gradient(45deg,var(--primary),#7c3aed);border:none;border-radius:12px;padding:14px 24px;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;font-size:1.2rem;font-weight:600}
+    .nav-btn a{color:var(--text);text-decoration:none;display:block}
+    .nav-btn:hover{transform:scale(1.08);box-shadow:0 8px 20px rgba(79,70,229,.5)}
+    .game-container{position:relative;z-index:3;width:100%;max-width:900px;margin:20px auto;padding:30px;text-align:center;background:linear-gradient(135deg,rgba(79,70,229,.2),rgba(124,58,237,.2));border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.3);transition:box-shadow .2s ease;min-height:700px}
+    .game-container:hover{box-shadow:0 10px 25px rgba(165,180,252,.4)}
+    .game-title{color:var(--accent);font-size:2.8rem;font-weight:700;margin-bottom:15px;text-transform:uppercase;letter-spacing:2px;text-shadow:0 0 12px rgba(165,180,252,.7);animation:glowPulse 1.2s ease-in-out infinite alternate}
+    @keyframes glowPulse{0%{text-shadow:0 0 10px rgba(165,180,252,.7)}100%{text-shadow:0 0 20px rgba(165,180,252,.9)}}
+    .chessboard{display:grid;grid-template-columns:repeat(8,80px);grid-template-rows:repeat(8,80px);border:2px solid var(--secondary);margin:0 auto;box-shadow:0 6px 15px rgba(0,0,0,.3); width: 640px;}
+    .square{display:flex;align-items:center;justify-content:center;font-size:4rem;cursor:pointer;transition:background .2s ease,transform .2s ease;font-weight:bold;text-shadow:0 0 5px rgba(0,0,0,.5)}
+    .square:hover{transform:scale(1.05)}
+    .light{background:var(--light-square)}
+    .dark{background:var(--dark-square)}
+    .selected{outline:4px solid var(--selected)}
+    .possible{box-shadow: inset 0 0 0 6px rgba(0,255,0,.6)}
+    .capture{box-shadow: inset 0 0 0 6px rgba(255,0,0,.6)}
+    .check{animation:pulse 1s infinite;box-shadow: inset 0 0 0 6px rgba(255,0,0,.7)}
+    @keyframes pulse{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+    .white-piece{color:#ffffff;text-shadow:0 0 5px #000000}
+    .black-piece{color:#000000;text-shadow:0 0 5px #ffffff}
+    .status{margin-top:20px;font-size:1.5rem;color:var(--accent);background:rgba(79,70,229,.1);padding:10px;border-radius:8px;box-shadow:0 4px 10px rgba(165,180,252,.3)}
+    .turn-indicator{display:inline-block;width:20px;height:20px;border-radius:50%;margin-left:10px}
+    .white-turn{background:var(--white-turn);border:2px solid var(--black-turn)}
+    .black-turn{background:var(--black-turn);border:2px solid var(--white-turn)}
+    .turn-status{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:1.8rem;color:var(--accent);background:linear-gradient(45deg,rgba(79,70,229,.5),rgba(124,58,237,.5));padding:10px 20px;border-radius:20px;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:3;transition:background .3s ease}
+    .turn-status.white{background:linear-gradient(45deg,rgba(255,255,255,.5),rgba(165,180,252,.5));color:#000}
+    .turn-status.black{background:linear-gradient(45deg,rgba(0,0,0,.5),rgba(165,180,252,.5));color:#fff}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(15,23,42,.95),rgba(30,41,59,.95));z-index:1000;align-items:center;justify-content:center}
+    .modal-content{background:linear-gradient(135deg,var(--primary),#7c3aed);padding:25px;border-radius:12px;text-align:center;color:var(--text);box-shadow:0 8px 20px rgba(0,0,0,.4);border:2px solid #facc15;width:90%;max-width:480px;animation:glowFade .4s ease-in;backdrop-filter:blur(5px)}
+    @keyframes glowFade{from{opacity:0;transform:scale(.9);box-shadow:0 0 0 rgba(245,158,11,0)}to{opacity:1;transform:scale(1);box-shadow:0 8px 20px rgba(245,158,11,.5)}}
+    .modal-content h2{color:var(--accent);font-size:2rem;margin-bottom:15px;text-transform:uppercase;text-shadow:0 0 8px rgba(165,180,252,.6)}
+    .modal-content p{font-size:1.2rem;margin:12px 0}
+    .modal-content button{padding:10px 18px;font-size:1rem;border-radius:8px;border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:var(--text);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;margin:10px 5px;width:100%}
+    .modal-content button:focus{outline:none;border-color:var(--accent);box-shadow:0 4px 10px rgba(165,180,252,.4)}
+    .modal-content button:hover{transform:scale(1.05);box-shadow:0 4px 10px rgba(245,158,11,.4)}
+    .footer{text-align:center;padding:12px;background:linear-gradient(45deg,rgba(15,23,42,.95),rgba(30,41,59,.95));color:#e0f2fe;font-size:.9rem}
+    .footer a{color:var(--accent);text-decoration:none;margin:0 5px;transition:text-shadow .2s ease}
+    .footer a:hover{text-shadow:0 0 8px rgba(165,180,252,.6);text-decoration:underline}
+    @media (max-width:1200px){
+    .chessboard{
+        grid-template-columns:repeat(8,70px);
+        grid-template-rows:repeat(8,70px);
+        max-width: 560px;
+      }
+    }
+    @media (max-width:900px){
+      .chessboard{
+        grid-template-columns:repeat(8,60px);
+        grid-template-rows:repeat(8,60px);
+        max-width: 480px;
+
+      }
+    }
+    @media (max-width:768px){
+        .chessboard{
+            grid-template-columns:repeat(8,50px);
+            grid-template-rows:repeat(8,50px);
+            max-width: 400px;
+
+        }
+    }
+    @media (max-width:480px){
+      .chessboard{
+        grid-template-columns:repeat(8,40px);
+        grid-template-rows:repeat(8,40px);
+        max-width: 320px;
+
+      }
+      .game-title{
+        font-size:2rem
+      }
+      .square{
+        font-size:3rem
+        }
+    }
+  </style>
+</head>
+<body>
+<header class="header">
+    <div class="logo">
+        <div class="brand-icon">N</div>
+        <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+</header>
+
+<div class="hero-background">
+    <div class="starfield"></div>
+    <div class="floating-elements">
+        <div class="floating-icon">🌟</div><div class="floating-icon">✨</div>
+        <div class="floating-icon">⚡</div><div class="floating-icon">🌠</div>
+        <div class="floating-icon">💫</div>
+    </div>
+
+    <div class="game-container">
+        <br><br><br>
+        <div class="turn-status" id="turnStatus">Oq yurishi</div>
+        <div id="chessboard" class="chessboard" aria-label="Shaxmat doskasi"></div>
+        <div class="status" id="status" aria-live="polite"></div>
+
+        <div class="modal" id="gameOver">
+            <div class="modal-content">
+                <h2>O'yin tugadi!</h2>
+                <p id="winnerText"></p>
+                <button id="restartGame">Qayta boshlash</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+</footer>
+
+<script>
+    // ======= Dastlabki holat =======
+    const board = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R'],
+    ];
+    const pieces = {
+      'P':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔',
+      'p':'♟︎','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚'
+    };
+
+    const chessboard = document.getElementById('chessboard');
+    const statusEl = document.getElementById('status');
+    const turnStatus = document.getElementById('turnStatus');
+    const gameOverScreen = document.getElementById('gameOver');
+    const winnerText = document.getElementById('winnerText');
+    const restartGameBtn = document.getElementById('restartGame');
+
+    let turn = 'white';                  // 'white' | 'black'
+    let isCheck = false;                 // navbatdagi tomon shohi checkdami?
+    let selected = null;                 // {row, col} | null
+    let possibleMoves = [];              // [{r,c,capture}]
+
+    // ======= Yordamchi funksiyalar =======
+    const inBounds = (r,c)=> r>=0 && r<8 && c>=0 && c<8;
+    const isWhite = p => !!p && p === p.toUpperCase();
+    const isBlack = p => !!p && p === p.toLowerCase();
+    const colorOf = p => isWhite(p)?'white':isBlack(p)?'black':null;
+
+    function cloneBoard(b){
+      return b.map(row=>row.slice());
+    }
+
+    function squaresEqual(a,b){ return a && b && a.row===b.row && a.col===b.col; }
+
+    function findKing(b, color){
+      const k = color==='white'?'K':'k';
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          if(b[r][c]===k) return {r,c};
+        }
+      }
+      return null;
+    }
+
+    function isPathClear(b, sr, sc, er, ec){
+      const dr = Math.sign(er - sr);
+      const dc = Math.sign(ec - sc);
+      let r = sr + dr, c = sc + dc;
+      while(r !== er || c !== ec){
+        if(b[r][c]) return false;
+        r += dr; c += dc;
+      }
+      return true;
+    }
+
+    // Geometrik yurish qoidalari (path va o'z shohini tekshirmasdan).
+    // Pawn uchun forAttack=true bo'lsa faqat diagonal olish tekshiriladi.
+    function pieceCanMove(b, sr, sc, er, ec, forAttack=false){
+      const p = b[sr][sc];
+      if(!p) return false;
+
+      const target = b[er][ec];
+      const sameColor = !!target && (isWhite(p) === isWhite(target));
+      if(!forAttack && sameColor) return false;
+
+      const type = p.toUpperCase();
+      const rowDiff = Math.abs(er - sr);
+      const colDiff = Math.abs(ec - sc);
+
+      switch(type){
+        case 'P':{
+          const dir = isWhite(p) ? -1 : 1;
+          const startRank = isWhite(p) ? 6 : 1;
+
+          if(forAttack){
+            // faqat diagonal olish
+            return rowDiff===1 && colDiff===1 && (er === sr + dir);
+          }
+
+          // oddiy yurish (oldinga bo'sh katak)
+          if(colDiff===0 && er === sr + dir && !target) return true;
+
+          // 2 qadam startdan (yo'lda to'siq bo'lmasin)
+          if(colDiff===0 && sr===startRank && er===sr + 2*dir && !target && !b[sr+dir][sc]) return true;
+
+          // diagonal olish
+          if(rowDiff===1 && colDiff===1 && er===sr + dir && target) return true;
+
+          return false;
+        }
+        case 'N':
+          return (rowDiff===2 && colDiff===1) || (rowDiff===1 && colDiff===2);
+
+        case 'B':
+          return rowDiff===colDiff && isPathClear(b, sr, sc, er, ec);
+
+        case 'R':
+          return (rowDiff===0 || colDiff===0) && isPathClear(b, sr, sc, er, ec);
+
+        case 'Q':
+          return (rowDiff===colDiff || rowDiff===0 || colDiff===0) && isPathClear(b, sr, sc, er, ec);
+
+        case 'K':
+          return rowDiff<=1 && colDiff<=1; // (castling yo'q)
+      }
+      return false;
+    }
+
+    function isSquareAttacked(b, r, c, byColor){
+      for(let i=0;i<8;i++){
+        for(let j=0;j<8;j++){
+          const p = b[i][j];
+          if(!p) continue;
+          if((byColor==='white' && isWhite(p)) || (byColor==='black' && isBlack(p))){
+            const type = p.toUpperCase();
+
+            if(type==='P'){
+              // piyoda hujumi: faqat diagonal
+              if(pieceCanMove(b, i, j, r, c, true)) return true;
+            } else if(type==='N'){
+              if(pieceCanMove(b, i, j, r, c, true)) { // knight forAttack muhim emas
+                // lekin knight path clear talab qilmaydi
+                const rd=Math.abs(r-i), cd=Math.abs(c-j);
+                if((rd===2 && cd===1)||(rd===1 && cd===2)) return true;
+              }
+            } else if(type==='B'){
+              if(Math.abs(r-i)===Math.abs(c-j) && isPathClear(b, i, j, r, c)) return true;
+            } else if(type==='R'){
+              if((r===i || c===j) && isPathClear(b, i, j, r, c)) return true;
+            } else if(type==='Q'){
+              const diag = Math.abs(r-i)===Math.abs(c-j);
+              const line = (r===i || c===j);
+              if((diag || line) && isPathClear(b, i, j, r, c)) return true;
+            } else if(type==='K'){
+              if(Math.abs(r-i)<=1 && Math.abs(c-j)<=1) return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    // To'liq qonuniy yurish: geometrik qoida + o'z shohini ochiq qoldirmaslik
+    function isLegalMove(b, sr, sc, er, ec){
+      if(!inBounds(sr,sc) || !inBounds(er,ec)) return false;
+      const p = b[sr][sc];
+      if(!p) return false;
+
+      // Faqat navbatdagi tomon figuralari yursin
+      if(turn==='white' && !isWhite(p)) return false;
+      if(turn==='black' && !isBlack(p)) return false;
+
+      // Geometrik tekshiruv
+      if(!pieceCanMove(b, sr, sc, er, ec, false)) return false;
+
+      // Simulyatsiya: yurishdan keyin o'z shohimiz tahdid ostida qolmasin
+      const next = cloneBoard(b);
+      const captured = next[er][ec];
+      next[er][ec] = p;
+      next[sr][sc] = '';
+
+      // Qirolni topamiz (agar qirol yurgan bo'lsa, yangi joyi)
+      const myColor = isWhite(p) ? 'white' : 'black';
+      let k = findKing(next, myColor);
+      if(!k){ // nazariy holda bo'lmasligi kerak
+        return false;
+      }
+      // Qirol hujum ostida qolsa, noqonuniy
+      const oppColor = myColor==='white' ? 'black' : 'white';
+      if(isSquareAttacked(next, k.r, k.c, oppColor)) return false;
+
+      return true;
+    }
+
+    function listLegalMoves(b, sr, sc){
+      const res = [];
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          if(isLegalMove(b, sr, sc, r, c)){
+            res.push({r, c, capture: !!b[r][c]});
+          }
+        }
+      }
+      return res;
+    }
+
+    function sideHasAnyLegalMove(b, side){
+      const prevTurn = turn;
+      turn = side; // isLegalMove turnga qaraydi
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          const p = b[r][c];
+          if(!p) continue;
+          if((side==='white' && isWhite(p)) || (side==='black' && isBlack(p))){
+            const moves = listLegalMoves(b, r, c);
+            if(moves.length>0){ turn = prevTurn; return true; }
+          }
+        }
+      }
+      turn = prevTurn;
+      return false;
+    }
+
+    function maybePromote(r,c){
+      const p = board[r][c];
+      if(p==='P' && r===0) board[r][c] = 'Q';
+      if(p==='p' && r===7) board[r][c] = 'q';
+    }
+
+    // ======= UI chizish =======
+    function renderBoard(){
+      chessboard.innerHTML = '';
+      for(let row=0; row<8; row++){
+        for(let col=0; col<8; col++){
+          const el = document.createElement('div');
+          el.className = 'square ' + (((row+col)%2===0)?'light':'dark');
+          el.dataset.row = row;
+          el.dataset.col = col;
+
+          const p = board[row][col];
+          if(p){
+            el.textContent = pieces[p] || '';
+            el.classList.add(isWhite(p)?'white-piece':'black-piece');
+          } else {
+            el.textContent = '';
+          }
+
+          // highlight: selected & possible moves
+          if(selected && selected.row===row && selected.col===col){
+            el.classList.add('selected');
+          }
+          const pm = possibleMoves.find(m => m.r===row && m.c===col);
+          if(pm){
+            el.classList.add(pm.capture ? 'capture' : 'possible');
+          }
+
+          el.addEventListener('click', handleSquareClick);
+          chessboard.appendChild(el);
+        }
+      }
+      applyCheckHighlight();
+      updateStatus();
+    }
+
+    function applyCheckHighlight(){
+      document.querySelectorAll('.square.check').forEach(sq => sq.classList.remove('check'));
+      if(isCheck){
+        const k = findKing(board, turn); // navbatdagi tomon shohi
+        if(k){
+          const sel = `[data-row="${k.r}"][data-col="${k.c}"]`;
+          const sq = chessboard.querySelector(sel);
+          if(sq) sq.classList.add('check');
+        }
+      }
+    }
+
+    function updateStatus(){
+      const nice = turn==='white'?'Oq':'Qora';
+      turnStatus.textContent = `${nice} yurishi`;
+      turnStatus.classList.remove('white','black');
+      turnStatus.classList.add(turn);
+      statusEl.textContent = isCheck ? "Shoh!" : "";
+    }
+
+    // ======= O'yin oqimi =======
+    function handleSquareClick(e){
+      const row = parseInt(e.currentTarget.dataset.row,10);
+      const col = parseInt(e.currentTarget.dataset.col,10);
+      const p = board[row][col];
+
+      if(selected){
+        // Agar tanlangan katakka yana bosilsa – bekor
+        if(selected.row===row && selected.col===col){
+          selected = null;
+          possibleMoves = [];
+          renderBoard();
+          return;
+        }
+
+        // Yurishga urinamiz
+        if(isLegalMove(board, selected.row, selected.col, row, col)){
+          // amalga oshiramiz
+          board[row][col] = board[selected.row][selected.col];
+          board[selected.row][selected.col] = '';
+          maybePromote(row, col);
+
+          // navbatni almashtiramiz
+          selected = null;
+          possibleMoves = [];
+          turn = (turn==='white') ? 'black' : 'white';
+
+          // yangi navbatdagi tomon shohi checkdami?
+          const k = findKing(board, turn);
+          isCheck = k ? isSquareAttacked(board, k.r, k.c, (turn==='white'?'black':'white')) : false;
+
+          renderBoard();
+          checkGameEnd(); // mate/pat
+        } else {
+          // Agar shu katakda o'z figuralari bo'lsa – yangi tanlash
+          if(p && ((turn==='white' && isWhite(p)) || (turn==='black' && isBlack(p)))){
+            selected = {row, col};
+            possibleMoves = listLegalMoves(board, row, col);
+            renderBoard();
+          } else {
+            // Aks holda tanlovni bekor
+            selected = null;
+            possibleMoves = [];
+            renderBoard();
+          }
+        }
+      } else {
+        // Hali hech narsa tanlanmagan – faqat navbatdagi tomon figuralari tanlansin
+        if(p && ((turn==='white' && isWhite(p)) || (turn==='black' && isBlack(p)))){
+          selected = {row, col};
+          possibleMoves = listLegalMoves(board, row, col);
+          renderBoard();
+        }
+      }
+    }
+
+    function checkGameEnd(){
+      const side = turn; // navbatdagi tomon
+      const k = findKing(board, side);
+      const anyMove = sideHasAnyLegalMove(board, side);
+      if(!anyMove){
+        if(k && isSquareAttacked(board, k.r, k.c, side==='white'?'black':'white')){
+          // Checkmate
+          gameOverScreen.style.display = 'flex';
+          winnerText.textContent = (side==='white') ? 'Qora yutdi! (Checkmate)' : 'Oq yutdi! (Checkmate)';
+        } else {
+          // Stalemate
+          gameOverScreen.style.display = 'flex';
+          winnerText.textContent = 'Durrang (Stalemate)';
+        }
+      }
+    }
+
+    restartGameBtn.addEventListener('click', ()=>{
+      gameOverScreen.style.display = 'none';
+      // reset
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          board[r][c] = ['', '', '', '', '', '', '', ''][c]; // tez tozalash
+        }
+      }
+      const start = [
+        ['r','n','b','q','k','b','n','r'],
+        ['p','p','p','p','p','p','p','p'],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','',''],
+        ['P','P','P','P','P','P','P','P'],
+        ['R','N','B','Q','K','B','N','R'],
+      ];
+      for(let r=0;r<8;r++) for(let c=0;c<8;c++) board[r][c]=start[r][c];
+      turn = 'white';
+      isCheck = false;
+      selected = null;
+      possibleMoves = [];
+      renderBoard();
+    });
+
+    // Boshlash
+    renderBoard();
+  </script>
+</body>
+</html>

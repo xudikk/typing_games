@@ -7,481 +7,71 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
   <style>
     :root {
-      --primary: #6366f1;
-      --secondary: #f59e0b;
-      --accent: #a5b4fc;
-      --text: #ffffff;
-      --bg-dark: #0f172a;
-      --bg-light: #1e293b;
-      --success: #22c55e;
-      --error: #ef4444;
+      --primary:#6366f1; --secondary:#f59e0b; --accent:#a5b4fc; --text:#ffffff;
+      --bg-dark:#0f172a; --bg-light:#1e293b; --success:#22c55e; --error:#ef4444;
+      --cell: 90px;
     }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,var(--bg-dark) 0%,var(--bg-light) 100%);color:var(--text);min-height:100vh;overflow-x:hidden}
+    .hero-background{position:relative;width:100%;min-height:calc(100vh - 80px);overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0}
+    .starfield{position:absolute;top:0;left:0;width:100%;height:100%;
+      background-image:radial-gradient(2px 2px at 20px 30px,var(--accent) 1.5px,transparent 0),
+                       radial-gradient(1.5px 1.5px at 50px 60px,var(--secondary) 1px,transparent 0),
+                       radial-gradient(1.8px 1.8px at 80px 90px,var(--text) 1.2px,transparent 0);
+      background-size:120px 120px;background-repeat:repeat;animation:twinkle 4s linear infinite;z-index:1}
+    @keyframes twinkle{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(-40px,-40px);opacity:.9}}
+    .floating-elements{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
+    .floating-icon{position:absolute;font-size:1.6rem;color:var(--accent);opacity:.6;animation:float 3.5s ease-in-out infinite;animation-delay:var(--delay,0s)}
+    .floating-icon:nth-child(1){top:10%;left:15%;--delay:0s}
+    .floating-icon:nth-child(2){top:50%;right:10%;--delay:.7s}
+    .floating-icon:nth-child(3){top:35%;right:20%;--delay:.3s}
+    .floating-icon:nth-child(4){bottom:25%;left:20%;--delay:1.1s}
+    .floating-icon:nth-child(5){bottom:10%;left:45%;--delay:1.5s}
+    @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-15px) scale(1.15)}}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:linear-gradient(45deg,rgba(15,23,42,.98),rgba(30,41,59,.98));box-shadow:0 6px 15px rgba(0,0,0,.4);z-index:4}
+    .logo{display:flex;align-items:center;gap:12px}
+    .brand-icon{width:48px;height:48px;background:var(--secondary);color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:1.8rem;font-weight:700;transition:transform .5s ease,box-shadow .3s ease}
+    .brand-icon:hover{transform:rotate(360deg);box-shadow:0 0 15px rgba(245,158,11,.6)}
+    .brand-text{color:var(--accent);font-size:1.8rem;font-weight:700;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .nav-links{display:flex;gap:15px}
+    .nav-btn{background:linear-gradient(45deg,var(--primary),#7c3aed);border:none;border-radius:12px;padding:14px 24px;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;font-size:1.2rem;font-weight:600}
+    .nav-btn a{color:var(--text);text-decoration:none;display:block}
+    .nav-btn:hover{transform:scale(1.08);box-shadow:0 8px 20px rgba(79,70,229,.5)}
+    .game-container{position:relative;z-index:3;width:100%;max-width:1000px;margin:30px auto;padding:40px;text-align:center;background:linear-gradient(135deg,rgba(79,70,229,.25),rgba(124,58,237,.25));border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.4);transition:box-shadow .3s ease;min-height:800px}
+    .game-container:hover{box-shadow:0 12px 30px rgba(165,180,252,.5)}
+    .game-title{color:var(--accent);font-size:3rem;font-weight:700;margin-bottom:20px;text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 15px rgba(165,180,252,.8);animation:glowPulse 1.5s ease-in-out infinite alternate}
+    @keyframes glowPulse{0%{text-shadow:0 0 12px rgba(165,180,252,.8)}100%{text-shadow:0 0 25px rgba(165,180,252,1)}}
+    .board{display:grid;gap:8px;background:rgba(79,70,229,.35);border:3px solid var(--accent);border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.4);margin:30px auto;padding:15px;width:fit-content;transition:transform .3s ease}
+    .board:hover{transform:scale(1.02)}
+    .cell{width:var(--cell);height:var(--cell);background:var(--bg-light);border:3px solid var(--secondary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:3rem;font-weight:700;color:var(--text);cursor:pointer;transition:background .3s ease, transform .3s ease, box-shadow .3s ease}
+    .cell:hover{background:var(--primary);transform:scale(1.1);box-shadow:0 6px 15px rgba(79,70,229,.5)}
+    .cell.disabled, .game-over .cell{pointer-events:none;opacity:.9}
+    .cell.win{background:linear-gradient(135deg, rgba(34,197,94,.35), rgba(34,197,94,.6));box-shadow:0 0 0 3px var(--success), inset 0 0 10px rgba(34,197,94,.7)}
+    .stats{display:flex;justify-content:center;gap:25px;font-size:1.2rem;color:var(--accent);margin-top:30px;background:rgba(79,70,229,.15);padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+    .stats span{border:2px solid var(--accent);padding:10px 20px;border-radius:10px;animation:popIn .6s ease forwards;transition:transform .3s ease, box-shadow .3s ease}
+    .stats span:hover{transform:scale(1.08);box-shadow:0 6px 15px rgba(165,180,252,.4)}
+    @keyframes popIn{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(15,23,42,.98),rgba(30,41,59,.98));z-index:1000;align-items:center;justify-content:center}
+    .modal-content{background:linear-gradient(135deg,var(--primary),#7c3aed);padding:30px;border-radius:16px;text-align:center;color:var(--text);box-shadow:0 10px 25px rgba(0,0,0,.5);border:3px solid #facc15;width:90%;max-width:500px;animation:glowFade .5s ease-in;backdrop-filter:blur(8px)}
+    @keyframes glowFade{from{opacity:0;transform:scale(.85);box-shadow:0 0 0 rgba(245,158,11,0)}to{opacity:1;transform:scale(1);box-shadow:0 10px 25px rgba(245,158,11,.6)}}
+    .modal-content h2{color:var(--accent);font-size:2.2rem;margin-bottom:20px;text-transform:uppercase;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .mode-buttons,.size-buttons{display:flex;gap:15px;justify-content:center;margin:15px 0}
+    .mode-btn,.size-btn{padding:12px 24px;font-size:1.1rem;border-radius:10px;border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:var(--text);cursor:pointer;transition:transform .3s ease,box-shadow .3s ease}
+    .mode-btn:hover,.size-btn:hover{transform:scale(1.08);box-shadow:0 6px 15px rgba(245,158,11,.5)}
+    .mode-btn.active,.size-btn.active{background:linear-gradient(45deg,var(--primary),#7c3aed);border-color:var(--accent);transform:scale(1.05)}
+    .result-container{display:none;margin-top:20px;padding:15px;background:linear-gradient(135deg,var(--primary),#7c3aed);border-radius:10px;box-shadow:0 6px 15px rgba(0,0,0,.4);border:2px solid #facc15;animation:glowFade .5s ease-in}
+    .result-container h2{color:var(--accent);font-size:2rem;margin-bottom:10px;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .result-container p{font-size:1.2rem;color:var(--text)}
+    .result-container button{margin-top:15px;padding:10px 20px;font-size:1rem;border-radius:8px;border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:var(--text);cursor:pointer;transition:transform .3s ease,box-shadow .3s ease}
+    .result-container button:hover{transform:scale(1.08);box-shadow:0 6px 15px rgba(245,158,11,.5)}
+    .footer{text-align:center;padding:15px;background:linear-gradient(45deg,rgba(15,23,42,.98),rgba(30,41,59,.98));color:#e0f2fe;font-size:1rem}
+    .footer a{color:var(--accent);text-decoration:none;margin:0 8px;transition:text-shadow .3s ease}
+    .footer a:hover{text-shadow:0 0 10px rgba(165,180,252,.7);text-decoration:underline}
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: "Inter", sans-serif;
-      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    .hero-background {
-      position: relative;
-      width: 100%;
-      min-height: calc(100vh - 80px);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 0;
-    }
-
-    .starfield {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: radial-gradient(2px 2px at 20px 30px, var(--accent) 1.5px, transparent 0),
-                       radial-gradient(1.5px 1.5px at 50px 60px, var(--secondary) 1px, transparent 0),
-                       radial-gradient(1.8px 1.8px at 80px 90px, var(--text) 1.2px, transparent 0);
-      background-size: 120px 120px;
-      background-repeat: repeat;
-      animation: twinkle 4s linear infinite;
-      z-index: 1;
-    }
-
-    @keyframes twinkle {
-      0% { transform: translate(0, 0); opacity: 0.9; }
-      100% { transform: translate(-40px, -40px); opacity: 0.9; }
-    }
-
-    .floating-elements {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .floating-icon {
-      position: absolute;
-      font-size: 1.6rem;
-      color: var(--accent);
-      opacity: 0.6;
-      animation: float 3.5s ease-in-out infinite;
-      animation-delay: var(--delay, 0s);
-    }
-
-    .floating-icon:nth-child(1) { top: 10%; left: 15%; --delay: 0s; }
-    .floating-icon:nth-child(2) { top: 50%; right: 10%; --delay: 0.7s; }
-    .floating-icon:nth-child(3) { top: 35%; right: 20%; --delay: 0.3s; }
-    .floating-icon:nth-child(4) { bottom: 25%; left: 20%; --delay: 1.1s; }
-    .floating-icon:nth-child(5) { bottom: 10%; left: 45%; --delay: 1.5s; }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-15px) scale(1.15); }
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 30px;
-      background: linear-gradient(45deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-      z-index: 4;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--secondary);
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      font-size: 1.8rem;
-      font-weight: 700;
-      transition: transform 0.5s ease, box-shadow 0.3s ease;
-    }
-
-    .brand-icon:hover {
-      transform: rotate(360deg);
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
-    }
-
-    .brand-text {
-      color: var(--accent);
-      font-size: 1.8rem;
-      font-weight: 700;
-      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 15px;
-    }
-
-    .nav-btn {
-      background: linear-gradient(45deg, var(--primary), #7c3aed);
-      border: none;
-      border-radius: 12px;
-      padding: 14px 24px;
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .nav-btn a {
-      color: var(--text);
-      text-decoration: none;
-      display: block;
-    }
-
-    .nav-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
-    }
-
-    .game-container {
-      position: relative;
-      z-index: 3;
-      width: 100%;
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 40px;
-      text-align: center;
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-      transition: box-shadow 0.3s ease;
-      min-height: 800px;
-    }
-
-    .game-container:hover {
-      box-shadow: 0 12px 30px rgba(165, 180, 252, 0.5);
-    }
-
-    .game-title {
-      color: var(--accent);
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-      letter-spacing: 3px;
-      text-shadow: 0 0 15px rgba(165, 180, 252, 0.8);
-      animation: glowPulse 1.5s ease-in-out infinite alternate;
-    }
-
-    @keyframes glowPulse {
-      0% { text-shadow: 0 0 12px rgba(165, 180, 252, 0.8); }
-      100% { text-shadow: 0 0 25px rgba(165, 180, 252, 1); }
-    }
-
-    .board {
-      display: grid;
-      gap: 8px;
-      background: rgba(79, 70, 229, 0.35);
-      border: 3px solid var(--accent);
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-      margin: 30px auto;
-      padding: 15px;
-      width: fit-content;
-      transition: transform 0.3s ease;
-    }
-
-    .board:hover {
-      transform: scale(1.02);
-    }
-
-    .cell {
-      width: 90px;
-      height: 90px;
-      background: var(--bg-light);
-      border: 3px solid var(--secondary);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--text);
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .cell:hover {
-      background: var(--primary);
-      transform: scale(1.1);
-      box-shadow: 0 6px 15px rgba(79, 70, 229, 0.5);
-    }
-
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 25px;
-      font-size: 1.2rem;
-      color: var(--accent);
-      margin-top: 30px;
-      background: rgba(79, 70, 229, 0.15);
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .stats span {
-      border: 2px solid var(--accent);
-      padding: 10px 20px;
-      border-radius: 10px;
-      animation: popIn 0.6s ease forwards;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .stats span:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 15px rgba(165, 180, 252, 0.4);
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content {
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
-      padding: 30px;
-      border-radius: 16px;
-      text-align: center;
-      color: var(--text);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      border: 3px solid #facc15;
-      width: 90%;
-      max-width: 500px;
-      animation: glowFade 0.5s ease-in;
-      backdrop-filter: blur(8px);
-    }
-
-    @keyframes glowFade {
-      from { opacity: 0; transform: scale(0.85); box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
-      to { opacity: 1; transform: scale(1); box-shadow: 0 10px 25px rgba(245, 158, 11, 0.6); }
-    }
-
-    .modal-content h2 {
-      color: var(--accent);
-      font-size: 2.2rem;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
-    }
-
-    .mode-buttons, .size-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      margin: 15px 0;
-    }
-
-    .mode-btn, .size-btn {
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      border-radius: 10px;
-      border: 2px solid var(--secondary);
-      background: linear-gradient(45deg, var(--secondary), #facc15);
-      color: var(--text);
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .mode-btn:hover, .size-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
-    }
-
-    .mode-btn.active, .size-btn.active {
-      background: linear-gradient(45deg, var(--primary), #7c3aed);
-      border-color: var(--accent);
-      transform: scale(1.05);
-    }
-
-    .modal-content button {
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      border-radius: 10px;
-      border: 2px solid var(--secondary);
-      background: linear-gradient(45deg, var(--secondary), #facc15);
-      color: var(--text);
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      margin: 15px 0;
-      width: 100%;
-    }
-
-    .modal-content button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
-    }
-
-    .modal-content button::after {
-      content: "✨";
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      font-size: 1rem;
-      opacity: 0;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-
-    .modal-content button:hover::after {
-      opacity: 0.8;
-      transform: scale(1.1);
-    }
-
-    .result-container {
-      display: none;
-      margin-top: 20px;
-      padding: 15px;
-      background: linear-gradient(135deg, var(--primary), #7c3aed);
-      border-radius: 10px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-      border: 2px solid #facc15;
-      animation: glowFade 0.5s ease-in;
-    }
-
-    .result-container h2 {
-      color: var(--accent);
-      font-size: 2rem;
-      margin-bottom: 10px;
-      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
-    }
-
-    .result-container p {
-      font-size: 1.2rem;
-      color: var(--text);
-    }
-
-    .result-container button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      border-radius: 8px;
-      border: 2px solid var(--secondary);
-      background: linear-gradient(45deg, var(--secondary), #facc15);
-      color: var(--text);
-      cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .result-container button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
-    }
-
-    .footer {
-      text-align: center;
-      padding: 15px;
-      background: linear-gradient(45deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-      color: #e0f2fe;
-      font-size: 1rem;
-    }
-
-    .footer a {
-      color: var(--accent);
-      text-decoration: none;
-      margin: 0 8px;
-      transition: text-shadow 0.3s ease;
-    }
-
-    .footer a:hover {
-      text-shadow: 0 0 10px rgba(165, 180, 252, 0.7);
-      text-decoration: underline;
-    }
-
-    @media (max-width: 1200px) {
-      .game-container { max-width: 900px; min-height: 700px; }
-      .game-title { font-size: 2.8rem; }
-      .stats { font-size: 1.1rem; }
-      .header { padding: 16px 24px; }
-      .brand-icon { width: 44px; height: 44px; font-size: 1.6rem; }
-      .brand-text { font-size: 1.7rem; }
-      .nav-btn { padding: 12px 20px; font-size: 1.1rem; }
-      .cell { width: 80px; height: 80px; font-size: 2.8rem; }
-    }
-
-    @media (max-width: 900px) {
-      .game-container { padding: 30px; min-height: 650px; }
-      .game-title { font-size: 2.5rem; }
-      .cell { width: 70px; height: 70px; font-size: 2.5rem; }
-      .header { padding: 14px 20px; }
-      .brand-icon { width: 40px; height: 40px; font-size: 1.5rem; }
-      .brand-text { font-size: 1.6rem; }
-      .nav-btn { padding: 10px 18px; font-size: 1rem; }
-      .nav-btn:hover { transform: none; box-shadow: 0 6px 12px rgba(79, 70, 229, 0.5); }
-    }
-
-    @media (max-width: 768px) {
-      .game-container { padding: 25px; min-height: 600px; }
-      .game-title { font-size: 2.2rem; }
-      .cell { width: 60px; height: 60px; font-size: 2.2rem; }
-      .stats { flex-direction: column; gap: 15px; font-size: 1rem; }
-      .stats span:hover { transform: none; box-shadow: 0 6px 12px rgba(165, 180, 252, 0.4); }
-      .header { padding: 12px 16px; }
-      .nav-links { flex-direction: column; gap: 12px; }
-      .brand-icon { width: 36px; height: 36px; font-size: 1.4rem; }
-      .brand-text { font-size: 1.5rem; }
-      .nav-btn { padding: 8px 16px; font-size: 0.95rem; }
-      .modal-content { max-width: 450px; }
-      .mode-btn, .size-btn, .modal-content button { width: 100%; }
-    }
-
-    @media (max-width: 480px) {
-      .game-container { padding: 20px; min-height: 550px; }
-      .game-title { font-size: 2rem; }
-      .cell { width: 50px; height: 50px; font-size: 2rem; }
-      .stats { font-size: 0.95rem; }
-      .modal-content { padding: 20px; }
-      .modal-content h2 { font-size: 2rem; }
-      .result-container h2 { font-size: 1.8rem; }
-      .result-container p { font-size: 1.1rem; }
-      .header { padding: 10px 12px; }
-      .brand-icon { width: 32px; height: 32px; font-size: 1.3rem; }
-      .brand-text { font-size: 1.4rem; }
-      .nav-btn { padding: 6px 12px; font-size: 0.9rem; }
-      .mode-btn, .size-btn, .modal-content button { font-size: 0.95rem; }
-      .mode-btn:hover, .size-btn:hover, .modal-content button:hover { transform: none; box-shadow: 0 6px 12px rgba(245, 158, 11, 0.5); }
-    }
+    @media (max-width:1200px){.game-container{max-width:900px;min-height:700px}.game-title{font-size:2.8rem}.stats{font-size:1.1rem}.header{padding:16px 24px}.brand-icon{width:44px;height:44px;font-size:1.6rem}.brand-text{font-size:1.7rem}.nav-btn{padding:12px 20px;font-size:1.1rem}:root{--cell:80px}}
+    @media (max-width:900px){.game-container{padding:30px;min-height:650px}.game-title{font-size:2.5rem}.header{padding:14px 20px}.brand-icon{width:40px;height:40px;font-size:1.5rem}.brand-text{font-size:1.6rem}.nav-btn{padding:10px 18px;font-size:1rem}.nav-btn:hover{transform:none;box-shadow:0 6px 12px rgba(79,70,229,.5)}:root{--cell:70px}}
+    @media (max-width:768px){.game-container{padding:25px;min-height:600px}.game-title{font-size:2.2rem}.stats{flex-direction:column;gap:15px;font-size:1rem}.stats span:hover{transform:none;box-shadow:0 6px 12px rgba(165,180,252,.4)}.header{padding:12px 16px}.nav-links{flex-direction:column;gap:12px}.brand-icon{width:36px;height:36px;font-size:1.4rem}.brand-text{font-size:1.5rem}.nav-btn{padding:8px 16px;font-size:.95rem}.modal-content{max-width:450px}:root{--cell:60px}}
+    @media (max-width:480px){.game-container{padding:20px;min-height:550px}.game-title{font-size:2rem}.stats{font-size:.95rem}.modal-content{padding:20px}.modal-content h2{font-size:2rem}.result-container h2{font-size:1.8rem}.result-container p{font-size:1.1rem}.header{padding:10px 12px}.brand-icon{width:32px;height:32px;font-size:1.3rem}.brand-text{font-size:1.4rem}.nav-btn{padding:6px 12px;font-size:.9rem}.mode-btn,.size-btn,.modal-content button{font-size:.95rem}.mode-btn:hover,.size-btn:hover,.modal-content button:hover{transform:none;box-shadow:0 6px 12px rgba(245,158,11,.5)}:root{--cell:50px}}
   </style>
 </head>
 <body>
@@ -501,24 +91,26 @@
   <div class="hero-background">
     <div class="starfield"></div>
     <div class="floating-elements">
-      <div class="floating-icon">🌟</div>
-      <div class="floating-icon">✨</div>
-      <div class="floating-icon">⚡</div>
-      <div class="floating-icon">🌠</div>
+      <div class="floating-icon">🌟</div><div class="floating-icon">✨</div>
+      <div class="floating-icon">⚡</div><div class="floating-icon">🌠</div>
       <div class="floating-icon">💫</div>
     </div>
+
     <div class="game-container">
       <h2 class="game-title">XO O'yini</h2>
       <div class="stats">
         <span>X ochkosi: <span id="xScore">0</span></span>
         <span>O ochkosi: <span id="oScore">0</span></span>
       </div>
+
       <div id="board" class="board"></div>
+
       <div id="resultContainer" class="result-container">
         <h2 id="resultText">O'yin tugadi!</h2>
         <p id="winnerText"></p>
         <button id="restartGame">Qayta boshlash</button>
       </div>
+
       <div class="modal" id="startGame">
         <div class="modal-content">
           <h2>O'yin sozlamalari</h2>
@@ -544,242 +136,316 @@
   </footer>
 
   <script>
-    const boardElement = document.getElementById("board");
-    const xScoreDisplay = document.getElementById("xScore");
-    const oScoreDisplay = document.getElementById("oScore");
-    const startGameScreen = document.getElementById("startGame");
-    const resultContainer = document.getElementById("resultContainer");
+    // Elements
+    const boardEl = document.getElementById("board");
+    const xScoreEl = document.getElementById("xScore");
+    const oScoreEl = document.getElementById("oScore");
+    const startModal = document.getElementById("startGame");
+    const resultBox = document.getElementById("resultContainer");
     const resultText = document.getElementById("resultText");
     const winnerText = document.getElementById("winnerText");
-    const startGameBtn = document.getElementById("startGameBtn");
-    const restartGameBtn = document.getElementById("restartGame");
-    const modeButtons = document.querySelectorAll(".mode-btn");
-    const sizeButtons = document.querySelectorAll(".size-btn");
+    const startBtn = document.getElementById("startGameBtn");
+    const restartBtn = document.getElementById("restartGame");
+    const modeBtns = document.querySelectorAll(".mode-btn");
+    const sizeBtns = document.querySelectorAll(".size-btn");
 
+    // State
     let board = [];
     let currentPlayer = "X";
     let gameOver = false;
     let gameMode = "human";
     let boardSize = 3;
+    let winLen = 3;
     let xScore = 0;
     let oScore = 0;
+    let winningCells = []; // [{r,c}, ...]
 
-    function initializeBoard(size) {
-      board = Array(size).fill().map(() => Array(size).fill(""));
-      boardElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-      boardElement.innerHTML = "";
-      for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          cell.dataset.row = i;
-          cell.dataset.col = j;
-          cell.addEventListener("click", () => handleCellClick(i, j));
-          boardElement.appendChild(cell);
-        }
-      }
+    // UI helpers
+    function setGrid(size){
+      boardEl.style.gridTemplateColumns = `repeat(${size}, var(--cell))`;
     }
 
-    function handleCellClick(row, col) {
-      if (gameOver || board[row][col] !== "") return;
+    function initializeBoard(size){
+      board = Array.from({length:size}, ()=>Array(size).fill(""));
+      winLen = size === 3 ? 3 : size === 4 ? 4 : 5;
+      setGrid(size);
+      boardEl.innerHTML = "";
+      boardEl.classList.remove("game-over");
 
-      board[row][col] = currentPlayer;
-      document.querySelector(`[data-row="${row}"][data-col="${col}"]`).textContent = currentPlayer;
+      for(let r=0;r<size;r++){
+        for(let c=0;c<size;c++){
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener("click", onCellClick, { once:false });
+          boardEl.appendChild(cell);
+        }
+      }
+      winningCells = [];
+    }
 
-      if (checkWin(currentPlayer)) {
+    function onCellClick(e){
+      if(gameOver) return;
+      const row = +e.currentTarget.dataset.row;
+      const col = +e.currentTarget.dataset.col;
+      if(board[row][col] !== "") return;
+
+      placeMark(row, col, currentPlayer);
+
+      const win = checkWin(board, currentPlayer, winLen);
+      if(win){
         gameOver = true;
+        winningCells = win.cells;
+        highlightWin(winningCells);
         updateScore(currentPlayer);
         showResult(`${currentPlayer} yutdi!`);
         return;
       }
-      if (checkDraw()) {
+
+      if(isDraw(board)){
         gameOver = true;
         showResult("Durrang!");
         return;
       }
 
-      currentPlayer = currentPlayer === "X" ? "O" : "X";
-      if (gameMode === "bot" && currentPlayer === "O" && !gameOver) {
-        setTimeout(botMove, 500);
+      currentPlayer = (currentPlayer === "X") ? "O" : "X";
+
+      if(gameMode === "bot" && currentPlayer === "O" && !gameOver){
+        // Botga navbat – 3x3: minimax; 4+ : aqlli tezkor
+        setTimeout(()=>botMove(), 180);
       }
     }
 
-    function checkWin(player) {
-      const size = boardSize;
-      const winCount = size === 3 ? 3 : size === 4 ? 4 : 5;
+    function placeMark(r,c,player){
+      board[r][c] = player;
+      const cell = boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+      if(cell) cell.textContent = player;
+    }
 
-      // Check rows
-      for (let i = 0; i < size; i++) {
-        let count = 0;
-        for (let j = 0; j < size; j++) {
-          if (board[i][j] === player) count++;
-          else count = 0;
-          if (count >= winCount) return true;
-        }
-      }
+    // Win check: returns {cells:[{r,c}...]} or null
+    function checkWin(b, player, k){
+      const n = b.length;
 
-      // Check columns
-      for (let j = 0; j < size; j++) {
-        let count = 0;
-        for (let i = 0; i < size; i++) {
-          if (board[i][j] === player) count++;
-          else count = 0;
-          if (count >= winCount) return true;
-        }
-      }
-
-      // Check main diagonal
-      for (let i = 0; i <= size - winCount; i++) {
-        for (let j = 0; j <= size - winCount; j++) {
-          let count = 0;
-          for (let k = 0; k < winCount; k++) {
-            if (board[i + k][j + k] === player) count++;
-            else break;
-            if (count >= winCount) return true;
+      // Rows
+      for(let r=0;r<n;r++){
+        let count=0, start=0;
+        for(let c=0;c<n;c++){
+          if(b[r][c]===player){
+            if(count===0) start=c;
+            count++;
+            if(count>=k){
+              const cells=[]; for(let i=0;i<k;i++) cells.push({r, c:start+i});
+              return { cells };
+            }
+          } else {
+            count=0;
           }
         }
       }
-
-      // Check anti-diagonal
-      for (let i = 0; i <= size - winCount; i++) {
-        for (let j = winCount - 1; j < size; j++) {
-          let count = 0;
-          for (let k = 0; k < winCount; k++) {
-            if (board[i + k][j - k] === player) count++;
-            else break;
-            if (count >= winCount) return true;
+      // Columns
+      for(let c=0;c<n;c++){
+        let count=0, start=0;
+        for(let r=0;r<n;r++){
+          if(b[r][c]===player){
+            if(count===0) start=r;
+            count++;
+            if(count>=k){
+              const cells=[]; for(let i=0;i<k;i++) cells.push({r:start+i, c});
+              return { cells };
+            }
+          } else {
+            count=0;
           }
         }
       }
-
-      return false;
-    }
-
-    function checkDraw() {
-      return board.every(row => row.every(cell => cell !== ""));
-    }
-
-    function updateScore(player) {
-      if (player === "X") {
-        xScore++;
-        xScoreDisplay.textContent = xScore;
-      } else if (player === "O") {
-        oScore++;
-        oScoreDisplay.textContent = oScore;
+      // Main diagonals (top-left to bottom-right)
+      for(let r0=0;r0<=n-k;r0++){
+        for(let c0=0;c0<=n-k;c0++){
+          let ok=true, cells=[];
+          for(let t=0;t<k;t++){
+            if(b[r0+t][c0+t]!==player){ ok=false; break; }
+            cells.push({r:r0+t, c:c0+t});
+          }
+          if(ok) return { cells };
+        }
       }
+      // Anti-diagonals (top-right to bottom-left)
+      for(let r0=0;r0<=n-k;r0++){
+        for(let c0=k-1;c0<n;c0++){
+          let ok=true, cells=[];
+          for(let t=0;t<k;t++){
+            if(b[r0+t][c0-t]!==player){ ok=false; break; }
+            cells.push({r:r0+t, c:c0-t});
+          }
+          if(ok) return { cells };
+        }
+      }
+      return null;
     }
 
-    function showResult(message) {
+    function highlightWin(cells){
+      cells.forEach(({r,c})=>{
+        const el = boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+        if(el) el.classList.add("win");
+      });
+      boardEl.classList.add("game-over");
+    }
+
+    function isDraw(b){
+      return b.every(row => row.every(cell => cell !== ""));
+    }
+
+    function updateScore(player){
+      if(player==="X"){ xScore++; xScoreEl.textContent=xScore; }
+      else { oScore++; oScoreEl.textContent=oScore; }
+    }
+
+    function showResult(message){
       resultText.textContent = "O'yin tugadi!";
       winnerText.textContent = message;
-      resultContainer.style.display = "block";
-      boardElement.style.opacity = "0.5";
+      resultBox.style.display = "block";
+      boardEl.style.opacity = "0.5";
     }
 
-    function minimax(board, depth, isMaximizing, alpha, beta) {
-      if (checkWin("O")) return { score: 10 - depth };
-      if (checkWin("X")) return { score: depth - 10 };
-      if (checkDraw()) return { score: 0 };
+    // ===== Bot =====
+    function botMove(){
+      if(gameOver || currentPlayer!=="O") return;
 
-      if (isMaximizing) {
-        let bestScore = -Infinity;
-        let move = null;
-        for (let i = 0; i < boardSize; i++) {
-          for (let j = 0; j < boardSize; j++) {
-            if (board[i][j] === "") {
-              board[i][j] = "O";
-              let result = minimax(board, depth + 1, false, alpha, beta);
-              board[i][j] = "";
-              if (result.score > bestScore) {
-                bestScore = result.score;
-                move = [i, j];
-              }
-              alpha = Math.max(alpha, bestScore);
-              if (beta <= alpha) break;
-            }
-          }
-        }
-        return { score: bestScore, move };
+      let move;
+      if(boardSize===3){
+        move = bestMoveMinimax(); // mukammal
       } else {
-        let bestScore = Infinity;
-        let move = null;
-        for (let i = 0; i < boardSize; i++) {
-          for (let j = 0; j < boardSize; j++) {
-            if (board[i][j] === "") {
-              board[i][j] = "X";
-              let result = minimax(board, depth + 1, true, alpha, beta);
-              board[i][j] = "";
-              if (result.score < bestScore) {
-                bestScore = result.score;
-                move = [i, j];
-              }
-              beta = Math.min(beta, bestScore);
-              if (beta <= alpha) break;
-            }
-          }
+        move = bestMoveHeuristic(); // tezkor
+      }
+      if(move){
+        placeMark(move[0], move[1], "O");
+        const win = checkWin(board, "O", winLen);
+        if(win){
+          gameOver = true; winningCells = win.cells; highlightWin(winningCells);
+          updateScore("O"); showResult("O yutdi!"); return;
         }
-        return { score: bestScore, move };
+        if(isDraw(board)){ gameOver=true; showResult("Durrang!"); return; }
+        currentPlayer = "X";
       }
     }
 
-    function botMove() {
-      let bestMove = minimax(board, 0, true, -Infinity, Infinity).move;
-      if (bestMove) {
-        handleCellClick(bestMove[0], bestMove[1]);
+    // 3x3 – to'liq minimax (alpha-beta)
+    function bestMoveMinimax(){
+      let bestScore = -Infinity, best=null;
+      for(const [r,c] of emptyCells(board)){
+        board[r][c] = "O";
+        const score = minimax(board, 0, false, -Infinity, Infinity);
+        board[r][c] = "";
+        if(score > bestScore){ bestScore=score; best=[r,c]; }
+      }
+      return best;
+    }
+    function minimax(b, depth, isMax, alpha, beta){
+      if(checkWin(b,"O",winLen)) return 10 - depth;
+      if(checkWin(b,"X",winLen)) return depth - 10;
+      if(isDraw(b)) return 0;
+
+      if(isMax){
+        let best=-Infinity;
+        for(const [r,c] of emptyCells(b)){
+          b[r][c]="O";
+          best=Math.max(best, minimax(b, depth+1, false, alpha, beta));
+          b[r][c]="";
+          alpha=Math.max(alpha,best);
+          if(beta<=alpha) break;
+        }
+        return best;
       } else {
-        let emptyCells = [];
-        for (let i = 0; i < boardSize; i++) {
-          for (let j = 0; j < boardSize; j++) {
-            if (board[i][j] === "") emptyCells.push([i, j]);
-          }
+        let best=Infinity;
+        for(const [r,c] of emptyCells(b)){
+          b[r][c]="X";
+          best=Math.min(best, minimax(b, depth+1, true, alpha, beta));
+          b[r][c]="";
+          beta=Math.min(beta,best);
+          if(beta<=alpha) break;
         }
-        if (emptyCells.length > 0) {
-          const [row, col] = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-          handleCellClick(row, col);
-        }
+        return best;
       }
     }
 
-    modeButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        modeButtons.forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        gameMode = button.dataset.mode;
+    // 4x4/5x5 – tezkor strategiya
+    function bestMoveHeuristic(){
+      const empties = emptyCells(board);
+      // 1) yutish imkonini tekshir (O uchun)
+      for(const [r,c] of empties){
+        board[r][c]="O";
+        if(checkWin(board,"O",winLen)){ board[r][c]=""; return [r,c]; }
+        board[r][c]="";
+      }
+      // 2) raqibni blokla (X uchun)
+      for(const [r,c] of empties){
+        board[r][c]="X";
+        if(checkWin(board,"X",winLen)){ board[r][c]=""; return [r,c]; }
+        board[r][c]="";
+      }
+      // 3) markaz
+      const center = Math.floor(boardSize/2);
+      if(board[center] && board[center][center]==="") return [center, center];
+
+      // 4) burchaklar
+      const corners = [[0,0],[0,boardSize-1],[boardSize-1,0],[boardSize-1,boardSize-1]];
+      for(const [r,c] of corners){ if(board[r][c]==="") return [r,c]; }
+
+      // 5) qolganlar – tasodifiy
+      if(empties.length>0){
+        return empties[Math.floor(Math.random()*empties.length)];
+      }
+      return null;
+    }
+
+    function emptyCells(b){
+      const arr=[];
+      for(let r=0;r<b.length;r++){
+        for(let c=0;c<b.length;c++){
+          if(b[r][c]==="") arr.push([r,c]);
+        }
+      }
+      return arr;
+    }
+
+    // ===== Controls =====
+    modeBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        modeBtns.forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        gameMode = btn.dataset.mode;
+      });
+    });
+    sizeBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        sizeBtns.forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        boardSize = parseInt(btn.dataset.size,10);
       });
     });
 
-    sizeButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        sizeButtons.forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        boardSize = parseInt(button.dataset.size);
-      });
-    });
-
-    startGameBtn.addEventListener("click", () => {
-      startGameScreen.style.display = "none";
-      resultContainer.style.display = "none";
-      boardElement.style.opacity = "1";
-      initializeBoard(boardSize);
+    startBtn.addEventListener("click", ()=>{
+      startModal.style.display = "none";
+      resultBox.style.display = "none";
+      boardEl.style.opacity = "1";
+      boardEl.classList.remove("game-over");
       currentPlayer = "X";
       gameOver = false;
-      if (gameMode === "bot" && currentPlayer === "O") {
-        setTimeout(botMove, 500);
-      }
+      initializeBoard(boardSize);
     });
 
-    restartGameBtn.addEventListener("click", () => {
-      resultContainer.style.display = "none";
-      boardElement.style.opacity = "1";
-      initializeBoard(boardSize);
+    restartBtn.addEventListener("click", ()=>{
+      resultBox.style.display = "none";
+      boardEl.style.opacity = "1";
+      boardEl.classList.remove("game-over");
       currentPlayer = "X";
       gameOver = false;
-      if (gameMode === "bot" && currentPlayer === "O") {
-        setTimeout(botMove, 500);
-      }
+      initializeBoard(boardSize);
     });
 
-    startGameScreen.style.display = "flex";
+    // Start
+    startModal.style.display = "flex";
   </script>
 </body>
 </html>

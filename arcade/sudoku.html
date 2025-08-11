@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sudoku — NeoCoder</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --primary:#6366f1; --secondary:#f59e0b; --accent:#a5b4fc; --text:#ffffff;
+      --bg-dark:#0f172a; --bg-light:#1e293b; --success:#22c55e; --error:#ef4444;
+      --cell: 56px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,var(--bg-dark) 0%,var(--bg-light) 100%);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+    /* NAVBAR (avvalgidek qoldi) */
+    .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:linear-gradient(45deg,rgba(15,23,42,.98),rgba(30,41,59,.98));box-shadow:0 6px 15px rgba(0,0,0,.4);z-index:4}
+    .logo{display:flex;align-items:center;gap:12px}
+    .brand-icon{width:48px;height:48px;background:var(--secondary);color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:1.8rem;font-weight:700;transition:transform .5s ease,box-shadow .3s ease}
+    .brand-icon:hover{transform:rotate(360deg);box-shadow:0 0 15px rgba(245,158,11,.6)}
+    .brand-text{color:var(--accent);font-size:1.8rem;font-weight:700;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .nav-links{display:flex;gap:15px}
+    .nav-btn{background:linear-gradient(45deg,var(--primary),#7c3aed);border:none;border-radius:12px;padding:14px 24px;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;font-size:1.2rem;font-weight:600}
+    .nav-btn a{color:var(--text);text-decoration:none;display:block}
+    .nav-btn:hover{transform:scale(1.08);box-shadow:0 8px 20px rgba(79,70,229,.5)}
+
+    .hero{position:relative;min-height:calc(100vh - 80px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:30px}
+    .starfield{position:absolute;inset:0;background-image:
+      radial-gradient(2px 2px at 20px 30px, var(--accent) 1.5px, transparent 0),
+      radial-gradient(1.5px 1.5px at 50px 60px, var(--secondary) 1px, transparent 0),
+      radial-gradient(1.8px 1.8px at 80px 90px, var(--text) 1.2px, transparent 0);
+      background-size:120px 120px;animation:twinkle 4s linear infinite;opacity:.6;pointer-events:none}
+    @keyframes twinkle{from{transform:translate(0,0)}to{transform:translate(-40px,-40px)}}
+
+    .container{position:relative;z-index:1;width:100%;max-width:1100px;background:linear-gradient(135deg,rgba(79,70,229,.18),rgba(124,58,237,.18));box-shadow:0 12px 30px rgba(0,0,0,.45);border-radius:16px;padding:24px}
+    .title{font-size:2.2rem;font-weight:800;color:var(--accent);text-align:center;margin-bottom:10px;text-shadow:0 0 12px rgba(165,180,252,.6)}
+
+    /* Yordamchi tugmalar — PASTDA */
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0}
+    .btn{border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700;transition:.2s;min-width:140px;text-align:center}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 8px 16px rgba(245,158,11,.4)}
+    .btn.alt{background:linear-gradient(45deg,var(--primary),#7c3aed);border-color:var(--accent)}
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+    .select{border:2px solid var(--accent);background:#0b1224;color:#fff;border-radius:10px;padding:10px 14px;font-weight:700}
+
+    .wrap{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}
+    .board{display:grid;grid-template-columns:repeat(9, var(--cell));gap:0;border:3px solid var(--accent);border-radius:12px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.4);background:rgba(79,70,229,.35)}
+    .cell{width:var(--cell);height:var(--cell);position:relative;background:#0b1224;border:1px solid #273047;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .cell.given{background:#0e162d}
+    .cell .value{font-size:1.4rem;font-weight:800}
+    .cell.given .value{color:#c7d2fe}
+    .cell.user .value{color:#fff}
+    .cell.conflict{background:linear-gradient(135deg, rgba(239,68,68,.18), rgba(239,68,68,.32))}
+    .cell.selected{outline:3px solid rgba(99,102,241,.7)}
+    .cell.related{background:#121d3a}
+    .cell.same{background:#15234a}
+    .notes{position:absolute;inset:4px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:1px;opacity:.9}
+    .note{font-size:.72rem;opacity:.8;display:flex;align-items:center;justify-content:center;color:#9fb3ff}
+    .subBoldTop{border-top:3px solid var(--accent)}
+    .subBoldLeft{border-left:3px solid var(--accent)}
+    .subBoldRight{border-right:3px solid var(--accent)}
+    .subBoldBottom{border-bottom:3px solid var(--accent)}
+
+    .side{min-width:260px;flex:1}
+    .panel{background:rgba(12,18,34,.6);border:1px solid #263152;border-radius:12px;padding:14px;box-shadow:inset 0 0 18px rgba(0,0,0,.25)}
+    .panel h3{color:#c7d2fe;margin-bottom:8px}
+    .noteText{font-size:.95rem;opacity:.9}
+
+    .keypad{display:grid;grid-template-columns:repeat(3, 90px);gap:10px;justify-content:center;margin-top:14px}
+    .key{background:#0b1224;border:2px solid #334155;border-radius:10px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;cursor:pointer}
+    .key:hover{box-shadow:0 6px 14px rgba(165,180,252,.35)}
+    .key.alt{border-color:var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:#fff}
+
+    .status{margin-top:12px;text-align:center;font-weight:700;color:#c7d2fe}
+    .footer{margin-top:16px;text-align:center;color:#e0f2fe;opacity:.9}
+
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(15,23,42,.94),rgba(30,41,59,.94));z-index:99}
+    .modal .content{width:min(420px,92vw);background:linear-gradient(135deg,var(--primary),#7c3aed);border:3px solid #facc15;border-radius:16px;padding:18px;color:#fff;box-shadow:0 12px 28px rgba(0,0,0,.55);text-align:center}
+    .content h2{margin-bottom:8px}
+    .content button{margin-top:10px}
+    @media (max-width:900px){
+      :root{--cell:50px}
+      .keypad{grid-template-columns:repeat(3,80px)}
+    }
+    @media (max-width:480px){
+      :root{--cell:44px}
+      .keypad{grid-template-columns:repeat(3,70px)}
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR (o'zgarmagan) -->
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="starfield"></div>
+    <div class="container">
+      <h1 class="title">Sudoku</h1>
+
+      <div class="toolbar">
+        <select id="difficulty" class="select" title="Qiyinlik" hidden>
+
+        </select>
+        <button class="btn" id="newBtn">Yangi o‘yin</button>
+        <button class="btn alt" id="checkBtn">Tekshirish</button>
+        <button class="btn" id="notesBtn">Eslatma rejimi: O‘CHIQLI</button>
+        <button class="btn alt" id="hintBtn">Yordam (3)</button>
+      </div>
+
+      <div class="wrap">
+        <div id="board" class="board" aria-label="Sudoku taxtasi"></div>
+
+        <div class="side">
+          <div class="panel">
+            <h3>Ko‘rsatmalar</h3>
+            <div class="noteText">
+              Katakka bosing va <b>1–9</b> yozing. <b>Delete</b> bilan o‘chiring.
+              <br> <b>Eslatma rejimi</b> yoqilganda, katakka nomzod raqamlar qo‘shiladi; to‘g‘ri raqam qo‘yilganda qatordagi/ustundagi/kvadratdan o‘sha nomzodlar avtomatik olib tashlanadi.
+              <br> <b>Yordam</b> — 3 marta bitta to‘g‘ri katakni to‘ldiradi.
+            </div>
+          </div>
+
+          <div class="keypad" aria-label="Raqamlar paneli">
+            <div class="key">1</div><div class="key">2</div><div class="key">3</div>
+            <div class="key">4</div><div class="key">5</div><div class="key">6</div>
+            <div class="key">7</div><div class="key">8</div><div class="key">9</div>
+            <div class="key alt" data-action="erase">Delete</div>
+          </div>
+
+          <div id="status" class="status"></div>
+        </div>
+      </div>
+
+      <div class="footer">© 2025 NeoCoder — Sudoku yechimini tekshiradi, har safar yangi taxta yaratadi.</div>
+    </div>
+  </div>
+
+  <!-- G‘OLIB MODAL -->
+  <div class="modal" id="winModal">
+    <div class="content">
+      <h2>Tabriklayman! 🎉</h2>
+      <p>Siz Sudoku’ni to‘g‘ri yechdingiz.</p>
+      <button class="btn" id="playAgain">Yana o‘ynash</button>
+    </div>
+  </div>
+
+  <script>
+    // ======== Holat ========
+    let puzzle = Array.from({length:9},()=>Array(9).fill(0));     // 0=bo'sh
+    let solution = Array.from({length:9},()=>Array(9).fill(0));   // to'liq yechim
+    let given = Array.from({length:9},()=>Array(9).fill(false));  // berilgan kataklar
+    let notes = Array.from({length:9},()=>Array.from({length:9},()=> new Set())); // nomzodlar
+    let selected = {r:0, c:0};
+    let notesMode = false;
+    let hintLeft = 3;
+
+    // ======== Elementlar ========
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const diffSel = document.getElementById('difficulty');
+    const newBtn = document.getElementById('newBtn');
+    const checkBtn = document.getElementById('checkBtn');
+    const notesBtn = document.getElementById('notesBtn');
+    const hintBtn = document.getElementById('hintBtn');
+    const winModal = document.getElementById('winModal');
+    const playAgain = document.getElementById('playAgain');
+
+    // ======== Util ========
+    const shuffle = a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+    const inBounds=(r,c)=> r>=0&&r<9&&c>=0&&c<9;
+
+    function cloneGrid(g){ return g.map(row=>row.slice()); }
+
+    function isSafe(grid, r, c, val){
+      for(let i=0;i<9;i++){
+        if(grid[r][i]===val || grid[i][c]===val) return false;
+      }
+      const br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+        if(grid[br+i][bc+j]===val) return false;
+      }
+      return true;
+    }
+
+    function findEmpty(grid){
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(grid[r][c]===0) return [r,c];
+      return null;
+    }
+
+    // ——— Solver (unique check uchun)
+    function solveCount(grid, limit=2){
+      const pos = findEmpty(grid);
+      if(!pos) return 1;
+      const [r,c] = pos;
+      const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+      let count=0;
+      for(const v of nums){
+        if(isSafe(grid,r,c,v)){
+          grid[r][c]=v;
+          count += solveCount(grid, limit);
+          if(count>=limit){ grid[r][c]=0; return count; }
+          grid[r][c]=0;
+        }
+      }
+      return count;
+    }
+
+    function solveOne(grid){
+      const pos = findEmpty(grid);
+      if(!pos) return true;
+      const [r,c] = pos;
+      const nums = shuffle([1,2,3,4,5,6,7,8,9]);
+      for(const v of nums){
+        if(isSafe(grid,r,c,v)){
+          grid[r][c]=v;
+          if(solveOne(grid)) return true;
+          grid[r][c]=0;
+        }
+      }
+      return false;
+    }
+
+    function generateSolved(){
+      const g = Array.from({length:9},()=>Array(9).fill(0));
+      // Birinchi qatorni tasodifiy aralashtirib qo'yamiz, keyin backtracking
+      const row0 = shuffle([1,2,3,4,5,6,7,8,9]);
+      for(let c=0;c<9;c++) g[0][c]=row0[c];
+      solveOne(g);
+      return g;
+    }
+
+    function makePuzzleFromSolved(solved, difficulty='medium'){
+      const g = cloneGrid(solved);
+      // qanchta katakni qoldiramiz?
+      let clues;
+      if(difficulty==='easy') clues = 40 + Math.floor(Math.random()*7);      // 40–46
+      else if(difficulty==='hard') clues = 25 + Math.floor(Math.random()*7); // 25–31
+      else clues = 32 + Math.floor(Math.random()*7);                         // 32–38
+
+      // hamohang bo'lishi uchun simmetrik o'chirish
+      const cells = [];
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) cells.push([r,c]);
+      shuffle(cells);
+
+      let toRemove = 81 - clues;
+      for(const [r,c] of cells){
+        if(toRemove<=0) break;
+        const r2 = 8 - r, c2 = 8 - c; // simmetrik juft
+        if(g[r][c]===0) continue;
+        const backup1=g[r][c]; const backup2=g[r2][c2];
+        g[r][c]=0;
+        if(!(r===r2 && c===c2)) g[r2][c2]=0;
+        const test = cloneGrid(g);
+        const solCount = solveCount(test,2);
+        if(solCount!==1){
+          g[r][c]=backup1;
+          if(!(r===r2 && c===c2)) g[r2][c2]=backup2;
+        } else {
+          toRemove -= (r===r2 && c===c2)?1:2;
+        }
+      }
+      return g;
+    }
+
+    // ======== UI ========
+    function renderBoard(){
+      boardEl.innerHTML='';
+      for(let r=0;r<9;r++){
+        for(let c=0;c<9;c++){
+          const cell = document.createElement('div');
+          cell.className='cell';
+          cell.dataset.r=r; cell.dataset.c=c;
+          // qalin subgrid chiziqlar
+          if(r%3===0) cell.classList.add('subBoldTop');
+          if(c%3===0) cell.classList.add('subBoldLeft');
+          if(c%3===2) cell.classList.add('subBoldRight');
+          if(r%3===2) cell.classList.add('subBoldBottom');
+
+          const valDiv = document.createElement('div');
+          valDiv.className='value';
+          if(puzzle[r][c]!==0){
+            valDiv.textContent = puzzle[r][c];
+            cell.classList.add(given[r][c] ? 'given' : 'user');
+          }
+
+          const notesDiv = document.createElement('div');
+          notesDiv.className='notes';
+          if(puzzle[r][c]===0 && notes[r][c].size){
+            for(let n=1;n<=9;n++){
+              const sp = document.createElement('div');
+              sp.className='note';
+              sp.textContent = notes[r][c].has(n)? String(n) : '';
+              notesDiv.appendChild(sp);
+            }
+          } else {
+            for(let i=0;i<9;i++){ const sp=document.createElement('div'); sp.className='note'; notesDiv.appendChild(sp); }
+          }
+
+          cell.appendChild(notesDiv);
+          cell.appendChild(valDiv);
+          cell.addEventListener('click', ()=>selectCell(r,c));
+          boardEl.appendChild(cell);
+        }
+      }
+      highlight();
+      updateStatus();
+    }
+
+    function selectCell(r,c){
+      selected = {r,c};
+      renderSelection();
+    }
+
+    function renderSelection(){
+      document.querySelectorAll('.cell').forEach(el=>el.classList.remove('selected','related','same','conflict'));
+      const {r,c}=selected;
+      const val = puzzle[r][c];
+      document.querySelectorAll('.cell').forEach(el=>{
+        const rr=+el.dataset.r, cc=+el.dataset.c;
+        if(rr===r && cc===c) el.classList.add('selected');
+        else if(rr===r || cc===c || (Math.floor(rr/3)===Math.floor(r/3) && Math.floor(cc/3)===Math.floor(c/3))) el.classList.add('related');
+        if(val!==0 && puzzle[rr][cc]===val) el.classList.add('same');
+      });
+      markConflicts();
+    }
+
+    function markConflicts(){
+      // har bir raqam uchun qator/ustun/kvadratda dublikatlarni bo'yaymiz
+      const conflict = new Set();
+      // rows
+      for(let r=0;r<9;r++){
+        const seen={};
+        for(let c=0;c<9;c++){
+          const v=puzzle[r][c];
+          if(v===0) continue;
+          if(seen[v]){ conflict.add(`${r},${c}`); conflict.add(`${r},${seen[v]-1}`); }
+          else seen[v]=c+1;
+        }
+      }
+      // cols
+      for(let c=0;c<9;c++){
+        const seen={};
+        for(let r=0;r<9;r++){
+          const v=puzzle[r][c];
+          if(v===0) continue;
+          if(seen[v]){ conflict.add(`${r},${c}`); conflict.add(`${seen[v]-1},${c}`); }
+          else seen[v]=r+1;
+        }
+      }
+      // boxes
+      for(let br=0;br<3;br++) for(let bc=0;bc<3;bc++){
+        const seen={};
+        for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+          const r=br*3+i, c=bc*3+j, v=puzzle[r][c];
+          if(v===0) continue;
+          if(seen[v]){ const [pr,pc]=seen[v]; conflict.add(`${r},${c}`); conflict.add(`${pr},${pc}`); }
+          else seen[v]=[r,c];
+        }
+      }
+      conflict.forEach(key=>{
+        const [r,c]=key.split(',').map(Number);
+        const cell = cellAt(r,c);
+        if(cell) cell.classList.add('conflict');
+      });
+    }
+
+    function highlight(){ renderSelection(); }
+
+    function cellAt(r,c){ return boardEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`); }
+
+    function setValue(r,c,val){
+      if(given[r][c]) return;
+      // Clear notes on set
+      notes[r][c].clear();
+      puzzle[r][c]=val;
+      // Auto-remove same candidate from row/col/box
+      if(val!==0){
+        for(let i=0;i<9;i++){ notes[r][i].delete(val); notes[i][c].delete(val); }
+        const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+        for(let i=0;i<3;i++) for(let j=0;j<3;j++){ notes[br+i][bc+j].delete(val); }
+      }
+      renderBoard();
+      checkWin();
+    }
+
+    function toggleNote(r,c,val){
+      if(given[r][c] || puzzle[r][c]!==0) return;
+      const s = notes[r][c];
+      if(s.has(val)) s.delete(val); else s.add(val);
+      renderBoard();
+    }
+
+    function updateStatus(){
+      let remain=0;
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(puzzle[r][c]===0) remain++;
+      statusEl.textContent = `Bo'sh kataklar: ${remain} | Eslatma: ${notesMode ? 'Yoqilgan' : 'O‘chiq'} | Yordam: ${hintLeft}`;
+      notesBtn.textContent = `Eslatma rejimi: ${notesMode ? 'YOQILGAN' : 'O‘CHIQLI'}`;
+      hintBtn.textContent = `Yordam (${hintLeft})`;
+      hintBtn.disabled = hintLeft<=0;
+    }
+
+    function onDigit(d){
+      const {r,c}=selected;
+      if(!inBounds(r,c)) return;
+      if(notesMode) toggleNote(r,c,d);
+      else setValue(r,c,d);
+    }
+
+    function onErase(){
+      const {r,c}=selected;
+      if(!inBounds(r,c) || given[r][c]) return;
+      setValue(r,c,0);
+    }
+
+    // Klaviatura
+    document.addEventListener('keydown', (e)=>{
+      const key = e.key;
+      if(key>='1' && key<='9'){ onDigit(+key); }
+      else if(key==='Backspace' || key==='Delete'){ onErase(); e.preventDefault(); }
+      else if(key==='ArrowLeft'){ moveSel(0,-1); e.preventDefault(); }
+      else if(key==='ArrowRight'){ moveSel(0,1); e.preventDefault(); }
+      else if(key==='ArrowUp'){ moveSel(-1,0); e.preventDefault(); }
+      else if(key==='ArrowDown'){ moveSel(1,0); e.preventDefault(); }
+      else if(key==='n' || key==='N'){ notesMode=!notesMode; updateStatus(); }
+    });
+
+    function moveSel(dr,dc){
+      let r=selected.r, c=selected.c;
+      r = Math.min(8, Math.max(0, r+dr));
+      c = Math.min(8, Math.max(0, c+dc));
+      selectCell(r,c);
+    }
+
+    // On-screen keypad
+    document.querySelectorAll('.keypad .key').forEach(k=>{
+      k.addEventListener('click', ()=>{
+        const act = k.dataset.action;
+        if(act==='erase') onErase();
+        else onDigit(+k.textContent.trim());
+      });
+    });
+
+    // Tugmalar
+    newBtn.addEventListener('click', ()=> newGame());
+    checkBtn.addEventListener('click', ()=> checkBoard());
+    notesBtn.addEventListener('click', ()=>{ notesMode=!notesMode; updateStatus(); });
+    hintBtn.addEventListener('click', ()=> giveHint());
+    playAgain.addEventListener('click', ()=>{ winModal.style.display='none'; newGame(); });
+
+    // ======== Tekshirish / Yordam / G‘alaba ========
+    function checkBoard(){
+      // noto'g'ri raqamlarni yoritamiz
+      let ok=true;
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+        const cell = cellAt(r,c);
+        if(puzzle[r][c]!==0 && puzzle[r][c]!==solution[r][c]){
+          cell.classList.add('conflict');
+          ok=false;
+        }
+      }
+      if(ok) statusEl.textContent = "Ajoyib! Hozirgacha hammasi to‘g‘ri ✅";
+      else statusEl.textContent = "Ba'zi kataklar xato. Qizil yoritilgan joylarni tekshiring.";
+    }
+
+    function giveHint(){
+      if(hintLeft<=0) return;
+      // avvalo xato raqamlar bo'lsa, shulardan bittasini to'g'irlaymiz
+      const wrong=[];
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+        if(puzzle[r][c]!==0 && puzzle[r][c]!==solution[r][c]) wrong.push([r,c]);
+      }
+      if(wrong.length){
+        const [r,c]=wrong[Math.floor(Math.random()*wrong.length)];
+        setValue(r,c,solution[r][c]);
+      } else {
+        // bo'sh kataklardan bittasini to'ldiramiz
+        const empties=[];
+        for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(puzzle[r][c]===0) empties.push([r,c]);
+        if(empties.length){
+          const [r,c]=empties[Math.floor(Math.random()*empties.length)];
+          setValue(r,c,solution[r][c]);
+        }
+      }
+      hintLeft--; updateStatus();
+    }
+
+    function checkWin(){
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+        if(puzzle[r][c]!==solution[r][c]) return;
+      }
+      winModal.style.display='flex';
+    }
+
+    // ======== Yangi o‘yin ========
+    function newGame(){
+      // tozalash
+      notes = Array.from({length:9},()=>Array.from({length:9},()=> new Set()));
+      hintLeft = 3;
+      notesMode = false;
+
+      // yechim yaratish va puzzle qilish
+      solution = generateSolved();
+      puzzle = makePuzzleFromSolved(solution, diffSel.value);
+      // berilganlar
+      given = Array.from({length:9},()=>Array(9).fill(false));
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++){
+        if(puzzle[r][c]!==0) given[r][c]=true;
+      }
+      // boshlang'ich tanlov
+      selected={r:0,c:0};
+      renderBoard();
+      updateStatus();
+    }
+
+    // Boshlash
+    newGame();
+  </script>
+</body>
+</html>

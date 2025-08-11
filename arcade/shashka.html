@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shashka O'yini</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --primary:#6366f1;--secondary:#f59e0b;--accent:#a5b4fc;--text:#ffffff;
+      --bg-dark:#0f172a;--bg-light:#1e293b;--success:#22c55e;--error:#ef4444;
+      --light-square:#f0d9b5;--dark-square:#b58863;--selected:#ffff00;
+      --possible-move:#00ff00;--capture:#ff0000;--check:#ff0000;
+      --white-turn:#ffffff;--black-turn:#000000;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,var(--bg-dark) 0%,var(--bg-light) 100%);color:var(--text);min-height:100vh;overflow-x:hidden}
+    .hero-background{position:relative;width:100%;min-height:calc(100vh - 80px);overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0}
+    .starfield{position:absolute;top:0;left:0;width:100%;height:100%;
+      background-image:radial-gradient(2px 2px at 20px 30px,var(--accent) 1.5px,transparent 0),
+                       radial-gradient(1.5px 1.5px at 50px 60px,var(--secondary) 1px,transparent 0),
+                       radial-gradient(1.8px 1.8px at 80px 90px,var(--text) 1.2px,transparent 0);
+      background-size:120px 120px;background-repeat:repeat;animation:twinkle 4s linear infinite;z-index:1}
+    @keyframes twinkle{0%{transform:translate(0,0);opacity:.9}100%{transform:translate(-40px,-40px);opacity:.9}}
+    .floating-elements{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
+    .floating-icon{position:absolute;font-size:1.6rem;color:var(--accent);opacity:.6;animation:float 3.5s ease-in-out infinite;animation-delay:var(--delay,0s)}
+    .floating-icon:nth-child(1){top:10%;left:15%;--delay:0s}
+    .floating-icon:nth-child(2){top:50%;right:10%;--delay:.7s}
+    .floating-icon:nth-child(3){top:35%;right:20%;--delay:.3s}
+    .floating-icon:nth-child(4){bottom:25%;left:20%;--delay:1.1s}
+    .floating-icon:nth-child(5){bottom:10%;left:45%;--delay:1.5s}
+    @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-15px) scale(1.15)}}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:20px 30px;background:linear-gradient(45deg,rgba(15,23,42,.98),rgba(30,41,59,.98));box-shadow:0 6px 15px rgba(0,0,0,.4);z-index:4}
+    .logo{display:flex;align-items:center;gap:12px}
+    .brand-icon{width:48px;height:48px;background:var(--secondary);color:var(--text);display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:1.8rem;font-weight:700;transition:transform .5s ease,box-shadow .3s ease}
+    .brand-icon:hover{transform:rotate(360deg);box-shadow:0 0 15px rgba(245,158,11,.6)}
+    .brand-text{color:var(--accent);font-size:1.8rem;font-weight:700;text-shadow:0 0 10px rgba(165,180,252,.7)}
+    .nav-links{display:flex;gap:15px}
+    .nav-btn{background:linear-gradient(45deg,var(--primary),#7c3aed);border:none;border-radius:12px;padding:14px 24px;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;font-size:1.2rem;font-weight:600}
+    .nav-btn a{color:var(--text);text-decoration:none;display:block}
+    .nav-btn:hover{transform:scale(1.08);box-shadow:0 8px 20px rgba(79,70,229,.5)}
+    .game-container{position:relative;z-index:3;width:100%;max-width:900px;margin:20px auto;padding:30px;text-align:center;background:linear-gradient(135deg,rgba(79,70,229,.2),rgba(124,58,237,.2));border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.3);transition:box-shadow .2s ease;min-height:700px}
+    .game-container:hover{box-shadow:0 10px 25px rgba(165,180,252,.4)}
+    .game-title{color:var(--accent);font-size:2.8rem;font-weight:700;margin-bottom:15px;text-transform:uppercase;letter-spacing:2px;text-shadow:0 0 12px rgba(165,180,252,.7);animation:glowPulse 1.2s ease-in-out infinite alternate}
+    @keyframes glowPulse{0%{text-shadow:0 0 10px rgba(165,180,252,.7)}100%{text-shadow:0 0 20px rgba(165,180,252,.9)}}
+    .board{display:grid;grid-template-columns:repeat(8,80px);grid-template-rows:repeat(8,80px);border:2px solid var(--secondary);margin:0 auto;box-shadow:0 6px 15px rgba(0,0,0,.3); width: 640px;}
+    .cell{display:flex;align-items:center;justify-content:center;font-size:3.2rem;cursor:pointer;transition:background .2s ease,transform .2s ease;font-weight:700;user-select:none}
+    .cell:hover{transform:scale(1.05)}
+    .light{background:var(--light-square)}
+    .dark{background:var(--dark-square)}
+    .disabled{cursor:default;opacity:.95}
+    .selected{outline:4px solid var(--selected)}
+    .possible{box-shadow: inset 0 0 0 6px rgba(0,255,0,.6)}
+    .capture{box-shadow: inset 0 0 0 6px rgba(255,0,0,.6)}
+    .white-piece{color:#ffffff;text-shadow:0 0 5px #000000}
+    .black-piece{color:#000000;text-shadow:0 0 5px #ffffff}
+    .status{margin-top:20px;font-size:1.5rem;color:var(--accent);background:rgba(79,70,229,.1);padding:10px;border-radius:8px;box-shadow:0 4px 10px rgba(165,180,252,.3)}
+    .turn-status{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:1.8rem;color:var(--accent);background:linear-gradient(45deg,rgba(79,70,229,.5),rgba(124,58,237,.5));padding:10px 20px;border-radius:20px;box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:3;transition:background .3s ease}
+    .turn-status.white{background:linear-gradient(45deg,rgba(255,255,255,.5),rgba(165,180,252,.5));color:#000}
+    .turn-status.black{background:linear-gradient(45deg,rgba(0,0,0,.5),rgba(165,180,252,.5));color:#fff}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(15,23,42,.95),rgba(30,41,59,.95));z-index:1000;align-items:center;justify-content:center}
+    .modal-content{background:linear-gradient(135deg,var(--primary),#7c3aed);padding:25px;border-radius:12px;text-align:center;color:var(--text);box-shadow:0 8px 20px rgba(0,0,0,.4);border:2px solid #facc15;width:90%;max-width:480px;animation:glowFade .4s ease-in;backdrop-filter:blur(5px)}
+    @keyframes glowFade{from{opacity:0;transform:scale(.9);box-shadow:0 0 0 rgba(245,158,11,0)}to{opacity:1;transform:scale(1);box-shadow:0 8px 20px rgba(245,158,11,.5)}}
+    .modal-content h2{color:var(--accent);font-size:2rem;margin-bottom:15px;text-transform:uppercase;text-shadow:0 0 8px rgba(165,180,252,.6)}
+    .modal-content p{font-size:1.2rem;margin:12px 0}
+    .modal-content button{padding:10px 18px;font-size:1rem;border-radius:8px;border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:var(--text);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;margin:10px 5px;width:100%}
+    .modal-content button:hover{transform:scale(1.05);box-shadow:0 4px 10px rgba(245,158,11,.4)}
+    .footer{text-align:center;padding:12px;background:linear-gradient(45deg,rgba(15,23,42,.95),rgba(30,41,59,.95));color:#e0f2fe;font-size:.9rem}
+    .footer a{color:var(--accent);text-decoration:none;margin:0 5px;transition:text-shadow .2s ease}
+    .footer a:hover{text-shadow:0 0 8px rgba(165,180,252,.6);text-decoration:underline}
+    .board{
+        grid-template-columns:repeat(8,70px);
+        grid-template-rows:repeat(8,70px);
+        max-width: 560px;
+      }
+    }
+    @media (max-width:900px){
+      .board{
+        grid-template-columns:repeat(8,60px);
+        grid-template-rows:repeat(8,60px);
+        max-width: 480px;
+
+      }
+    }
+    @media (max-width:768px){
+        .board{
+            grid-template-columns:repeat(8,50px);
+            grid-template-rows:repeat(8,50px);
+            max-width: 400px;
+
+        }
+    }
+    @media (max-width:480px){
+      .board{
+        grid-template-columns:repeat(8,40px);
+        grid-template-rows:repeat(8,40px);
+        max-width: 320px;
+
+      }
+      .game-title{
+        font-size:2rem
+      }
+      .cell{
+        font-size:3rem
+        }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="hero-background">
+    <div class="starfield"></div>
+    <div class="floating-elements">
+      <div class="floating-icon">🌟</div><div class="floating-icon">✨</div>
+      <div class="floating-icon">⚡</div><div class="floating-icon">🌠</div>
+      <div class="floating-icon">💫</div>
+    </div>
+
+    <div class="game-container">
+        <br><br><br>
+      <div class="turn-status" id="turnStatus">Oq yurishi</div>
+      <div id="board" class="board" aria-label="Shashka taxtasi"></div>
+      <div class="status" id="status" aria-live="polite"></div>
+
+      <div class="modal" id="gameOver">
+        <div class="modal-content">
+          <h2>O'yin tugadi!</h2>
+          <p id="winnerText"></p>
+          <button id="restartGame">Qayta boshlash</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
+  </footer>
+
+  <script>
+    // ====== Model (Ruscha shashka qoidalari) ======
+    // 'w' - oq piyoda, 'W' - oq dama; 'b' - qora piyoda, 'B' - qora dama
+    const PIECE_GLYPH = { w:'⛀', W:'⛁', b:'⛂', B:'⛃' };
+    const DIR = { white:-1, black:1 }; // oddiy yurish yo'nalishi
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const turnStatus = document.getElementById('turnStatus');
+    const modal = document.getElementById('gameOver');
+    const winnerText = document.getElementById('winnerText');
+    const restartBtn = document.getElementById('restartGame');
+
+    let board = startPosition();
+    let turn = 'white'; // 'white' | 'black'
+    let selected = null; // {r,c}
+    let forcedPiece = null; // ko'p sakrash davomida shu figura bilan davom
+    let possible = []; // [{r,c,capture, path:[{r,c}], taken:[{r,c}], promote:false}]
+
+    function startPosition(){
+      const b = Array.from({length:8}, ()=> Array(8).fill(''));
+      for(let r=0;r<3;r++){
+        for(let c=0;c<8;c++){
+          if((r+c)%2===1) b[r][c]='b';
+        }
+      }
+      for(let r=5;r<8;r++){
+        for(let c=0;c<8;c++){
+          if((r+c)%2===1) b[r][c]='w';
+        }
+      }
+      return b;
+    }
+
+    const inBounds=(r,c)=> r>=0&&r<8&&c>=0&&c<8;
+    const isWhite=p=>!!p && (p==='w'||p==='W');
+    const isBlack=p=>!!p && (p==='b'||p==='B');
+    const colorOf=p=> isWhite(p)?'white': isBlack(p)?'black': null;
+    const isKing=p=> p==='W'||p==='B';
+
+    function cloneBoard(b){ return b.map(row=>row.slice()); }
+
+    // ====== Har bir figura uchun yurishlar ======
+    // oddiy yurishlar (olishsiz)
+    function simpleMoves(b,r,c){
+      const p=b[r][c]; if(!p) return [];
+      const moves=[];
+      if(isKing(p)){
+        // dama: diagonalda istalgan masofa (yo'l bo'sh bo'lsa)
+        const dirs=[[1,1],[1,-1],[-1,1],[-1,-1]];
+        for(const [dr,dc] of dirs){
+          let nr=r+dr, nc=c+dc;
+          while(inBounds(nr,nc) && !b[nr][nc]){
+            moves.push({r:nr,c:nc,capture:false, path:[{r:nr,c:nc}]});
+            nr+=dr; nc+=dc;
+          }
+        }
+      } else {
+        const dir = isWhite(p)? DIR.white : DIR.black;
+        for(const dc of [-1,1]){
+          const nr=r+dir, nc=c+dc;
+          if(inBounds(nr,nc) && !b[nr][nc]){
+            moves.push({r:nr,c:nc,capture:false, path:[{r:nr,c:nc}]});
+          }
+        }
+      }
+      return moves;
+    }
+
+    // olish (bitta sakrash bosqichi) — ruscha shashkada:
+    // - piyoda to'rt yo'nalishda ham olishi mumkin
+    // - dama uzoqdan oladi: qarshi figura orqasidagi bo'sh kataklardan istalab biriga qo'nishi mumkin
+    function captureSteps(b,r,c){
+      const p=b[r][c]; if(!p) return [];
+      const steps=[];
+      if(isKing(p)){
+        const dirs=[[1,1],[1,-1],[-1,1],[-1,-1]];
+        for(const [dr,dc] of dirs){
+          let nr=r+dr, nc=c+dc;
+          // yo'l bo'ylab raqibni qidiramiz
+          let enemyPos=null;
+          while(inBounds(nr,nc) && !b[nr][nc]){ nr+=dr; nc+=dc; }
+          if(inBounds(nr,nc) && b[nr][nc] && colorOf(b[nr][nc])!==turn){
+            enemyPos={r:nr,c:nc};
+            // dushman ortidagi bo'sh kataklar — hammasi qo'nish mumkin
+            nr+=dr; nc+=dc;
+            while(inBounds(nr,nc) && !b[nr][nc]){
+              steps.push({to:{r:nr,c:nc}, taken:[enemyPos]});
+              nr+=dr; nc+=dc;
+            }
+          }
+        }
+      } else {
+        const dirs=[[1,1],[1,-1],[-1,1],[-1,-1]];
+        for(const [dr,dc] of dirs){
+          const mr=r+dr, mc=c+dc; // raqib bo'lishi mumkin bo'lgan katak
+          const lr=r+2*dr, lc=c+2*dc; // qo'nish katagi
+          if(inBounds(mr,mc) && inBounds(lr,lc)){
+            if(b[mr][mc] && colorOf(b[mr][mc])!==turn && !b[lr][lc]){
+              steps.push({to:{r:lr,c:lc}, taken:[{r:mr,c:mc}]});
+            }
+          }
+        }
+      }
+      return steps;
+    }
+
+    // Bitta figura uchun barcha OLISh zanjiri (ko'p sakrashni davom ettirish)
+    function captureChainsFrom(b, sr, sc, piece){
+      // DFS bo'yicha barcha tarmoqlarni yig'amiz
+      const results=[];
+      const visitedTaken = new Set(); // ixtiyoriy, lekin bizda figuralar darhol olib tashlanadi simulyatsiyada
+
+      function dfs(boardNow, r, c, takenList, path, pieceNow){
+        const steps = captureSteps(boardNow, r, c);
+        // biror qadam bo'lmasa — bazaviy
+        if(steps.length===0){
+          results.push({r, c, capture:true, taken:[...takenList], path:[...path]});
+          return;
+        }
+        let progressed=false;
+        for(const st of steps){
+          const nb = cloneBoard(boardNow);
+          // ko'chirish + olishni simulyatsiya
+          nb[r][c]='';
+          const captured = st.taken[0];
+          const capturedPiece = nb[captured.r][captured.c];
+          nb[captured.r][captured.c]='';
+          // qo'nish
+          let newPiece = pieceNow;
+          nb[st.to.r][st.to.c] = newPiece;
+
+          // PROMOTSIYA: piyoda oxirgi qatorda — ruscha qoidada o'sha yurishda damaga aylanib, davom etadi
+          if(!isKing(newPiece)){
+            const lastRow = (turn==='white') ? 0 : 7;
+            if(st.to.r === lastRow){
+              newPiece = (turn==='white') ? 'W' : 'B';
+              nb[st.to.r][st.to.c] = newPiece;
+            }
+          }
+
+          dfs(nb, st.to.r, st.to.c, [...takenList, captured], [...path, {r:st.to.r,c:st.to.c}], newPiece);
+          progressed=true;
+        }
+        if(!progressed){
+          results.push({r, c, capture:true, taken:[...takenList], path:[...path]});
+        }
+      }
+
+      dfs(b, sr, sc, [], [], piece);
+      // bir xil tugash nuqtalari ichidan eng uzunlarini tanlashni ENDA talab qilmaymiz.
+      return results;
+    }
+
+    // Joriy tomonga tegishli barcha yurishlar
+    function allMoves(b, side){
+      const mv=[];
+      // avval hamma OLIShlarni topamiz
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          const p=b[r][c]; if(!p) continue;
+          if((side==='white' && isWhite(p)) || (side==='black' && isBlack(p))){
+            const chains=captureChainsFrom(b,r,c,p).filter(x=>x.taken.length>0);
+            for(const ch of chains){
+              mv.push({sr:r,sc:c, r:ch.r, c:ch.c, capture:true, taken:ch.taken, path:ch.path, piece:p});
+            }
+          }
+        }
+      }
+      if(mv.length>0) return mv; // majburiy olish
+
+      // aks holda oddiy yurishlar
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          const p=b[r][c]; if(!p) continue;
+          if((side==='white' && isWhite(p)) || (side==='black' && isBlack(p))){
+            for(const m of simpleMoves(b,r,c)){
+              mv.push({sr:r,sc:c, r:m.r, c:m.c, capture:false, taken:[], path:m.path, piece:p});
+            }
+          }
+        }
+      }
+      return mv;
+    }
+
+    function sideHasAnyMove(b, side){
+      return allMoves(b, side).length>0;
+    }
+
+    // ====== UI/render ======
+    function render(){
+      boardEl.innerHTML='';
+      for(let r=0;r<8;r++){
+        for(let c=0;c<8;c++){
+          const cell=document.createElement('div');
+          cell.className='cell ' + (((r+c)%2===0)?'light':'dark');
+          cell.dataset.r=r; cell.dataset.c=c;
+
+          // faqat to'q kataklarda o'yin bo'ladi
+          if((r+c)%2===0){
+            cell.classList.add('disabled');
+          } else {
+            cell.addEventListener('click', onCellClick);
+          }
+
+          const p=board[r][c];
+          if(p){
+            cell.textContent = PIECE_GLYPH[p] || '';
+            cell.classList.add(isWhite(p)?'white-piece':'black-piece');
+          } else cell.textContent='';
+
+          // highlight
+          if(selected && selected.r===r && selected.c===c){
+            cell.classList.add('selected');
+          }
+          const mark = possible.find(m=>m.r===r && m.c===c);
+          if(mark){
+            cell.classList.add(mark.capture ? 'capture' : 'possible');
+          }
+
+          boardEl.appendChild(cell);
+        }
+      }
+      updateStatus();
+    }
+
+    function updateStatus(){
+      const nice = turn==='white'?'Oq':'Qora';
+      turnStatus.textContent = `${nice} yurishi`;
+      turnStatus.classList.remove('white','black');
+      turnStatus.classList.add(turn);
+
+      const all = allMoves(board, turn);
+      const hasCapture = all.some(m=>m.capture);
+      statusEl.textContent = hasCapture ? 'Majburiy olish mavjud' : '';
+    }
+
+    function legalMovesForSquare(r,c){
+      const all = allMoves(board, turn);
+      // agar ko'p sakrash suruvi bo'lsa — faqat shu figura
+      const restricted = forcedPiece ? all.filter(m=>m.sr===forcedPiece.r && m.sc===forcedPiece.c) : all;
+      const sel = restricted.filter(m=>m.sr===r && m.sc===c);
+      return sel.map(m=>({r:m.r,c:m.c,capture:m.capture,taken:m.taken,path:m.path,piece:m.piece, sr:m.sr, sc:m.sc}));
+    }
+
+    // ====== Oqim ======
+    function onCellClick(e){
+      const r=parseInt(e.currentTarget.dataset.r,10);
+      const c=parseInt(e.currentTarget.dataset.c,10);
+
+      const p=board[r][c];
+      const myPiece = p && ((turn==='white' && isWhite(p)) || (turn==='black' && isBlack(p)));
+
+      if(selected){
+        // xuddi shu hujayrani qayta bosish — bekor
+        if(selected.r===r && selected.c===c){
+          if(forcedPiece) return; // ko'p sakrashda bekor qilib bo'lmaydi
+          selected=null; possible=[]; render(); return;
+        }
+
+        // tanlangan joydan shu katakka yurish mumkinmi?
+        const can = possible.find(m=>m.r===r && m.c===c);
+        if(can){
+          // yurishni bajarish
+          makeMove(can);
+          return;
+        }
+
+        // agar o'z figuralarimizdan boshqasiga bosilsa — yangi tanlashga ruxsat (agar ko'p sakrash bo'lmasa)
+        if(!forcedPiece && myPiece){
+          selected={r,c};
+          possible=legalMovesForSquare(r,c);
+          render();
+          return;
+        }
+
+        // aks holda hech narsa
+        return;
+      } else {
+        // hali tanlanmagan: faqat navbat tomoni figurasini tanlash
+        if(myPiece){
+          selected={r,c};
+          possible=legalMovesForSquare(r,c);
+          render();
+        }
+      }
+    }
+
+    function makeMove(move){
+      // move: {sr,sc,r,c,capture,taken,path,piece}
+      // 1) ko'chirish
+      const p = board[move.sr][move.sc];
+      board[move.sr][move.sc]='';
+      board[move.r][move.c]=p;
+
+      // 2) olinganlarni olib tashlash
+      for(const t of move.taken){
+        board[t.r][t.c]='';
+      }
+
+      // 3) promotsiya
+      const lastRow = (turn==='white') ? 0 : 7;
+      let becameKing=false;
+      if(!isKing(p) && move.r===lastRow){
+        board[move.r][move.c] = (turn==='white') ? 'W' : 'B';
+        becameKing=true;
+      }
+
+      // 4) ko'p sakrashni davom ettirish kerakmi?
+      // ruscha qoida: promotsiya bilan ham davom etishi mumkin (dama bo'lib).
+      const pieceNow = board[move.r][move.c];
+      const contCaptures = captureChainsFrom(board, move.r, move.c, pieceNow).filter(x=>x.taken.length>0);
+
+      if(move.capture && contCaptures.length>0){
+        forcedPiece = {r:move.r, c:move.c};
+        selected = {r:move.r, c:move.c};
+        // faqat shu figura uchun davomiy yurishlarni ko'rsatamiz
+        possible = contCaptures.map(ch=>({sr:move.r,sc:move.c,r:ch.r,c:ch.c,capture:true,taken:ch.taken,path:ch.path,piece:pieceNow}));
+        render();
+        return; // navbat almashtirilmaydi
+      }
+
+      // 5) turnni almashtirish
+      forcedPiece = null;
+      selected=null; possible=[];
+      turn = (turn==='white') ? 'black' : 'white';
+
+      // 6) o'yin yakuni
+      if(!sideHasAnyMove(board, turn)){
+        modal.style.display='flex';
+        winnerText.textContent = (turn==='white') ? 'Qora yutdi!' : 'Oq yutdi!';
+      }
+
+      render();
+    }
+
+    restartBtn.addEventListener('click', ()=>{
+      board = startPosition();
+      turn='white';
+      selected=null; possible=[]; forcedPiece=null;
+      modal.style.display='none';
+      render();
+    });
+
+    // Boshlash
+    render();
+  </script>
+</body>
+</html>
