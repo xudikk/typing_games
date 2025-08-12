@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="dark light">
+  <title>Jumanchi — Jumanji uslubida (refactor v6)</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap">
+  <style>
+    :root{
+      --leaf:#16a34a; --vine:#22c55e; --snake:#ef4444; --trap:#94a3b8; --brown:#8b4513;
+      --gold:#facc15; --wood1:#3b2f22; --wood2:#5a4532; --wood3:#6b523b;
+      --text:#f8fafc; --shadow:rgba(0,0,0,.45);
+      --cols:15;            /* 15x10 = 150 */
+      --cell:60px;          /* Kattaroq maydon */
+      --ring:#8b5cf6;       /* highlight */
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:"Inter",sans-serif;color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(34,197,94,.12), transparent 50%),
+        radial-gradient(1200px 600px at 80% 90%, rgba(250,204,21,.08), transparent 50%),
+        linear-gradient(135deg,#0b2a24,#111827 70%);
+      min-height:100vh; overflow-x:hidden;
+    }
+
+    /* NAVBAR */
+    .header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:linear-gradient(45deg,rgba(16,24,39,.96),rgba(27,36,48,.96));box-shadow:0 6px 16px var(--shadow);position:sticky;top:0;z-index:40}
+    .logo{display:flex;align-items:center;gap:10px}
+    .brand-icon{width:44px;height:44px;background:linear-gradient(135deg,#b45309,#f59e0b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#111}
+    .brand-text{font-weight:800;color:#eab308;letter-spacing:.5px;text-shadow:0 0 10px rgba(250,204,21,.35)}
+    .nav-links{display:flex;gap:10px}
+    .nav-btn{background:linear-gradient(45deg,#4338ca,#7c3aed);border:none;border-radius:12px;padding:10px 16px;cursor:pointer;transition:.2s;font-weight:700;color:#fff;text-decoration:none;display:block}
+    .nav-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(124,58,237,.4)}
+    .nav-btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+    /* Jungle bezaklari */
+    .vines{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35}
+    .vines .leaf{position:absolute;filter:blur(.3px)}
+    .leaf.l1{left:2%; top:6%; font-size:70px; transform:rotate(-18deg)}
+    .leaf.l2{left:6%; top:60%; font-size:90px; transform:rotate(12deg)}
+    .leaf.l3{right:3%; top:14%; font-size:80px; transform:rotate(22deg)}
+    .leaf.l4{right:8%; bottom:6%; font-size:92px; transform:rotate(-6deg)}
+    .leaf.l5{left:10%; bottom:10%; font-size:65px; transform:rotate(8deg)}
+    .leaf.l6{right:15%; top:30%; font-size:75px; transform:rotate(-12deg)}
+
+    /* Korpus */
+    .shell{position:relative;z-index:1; padding:22px}
+    .board-shell{
+      max-width: calc(var(--cell)*var(--cols) + 32px);
+      margin: 0 auto 120px auto;
+      border-radius:20px;
+      background:
+        linear-gradient(120deg, rgba(0,0,0,.3), rgba(0,0,0,.1)),
+        linear-gradient(180deg, var(--wood3), var(--wood2));
+      box-shadow: 0 20px 40px var(--shadow), inset 0 0 45px rgba(0,0,0,.3);
+      padding:16px; position:relative;
+      border:4px solid rgba(250,204,21,.45);
+    }
+    .badges{position:absolute;inset:auto 14px 14px auto;display:flex;gap:8px;opacity:.9}
+    .badge{
+      background:rgba(0,0,0,.35); border:1px solid rgba(250,204,21,.35);
+      padding:4px 10px; border-radius:10px; font-weight:700; font-size:.9rem
+    }
+
+    .board-wrap{ position:relative }
+
+    /* Board (15x10) */
+    .board{
+      max-width:  100%;
+      position:relative; display:grid;
+      grid-template-columns: repeat(var(--cols), var(--cell));
+      grid-auto-rows: var(--cell);
+      border-radius:14px; overflow:auto;
+      box-shadow: 0 12px 28px var(--shadow);
+      background:linear-gradient(135deg, rgba(14,24,39,.7), rgba(12,20,34,.7));
+      border:2px solid rgba(250,204,21,.3);
+      gap:10px; /* Kataklar orasidagi bo'shliq */
+      padding:10px; /* token/overlay hisoblash uchun insets */
+    }
+    .sq{
+      position:relative; display:flex;align-items:center;justify-content:center; user-select:none;
+      border:1px solid rgba(255,255,255,.06);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #4a3a2b, #3b2f22);
+    }
+    .sq:nth-child(odd){
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #5a4532, #463624);
+    }
+    .sq[data-type="green"] {
+      background:
+        linear-gradient(180deg, rgba(34,197,94,.3), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #4a3a2b, #3b2f22);
+    }
+    .sq[data-type="red"] {
+      background:
+        linear-gradient(180deg, rgba(239,68,68,.3), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #4a3a2b, #3b2f22);
+    }
+    .sq[data-type="black"] {
+      background:
+        linear-gradient(180deg, rgba(148,163,184,.3), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #4a3a2b, #3b2f22);
+    }
+    .sq[data-type="brown"] {
+      background:
+        linear-gradient(180deg, rgba(139,92,246,.35), rgba(0,0,0,.1)),
+        linear-gradient(180deg, #4a3a2b, #3b2f22);
+    }
+    .num{
+      position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:1rem;color:#fde68a;opacity:.95;text-shadow:0 0 7px rgba(0,0,0,.5);z-index:1
+    }
+    .effect{
+      position:absolute;
+      bottom:5px;
+      right:5px;
+      font-weight:700;
+      font-size:.8rem;
+      text-shadow:0 0 5px rgba(0,0,0,.5);
+      z-index:1;
+      color:#fff;
+    }
+
+    /* Overlay (yo'l uchun) */
+    .overlay{position:absolute; inset:0; pointer-events:none}
+    .route{stroke:rgba(250,204,21,.4); fill:none; stroke-width:16; stroke-linecap:round; stroke-linejoin:round; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+    .route-edge{stroke:rgba(0,0,0,.3); fill:none; stroke-width:20; opacity:.4}
+
+    /* Tokenlar */
+    .token{position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.95);box-shadow:0 4px 14px var(--shadow), 0 0 8px rgba(250,204,21,.3);z-index:10}
+    .p0{background:linear-gradient(135deg,#22d3ee,#0284c7)}
+    .p1{background:linear-gradient(135deg,#fde047,#f59e0b)}
+    .p2{background:linear-gradient(135deg,#fb7185,#ef4444)}
+    .p3{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
+
+    /* Pastki DOCK */
+    .dock{
+      position:fixed; left:0; right:0; bottom:0; z-index:50;
+      background:linear-gradient(180deg, rgba(8,13,20,.9), rgba(8,13,20,.98));
+      border-top:2px solid rgba(250,204,21,.3);
+      box-shadow:0 -12px 28px var(--shadow);
+      padding:12px 16px;
+    }
+    .dock .row{display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+    .group{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .btn{
+      border:2px solid rgba(250,204,21,.6);
+      background:linear-gradient(180deg,#8a6d3b,#6b523b);
+      color:#fff; padding:12px 18px; border-radius:14px; font-weight:800; letter-spacing:.5px; cursor:pointer;
+      box-shadow:0 6px 16px var(--shadow); transition:.15s transform, .15s box-shadow
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 12px 20px var(--shadow)}
+    .btn.alt{background:linear-gradient(180deg,#374151,#1f2937); border-color:rgba(148,163,184,.65)}
+    .btn:disabled{opacity:.6; cursor:not-allowed; transform:none}
+    .btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+    .status{font-weight:800;color:#c7d2fe;text-shadow:0 0 8px rgba(99,102,241,.25)}
+    .winners{font-weight:700;color:#fde68a}
+    .roll-value{font-weight:900; font-size:1.4rem; color:#facc15; text-shadow:0 0 12px rgba(250,204,21,.4)}
+
+    /* 3D Tosh */
+    .tosh-wrap{display:flex;align-items:center;gap:12px}
+    .tosh-label{font-weight:800;color:#facc15}
+    .scene{width:60px;height:60px; perspective:800px}
+    .cube{
+      width:100%; height:100%; position:relative; transform-style:preserve-3d;
+      transition: transform 600ms cubic-bezier(.2,.6,.2,1);
+    }
+    .cube.rolling{animation: rollSpin 700ms ease-in-out}
+    @keyframes rollSpin{
+      from{transform:rotateX(0) rotateY(0) rotateZ(0)}
+      to{transform:rotateX(540deg) rotateY(450deg) rotateZ(360deg)}
+    }
+    .face{
+      position:absolute; inset:0; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+      background:linear-gradient(135deg,#6b7280,#374151); border:2px solid rgba(0,0,0,.35); border-radius:12px;
+      box-shadow: inset 0 0 18px rgba(0,0,0,.6), 0 6px 14px var(--shadow);
+    }
+    .pip{width:12px;height:12px;background:#f8fafc;border-radius:50%; place-self:center; box-shadow: inset 0 0 2px rgba(0,0,0,.4), 0 0 4px rgba(255,255,255,.6)}
+
+    .pip.p1{grid-area:2/2}
+    .pip.p2a{grid-area:1/1}.pip.p2b{grid-area:3/3}
+    .pip.p3a{grid-area:1/1}.pip.p3b{grid-area:2/2}.pip.p3c{grid-area:3/3}
+    .pip.p4a{grid-area:1/1}.pip.p4b{grid-area:1/3}.pip.p4c{grid-area:3/1}.pip.p4d{grid-area:3/3}
+    .pip.p5a{grid-area:1/1}.pip.p5b{grid-area:1/3}.pip.p5c{grid-area:2/2}.pip.p5d{grid-area:3/1}.pip.p5e{grid-area:3/3}
+    .pip.p6a{grid-area:1/1}.pip.p6b{grid-area:2/1}.pip.p6c{grid-area:3/1}.pip.p6d{grid-area:1/3}.pip.p6e{grid-area:2/3}.pip.p6f{grid-area:3/3}
+
+    .show1{transform:rotateX(0deg) rotateY(0deg)}
+    .show2{transform:rotateY(-90deg)}
+    .show3{transform:rotateX(90deg)}
+    .show4{transform:rotateX(-90deg)}
+    .show5{transform:rotateY(90deg)}
+    .show6{transform:rotateY(180deg)}
+
+    .face.front {transform: translateZ(30px)}
+    .face.back  {transform: rotateY(180deg) translateZ(30px)}
+    .face.right {transform: rotateY(90deg) translateZ(30px)}
+    .face.left  {transform: rotateY(-90deg) translateZ(30px)}
+    .face.top   {transform: rotateX(90deg) translateZ(30px)}
+    .face.bottom{transform: rotateX(-90deg) translateZ(30px)}
+
+    /* Start modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(3,6,12,.85),rgba(8,13,20,.92));z-index:60}
+    .modal .card{
+      width:min(520px,92vw);
+      background:linear-gradient(135deg, #374151, #1f2937);
+      border:3px solid rgba(250,204,21,.55); border-radius:16px;
+      box-shadow:0 16px 36px var(--shadow); padding:18px; text-align:center
+    }
+    .card h2{margin-bottom:6px; color:#facc15}
+    .card p{opacity:.9}
+    .opts{display:flex;justify-content:center;gap:10px;margin:14px 0}
+    select{
+      border:2px solid rgba(250,204,21,.55); background:#0b1224; color:#fff; padding:10px 14px; border-radius:10px; font-weight:800
+    }
+    .card .actions{display:flex; gap:10px; margin-top:10px}
+    .card .btn{flex:1}
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .cube{ transition:none; animation:none }
+    }
+
+    @media (max-width:1200px){ :root{--cell:56px} }
+    @media (max-width:900px){ :root{--cell:52px} }
+    @media (max-width:640px){ :root{--cell:46px} }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon">N</div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links" aria-label="Asosiy navigatsiya">
+      <a class="nav-btn" href="../index.html">Bosh sahifa</a>
+      <a class="nav-btn" href="../lessons.html">Darslar</a>
+      <a class="nav-btn" href="../games.html">Arcade</a>
+      <a class="nav-btn" href="../profile.html">Profil</a>
+    </nav>
+  </header>
+
+  <!-- Jungle bezaklari -->
+  <div class="vines" aria-hidden="true">
+    <div class="leaf l1">🌿</div>
+    <div class="leaf l2">🌱</div>
+    <div class="leaf l3">🌿</div>
+    <div class="leaf l4">🍃</div>
+    <div class="leaf l5">🌿</div>
+    <div class="leaf l6">🍃</div>
+  </div>
+
+  <main class="shell">
+    <section class="board-shell">
+      <div class="board-wrap">
+        <div id="board" class="board" aria-label="Jumanchi taxtasi">
+          <svg id="overlay" class="overlay" aria-hidden="true">
+            <g id="gRoute"></g>
+          </svg>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DOCK -->
+  <div class="dock">
+    <div class="row">
+      <div class="group">
+        <button id="newMap" class="btn">Yangi xarita</button>
+        <button id="reset" class="btn alt">Qayta boshlash</button>
+        <button id="openSettings" class="btn alt">Sozlamalar</button>
+      </div>
+
+      <div class="group tosh-wrap">
+        <span class="tosh-label">Tosh:</span>
+        <div class="scene" aria-hidden="true">
+          <div id="cube" class="cube show1">
+            <div class="face front"> <span class="pip p1"></span> </div>
+            <div class="face back">  <span class="pip p6a"></span><span class="pip p6b"></span><span class="pip p6c"></span><span class="pip p6d"></span><span class="pip p6e"></span><span class="pip p6f"></span></div>
+            <div class="face right"> <span class="pip p2a"></span><span class="pip p2b"></span> </div>
+            <div class="face left">  <span class="pip p5a"></span><span class="pip p5b"></span><span class="pip p5c"></span><span class="pip p5d"></span><span class="pip p5e"></span></div>
+            <div class="face top">   <span class="pip p3a"></span><span class="pip p3b"></span><span class="pip p3c"></span></div>
+            <div class="face bottom"><span class="pip p4a"></span><span class="pip p4b"></span><span class="pip p4c"></span><span class="pip p4d"></span></div>
+          </div>
+        </div>
+        <button id="rollBtn" class="btn" aria-describedby="rollValue">Toshni tashla</button>
+        <span id="rollValue" class="roll-value" aria-live="polite">—</span>
+      </div>
+
+      <div class="group">
+        <div id="status" class="status" role="status" aria-live="polite">Tayyor.</div>
+        <div id="winners" class="winners" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOZLAMALAR MODALI -->
+  <div class="modal" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc" tabindex="-1">
+    <div class="card">
+      <h2 id="modalTitle">O‘yin sozlamalari</h2>
+      <p id="modalDesc">O‘yinchilar sonini tanlang (1–4). Xarita har safar yangilanadi.</p>
+      <div class="opts">
+        <label for="playersSelect">O‘yinchilar:</label>
+        <select id="playersSelect">
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button id="startBtn" class="btn">Qo‘llash</button>
+        <button id="closeBtn" class="btn alt">Yopish</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ====== Asosiy param va elementlar ====== */
+    const COLS=13, ROWS=10, CELLS=COLS*ROWS;
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const winnersEl = document.getElementById('winners');
+    const cube = document.getElementById('cube');
+    const rollBtn = document.getElementById('rollBtn');
+    const newMapBtn = document.getElementById('newMap');
+    const resetBtn = document.getElementById('reset');
+    const openSettingsBtn = document.getElementById('openSettings');
+    const startModal = document.getElementById('startModal');
+    const startBtn = document.getElementById('startBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const playersSelect = document.getElementById('playersSelect');
+    const rollValueEl = document.getElementById('rollValue');
+
+    const tokenColors=['p0','p1','p2','p3'];
+
+    // holat
+    let playing=1;
+    let positions=[];
+    let skips=[];
+    let current=0;
+    let specialCells = []; // {cell: num, type: 'green'|'red'|'black'|'brown', value: num for green/red}
+    let finishedOrder=[];
+    let animating=false;
+    let extraRoll = false;
+
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Markazlar kesh
+    let centers = [];
+
+    /* ====== yordamchi ====== */
+    function overlayEl(){ return document.getElementById('overlay'); }
+    function gRoute(){ return document.getElementById('gRoute'); }
+    function sqList(){ return boardEl.querySelectorAll('.sq'); }
+    function getSquareEl(n){ return sqList()[n-1]; }
+
+    /* ====== UI: taxta ====== */
+    function createBoard(){
+      boardEl.style.setProperty('--cols', COLS);
+      const frag = document.createDocumentFragment();
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          const d=document.createElement('div');
+          d.className='sq';
+          const n=document.createElement('div');
+          n.className='num';
+          n.textContent=numberAtGrid(r,c);
+          d.appendChild(n);
+          frag.appendChild(d);
+        }
+      }
+      boardEl.appendChild(frag);
+      drawBoardPath();
+      recomputeCenters();
+    }
+    function numberAtGrid(r,c){
+      const rowFromBottom = ROWS - 1 - r;
+      const base = rowFromBottom * COLS;
+      const serp = (rowFromBottom % 2 === 0) ? (c+1) : (COLS - c);
+      return base + serp;
+    }
+    function idxToRowCol(n){
+      const zero=n-1;
+      const rowFromBottom = Math.floor(zero/COLS);
+      const row = ROWS-1-rowFromBottom;
+      const pos = zero%COLS;
+      const serp = (rowFromBottom % 2 === 0) ? pos : (COLS-1-pos);
+      return {row,col:serp};
+    }
+
+    // REAL koordinatalar bilan markaz
+    function cellCenter(n){
+      const sq = getSquareEl(n);
+      const b = boardEl.getBoundingClientRect();
+      const r = sq.getBoundingClientRect();
+      return { x: (r.left - b.left) + r.width/2, y: (r.top - b.top) + r.height/2 };
+    }
+    function recomputeCenters(){
+      centers = Array.from({length:CELLS}, (_,i)=>cellCenter(i+1));
+      // SVG o'lchamini yangilash
+      const ov = overlayEl();
+      const bw = boardEl.clientWidth, bh = boardEl.clientHeight;
+      ov.setAttribute('viewBox', `0 0 ${bw} ${bh}`);
+    }
+    function cellCenterCached(n){ return centers[n-1] || cellCenter(n); }
+
+    /* ====== Yo‘lak ====== */
+    function drawBoardPath(){
+      const ov = overlayEl();
+      const routeG = gRoute();
+      routeG.innerHTML='';
+
+      const bw = boardEl.clientWidth, bh = boardEl.clientHeight;
+      ov.setAttribute('viewBox', `0 0 ${bw} ${bh}`);
+
+      const pts = [];
+      for(let i=1;i<=CELLS;i++){ pts.push(cellCenterCached(i)); }
+
+      const makePath = (widen=false)=>{
+        let d = '';
+        for(let i=0;i<pts.length;i++){
+          const p = pts[i];
+          if(i===0){ d += `M ${p.x} ${p.y}`; continue; }
+          const prev = pts[i-1];
+          const dx = p.x - prev.x, dy = p.y - prev.y;
+          const len = Math.hypot(dx,dy) || 1;
+          const nx = -dy/len, ny = dx/len;
+          const amp = (i % COLS === 1) ? 40 : 14;
+          const cx = prev.x + dx*0.5 + nx * (widen? amp+4 : amp);
+          const cy = prev.y + dy*0.5 + ny * (widen? amp+4 : amp);
+          d += ` Q ${cx} ${cy} ${p.x} ${p.y}`;
+        }
+        return d;
+      };
+
+      const edge = document.createElementNS('http://www.w3.org/2000/svg','path');
+      edge.setAttribute('class','route-edge');
+      edge.setAttribute('d', makePath(true));
+      routeG.appendChild(edge);
+
+      const route = document.createElementNS('http://www.w3.org/2000/svg','path');
+      route.setAttribute('class','route');
+      route.setAttribute('d', makePath(false));
+      routeG.appendChild(route);
+    }
+
+    /* ====== Maxsus kataklar ====== */
+    function generateSpecialCells(){
+      specialCells = [];
+      const used = new Set([1, CELLS]);
+      const ri = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+      // Yashil: 8-10 ta, value 5-20
+      for(let i=0, c=ri(8,10); i<c; i++){
+        let cell = ri(2, CELLS-20);
+        while(used.has(cell)){ cell = ri(2, CELLS-20); }
+        specialCells.push({cell, type: 'green', value: ri(5,20)});
+        used.add(cell);
+      }
+
+      // Qizil: 8-10 ta, value 5-20
+      for(let i=0, c=ri(8,10); i<c; i++){
+        let cell = ri(20, CELLS-2);
+        while(used.has(cell)){ cell = ri(20, CELLS-2); }
+        specialCells.push({cell, type: 'red', value: ri(5,20)});
+        used.add(cell);
+      }
+
+      // Qora: Faqat 1 ta
+      let blackCell = ri(15, CELLS-15);
+      while(used.has(blackCell)){ blackCell = ri(15, CELLS-15); }
+      specialCells.push({cell: blackCell, type: 'black'});
+      used.add(blackCell);
+
+      // Siyohrang (brown): 5-7 ta
+      for(let i=0, c=ri(5,7); i<c; i++){
+        let cell = ri(10, CELLS-10);
+        while(used.has(cell)){ cell = ri(10, CELLS-10); }
+        specialCells.push({cell, type: 'brown'});
+        used.add(cell);
+      }
+
+      applySpecialCells();
+    }
+
+    function applySpecialCells(){
+      // Avval tozalash
+      sqList().forEach(sq=>{
+        sq.removeAttribute('data-type');
+        sq.querySelectorAll('.effect').forEach(e=>e.remove());
+      });
+
+      specialCells.forEach(s => {
+        const idx = s.cell - 1;
+        const sq = sqList()[idx];
+        if(!sq) return;
+        sq.dataset.type = s.type;
+        if(s.value){
+          const eff = document.createElement('div');
+          eff.className = 'effect';
+          eff.textContent = s.type === 'green' ? `+${s.value}` : `-${s.value}`;
+          sq.appendChild(eff);
+        }
+      });
+    }
+
+    /* ====== Tokenlar ====== */
+    function createTokens(count){
+      boardEl.querySelectorAll('.token').forEach(e=>e.remove());
+      positions=Array.from({length:count},()=>1);
+      skips=Array.from({length:count},()=>false);
+      finishedOrder=[];
+      for(let i=0;i<count;i++){
+        const t=document.createElement('div');
+        t.className=`token ${tokenColors[i]}`;
+        t.dataset.idx=i;
+        t.setAttribute('role','img');
+        t.setAttribute('aria-label', `O‘yinchi ${i+1} — 1-katak`);
+        boardEl.appendChild(t);
+      }
+      positionAllTokens();
+      updateWinners();
+    }
+    function placeToken(i,cellNum){
+      const t=document.querySelector(`.token[data-idx="${i}"]`); if(!t) return;
+      const center = cellCenterCached(cellNum);
+      const size = getSquareEl(cellNum).getBoundingClientRect().width;
+      const offs=[[-size*.22,-size*.22],[size*.22,-size*.22],[-size*.22,size*.22],[size*.22,size*.22]][i%4];
+      const x = center.x + offs[0] - 14; // 14 = radius
+      const y = center.y + offs[1] - 14;
+      t.style.transform = `translate(${x}px, ${y}px)`;
+      t.setAttribute('aria-label', `O‘yinchi ${i+1} — ${cellNum}-katak`);
+    }
+    function positionAllTokens(){
+      if (!centers.length) recomputeCenters();
+      for(let i=0;i<positions.length;i++) placeToken(i,positions[i]);
+    }
+
+    /* ====== O'yin oqimi ====== */
+    function setStatus(msg){ statusEl.textContent=msg; }
+    function playerName(i=current){ return `O‘yinchi ${i+1}`; }
+
+    function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+    async function rollTosh(){
+      if(animating) return;
+      if(finishedOrder.includes(current)){ nextTurn(); return; }
+      if(skips[current]){
+        skips[current]=false;
+        setStatus(`${playerName()} trap tufayli yurishni o‘tkazdi.`);
+        nextTurn();
+        return;
+      }
+
+      const roll = Math.floor(Math.random()*6)+1;
+      rollValueEl.textContent = roll;
+      animateCube(roll);
+
+      animating=true;
+      await wait(prefersReduced ? 100 : 750);
+
+      let start=positions[current], target=start+roll;
+      if(target>CELLS){
+        setStatus(`${playerName()} — ${roll} tushdi, lekin ${CELLS} dan oshib ketadi. Joyida qoldi.`);
+        animating=false; nextTurn(); return;
+      }
+
+      await stepMove(current,start,target, prefersReduced ? 40 : 180);
+
+      await handleSpecialCell();
+
+      if(extraRoll){
+        extraRoll = false;
+        setStatus(`${playerName()} siyohrang katakka tushdi! Yana bir marta tosh tashlaydi.`);
+        rollBtn.textContent = 'Yana tashla';
+        await wait(500);
+        animating = false;
+        return; // Yana tashlash uchun navbat saqlanadi
+      } else {
+        rollBtn.textContent = 'Toshni tashla';
+      }
+
+      finishOrNext();
+    }
+
+    async function handleSpecialCell(){
+      const pos = positions[current];
+      const special = specialCells.find(s => s.cell === pos);
+      if(special){
+        const typeUz = special.type === 'green' ? 'yashil (+oldinga)' :
+                       special.type === 'red' ? 'qizil (-orqaga)' :
+                       special.type === 'black' ? 'qora (boshga qaytish)' : 'siyohrang (extra roll)';
+        setStatus(`${playerName()} ${typeUz} katakka tushdi!`);
+        await wait(prefersReduced ? 100 : 220);
+
+        if(special.type === 'green'){
+          await stepMove(current, pos, Math.min(pos + (special.value||0), CELLS), prefersReduced ? 40 : 220);
+        } else if(special.type === 'red'){
+          await stepMove(current, pos, Math.max(pos - (special.value||0), 1), prefersReduced ? 40 : 220);
+        } else if(special.type === 'black'){
+          await stepMove(current, pos, 1, prefersReduced ? 40 : 220);
+        } else if(special.type === 'brown'){
+          extraRoll = true;
+        }
+      }
+    }
+
+    async function stepMove(p,from,to,speed=160){
+      const forward = to >= from;
+      for(let now=from + (forward?1:-1); forward ? now<=to : now>=to; now += (forward?1:-1)){
+        positions[p]=now; placeToken(p,now);
+        await wait(speed);
+      }
+    }
+
+    function finishOrNext(){
+      animating=false;
+      if(positions[current]===CELLS){
+        if(!finishedOrder.includes(current)) finishedOrder.push(current);
+        setStatus(`${playerName()} — FINISH! 🏁`);
+        updateWinners();
+        if(finishedOrder.length===playing){ setStatus('O‘yin tugadi!'); rollBtn.disabled=true; return; }
+      }
+      nextTurn();
+    }
+
+    function nextTurn(){
+      let safety=0;
+      do{
+        current=(current+1)%playing;
+        safety++;
+      }while(finishedOrder.includes(current) && safety<playing+1);
+      highlightTurn();
+    }
+
+    function highlightTurn(){
+      const names = Array.from({length:playing},(_,i)=>`O‘yinchi ${i+1}${finishedOrder.includes(i)?' (finish)':''}${skips[i]?' — skip':''}`).join(' • ');
+      setStatus(`Navbat: ${playerName()}. ${names}`);
+    }
+
+    function updateWinners(){
+      if(!finishedOrder.length){ winnersEl.textContent=''; return; }
+      winnersEl.innerHTML = finishedOrder.map((p,i)=>`${i+1}) O‘yinchi ${p+1}`).join(' • ');
+    }
+
+    /* ====== Tosh animatsiyasi ====== */
+    function animateCube(val){
+      cube.classList.add('rolling');
+      rollBtn.disabled=true;
+      setTimeout(()=>{
+        cube.classList.remove('rolling');
+        cube.classList.remove('show1','show2','show3','show4','show5','show6');
+        cube.classList.add('show'+val);
+        rollBtn.disabled=false;
+      }, prefersReduced ? 100 : 700);
+    }
+
+    /* ====== Xarita va reset ====== */
+    function newMap(){
+      generateSpecialCells();
+      positionAllTokens();
+      drawBoardPath();
+    }
+    function resetGame(){
+      createTokens(playing);
+      current=0; rollBtn.disabled=false; rollBtn.textContent='Toshni tashla'; highlightTurn();
+    }
+
+    /* ====== Modal ====== */
+    function openStartModal(){
+      startModal.style.display='flex';
+      document.querySelector('main').inert = true;
+      startModal.dataset.prevFocus = document.activeElement ? (document.activeElement.id || 'rollBtn') : 'rollBtn';
+      startModal.focus();
+      setTimeout(()=> playersSelect.focus(), 0);
+      document.addEventListener('keydown', onModalKeyDown);
+    }
+    function closeStartModal(){
+      startModal.style.display='none';
+      document.removeEventListener('keydown', onModalKeyDown);
+      document.querySelector('main').inert = false;
+      const prevId = startModal.dataset.prevFocus;
+      if(prevId){ const prev = document.getElementById(prevId); if(prev) prev.focus(); }
+    }
+    function onModalKeyDown(e){
+      if(e.key==='Escape'){ e.preventDefault(); closeStartModal(); }
+      if(e.key==='Tab'){
+        const focusables = startModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const list = Array.from(focusables).filter(el=>!el.hasAttribute('disabled') && el.offsetParent!==null);
+        if(list.length===0) return;
+        const first = list[0], last = list[list.length-1];
+        if(e.shiftKey && document.activeElement===first){ last.focus(); e.preventDefault(); }
+        else if(!e.shiftKey && document.activeElement===last){ first.focus(); e.preventDefault(); }
+      }
+    }
+
+    function applySettingsAndStart(){
+      const newPlaying = parseInt(playersSelect.value,10);
+      playing = newPlaying;
+      drawBoardPath();
+      generateSpecialCells();
+      resetGame(); // har doim qayta yaratamiz
+      closeStartModal();
+    }
+
+    /* ====== Init ====== */
+    function init(){
+      createBoard();
+      generateSpecialCells();
+      createTokens(playing); // startda tokenlar mavjud bo'lsin
+      openStartModal();
+
+      const reposition = ()=>{ recomputeCenters(); drawBoardPath(); positionAllTokens(); };
+      window.addEventListener('resize',reposition);
+      document.fonts && document.fonts.ready && document.fonts.ready.then(reposition);
+      // Element o'lchami o'zgarsa ham kuzatamiz
+      if ('ResizeObserver' in window){
+        const ro = new ResizeObserver(reposition);
+        ro.observe(boardEl);
+      }
+    }
+
+    /* ====== Eventlar ====== */
+    rollBtn.addEventListener('click', rollTosh);
+    rollBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); rollTosh(); }});
+
+    newMapBtn.addEventListener('click', newMap);
+    resetBtn.addEventListener('click', resetGame);
+    openSettingsBtn.addEventListener('click', openStartModal);
+    startBtn.addEventListener('click', applySettingsAndStart);
+    closeBtn.addEventListener('click', closeStartModal);
+    startModal.addEventListener('click', (e)=>{ if(e.target===startModal) closeStartModal(); });
+
+    init();
+  </script>
+</body>
+</html>
