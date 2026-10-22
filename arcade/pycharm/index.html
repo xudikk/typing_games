@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyCharm Online — Python IDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/darcula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Menyu satri -->
+    <header class="menubar">
+      <a class="logo" href="../../games.html" title="Arcade'ga qaytish">
+        <span class="logo-badge">PC</span>
+      </a>
+      <nav class="menus">
+        <div class="menu" data-menu="file">Fayl
+          <div class="menu-pop">
+            <button data-act="newFile"><span>Yangi fayl</span><kbd>Alt+Ins</kbd></button>
+            <button data-act="newFolder"><span>Yangi papka</span></button>
+            <button data-act="upload"><span>Fayl yuklash...</span></button>
+            <hr>
+            <button data-act="save"><span>Saqlash</span><kbd>Ctrl+S</kbd></button>
+            <button data-act="downloadFile"><span>Faylni yuklab olish</span></button>
+            <button data-act="downloadZip"><span>Loyihani .zip qilib olish</span></button>
+            <hr>
+            <button data-act="resetProject"><span>Loyihani boshlang'ich holatga qaytarish</span></button>
+            <button data-act="exit"><span>Arcade'ga qaytish</span></button>
+          </div>
+        </div>
+        <div class="menu" data-menu="edit">Tahrirlash
+          <div class="menu-pop">
+            <button data-act="undo"><span>Bekor qilish</span><kbd>Ctrl+Z</kbd></button>
+            <button data-act="redo"><span>Qaytarish</span><kbd>Ctrl+Shift+Z</kbd></button>
+            <hr>
+            <button data-act="find"><span>Qidirish</span><kbd>Ctrl+F</kbd></button>
+            <button data-act="replace"><span>Almashtirish</span><kbd>Ctrl+R</kbd></button>
+            <button data-act="gotoLine"><span>Qatorga o'tish</span><kbd>Ctrl+G</kbd></button>
+            <hr>
+            <button data-act="comment"><span>Izohga olish</span><kbd>Ctrl+/</kbd></button>
+            <button data-act="duplicate"><span>Qatorni nusxalash</span><kbd>Ctrl+D</kbd></button>
+            <button data-act="deleteLine"><span>Qatorni o'chirish</span><kbd>Ctrl+Y</kbd></button>
+            <button data-act="format"><span>Kodni formatlash (black)</span><kbd>Ctrl+Alt+L</kbd></button>
+          </div>
+        </div>
+        <div class="menu" data-menu="view">Ko'rinish
+          <div class="menu-pop">
+            <button data-act="toggleProject"><span>Loyiha paneli</span><kbd>Alt+1</kbd></button>
+            <button data-act="toggleBottom"><span>Pastki panel</span><kbd>Alt+4</kbd></button>
+            <hr>
+            <button data-act="zoomIn"><span>Shriftni kattalashtirish</span><kbd>Ctrl+=</kbd></button>
+            <button data-act="zoomOut"><span>Shriftni kichraytirish</span><kbd>Ctrl+-</kbd></button>
+            <button data-act="zoomReset"><span>Asl o'lcham</span><kbd>Ctrl+0</kbd></button>
+          </div>
+        </div>
+        <div class="menu" data-menu="run">Run
+          <div class="menu-pop">
+            <button data-act="run"><span>Ishga tushirish</span><kbd>Shift+F10</kbd></button>
+            <button data-act="runCurrent"><span>Joriy faylni ishga tushirish</span><kbd>Ctrl+Shift+F10</kbd></button>
+            <button data-act="runTests"><span>Barcha testlarni ishga tushirish</span><kbd>Ctrl+Shift+T</kbd></button>
+            <hr>
+            <button data-act="openConsole"><span>Python konsol</span></button>
+            <button data-act="openTerminal"><span>Terminal (pip install)</span><kbd>Alt+F12</kbd></button>
+          </div>
+        </div>
+        <div class="menu" data-menu="help">Yordam
+          <div class="menu-pop">
+            <button data-act="shortcuts"><span>Klaviatura qisqartmalari</span></button>
+            <button data-act="about"><span>PyCharm Online haqida</span></button>
+          </div>
+        </div>
+      </nav>
+      <div class="project-name"><i class="fa-regular fa-folder"></i> project <span class="sep">›</span> <span id="crumbFile">main.py</span></div>
+      <div class="toolbar">
+        <select id="runConfig" title="Run konfiguratsiyasi"></select>
+        <button id="btnRun" class="tool run" title="Ishga tushirish (Shift+F10)"><i class="fa-solid fa-play"></i></button>
+        <button id="btnTests" class="tool test" title="Testlarni ishga tushirish (Ctrl+Shift+T)"><i class="fa-solid fa-flask-vial"></i></button>
+        <button id="btnFormat" class="tool" title="Formatlash (Ctrl+Alt+L)"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- Chap vertikal panel tugmalari -->
+      <aside class="stripe left">
+        <button class="stripe-btn active" id="stripeProject" title="Loyiha (Alt+1)"><i class="fa-regular fa-folder"></i></button>
+      </aside>
+
+      <!-- Loyiha daraxti -->
+      <section class="project" id="projectPanel">
+        <div class="panel-head">
+          <span>Loyiha</span>
+          <div class="panel-actions">
+            <button data-act="newFile" title="Yangi fayl"><i class="fa-regular fa-file"></i></button>
+            <button data-act="newFolder" title="Yangi papka"><i class="fa-regular fa-folder"></i></button>
+            <button data-act="collapseAll" title="Hammasini yig'ish"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></button>
+          </div>
+        </div>
+        <div class="tree" id="tree"></div>
+      </section>
+      <div class="resizer v" id="resizeSide"></div>
+
+      <!-- Muharrir + pastki panel -->
+      <section class="work">
+        <div class="tabs" id="tabs"></div>
+        <div class="editor-wrap">
+          <div id="editor"></div>
+          <div class="empty-editor" id="emptyEditor">
+            <div>
+              <p><b>Fayl ochilmagan</b></p>
+              <p>Loyiha panelidan fayl tanlang yoki <kbd>Alt+Ins</kbd> bilan yangisini yarating</p>
+              <p><kbd>Shift+F10</kbd> — ishga tushirish</p>
+            </div>
+          </div>
+        </div>
+        <div class="resizer h" id="resizeBottom"></div>
+        <div class="bottom" id="bottomPanel">
+          <div class="bottom-tabs">
+            <button class="btab active" data-tab="run"><i class="fa-solid fa-play"></i> Run</button>
+            <button class="btab" data-tab="tests"><i class="fa-solid fa-flask-vial"></i> Testlar <span class="count" id="testCount"></span></button>
+            <button class="btab" data-tab="console"><i class="fa-brands fa-python"></i> Python konsol</button>
+            <button class="btab" data-tab="terminal"><i class="fa-solid fa-terminal"></i> Terminal</button>
+            <button class="btab" data-tab="problems"><i class="fa-solid fa-triangle-exclamation"></i> Muammolar <span class="count" id="problemCount"></span></button>
+            <div class="spacer"></div>
+            <button class="bicon" id="btnClearOut" title="Tozalash"><i class="fa-solid fa-ban"></i></button>
+            <button class="bicon" id="btnHideBottom" title="Yashirish (Alt+4)"><i class="fa-solid fa-minus"></i></button>
+          </div>
+          <div class="bpane active" data-pane="run">
+            <div class="run-side">
+              <button id="btnRerun" title="Qayta ishga tushirish"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <pre class="out" id="runOut"></pre>
+          </div>
+          <div class="bpane" data-pane="tests">
+            <div class="tests-head">
+              <div class="tests-progress"><div id="testBar"></div></div>
+              <span id="testSummary">Testlar hali ishga tushirilmagan. <code>test_*.py</code> fayllardagi <code>unittest</code> testlari topiladi.</span>
+            </div>
+            <div class="tests-body">
+              <ul class="test-list" id="testList"></ul>
+              <pre class="out test-detail" id="testDetail"></pre>
+            </div>
+          </div>
+          <div class="bpane" data-pane="console">
+            <div class="repl" id="repl">
+              <pre class="out" id="replOut"></pre>
+              <div class="repl-line"><span class="ps" id="replPs">&gt;&gt;&gt;</span><input id="replIn" spellcheck="false" autocomplete="off" placeholder="Python ifodasini yozing..."></div>
+            </div>
+          </div>
+          <div class="bpane" data-pane="terminal">
+            <div class="repl" id="term">
+              <pre class="out" id="termOut"></pre>
+              <div class="repl-line"><span class="ps term-ps">project $</span><input id="termIn" spellcheck="false" autocomplete="off" placeholder="pip install requests  |  python main.py  |  help"></div>
+            </div>
+          </div>
+          <div class="bpane" data-pane="problems">
+            <ul class="problem-list" id="problemList"></ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Holat satri -->
+    <footer class="statusbar">
+      <span id="pyStatus"><span class="dot loading"></span> Python yuklanmoqda...</span>
+      <span class="grow" id="statusMsg"></span>
+      <span id="cursorPos">1:1</span>
+      <span>LF</span>
+      <span>UTF-8</span>
+      <span>4 spaces</span>
+      <span id="pyVersion">Python 3</span>
+    </footer>
+  </div>
+
+  <div class="ctx" id="ctx"></div>
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <h4 id="modalTitle"></h4>
+      <div id="modalBody"></div>
+      <input id="modalInput" spellcheck="false">
+      <div class="modal-actions">
+        <button id="modalCancel">Bekor qilish</button>
+        <button id="modalOk" class="primary">OK</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <input type="file" id="fileUpload" multiple hidden>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/jump-to-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
