@@ -272,7 +272,8 @@
 
     .code-display .correct { color: var(--success); }
     .code-display .error { color: var(--alert-red); }
-    .code-display .current { background: rgba(165, 180, 252, 0.3); }
+    .code-display .current { background: rgba(165, 180, 252, 0.45); border-radius: 2px; box-shadow: 0 2px 0 #facc15; }
+    .code-display .error { background: rgba(239, 68, 68, 0.25); border-radius: 2px; }
 
     #codeInput {
       width: 100%;
@@ -546,6 +547,7 @@
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     const codeSnippets = {
       python: [
@@ -835,205 +837,180 @@
     let currentCode = '';
     let currentOutput = '';
     let currentLanguage = 'python';
-    let startTime = 0;
-    let totalChars = 0;
-    let correctChars = 0;
-    let errors = 0;
+    let startTime = 0;          // birinchi tugma bosilganda boshlanadi
+    let finished = false;
+    let keystrokes = 0;         // jami bosilgan belgilar
+    let mistakes = 0;           // noto'g'ri bosilgan belgilar
+    let lastSnippet = -1;
+    let prevLen = 0;
     let consoleLogs = [];
 
+    const $ = id => document.getElementById(id);
+    const norm = s => s.replace(/\t/g, '    ').replace(/\r/g, '');
+
     function formatTime() {
-      const now = new Date();
-      return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+      const n = new Date();
+      return `[${[n.getHours(), n.getMinutes(), n.getSeconds()].map(v => String(v).padStart(2, '0')).join(':')}]`;
     }
-
     function logToConsole(message, type = 'info') {
-      const consoleOutput = document.getElementById('consoleOutput');
-      if (!consoleOutput) return;
-      consoleLogs.push({ message, type });
+      consoleLogs.push(`<div class="${type}-log">${formatTime()} ${escapeHtml(message)}</div>`);
       consoleLogs = consoleLogs.slice(-50);
-      consoleOutput.innerHTML = consoleLogs.map(log =>
-        `<div class="${log.type}-log">${formatTime()} ${log.message}</div>`
-      ).join('');
-      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      const out = $('consoleOutput');
+      out.innerHTML = consoleLogs.join('');
+      out.parentElement.scrollTop = out.parentElement.scrollHeight;
     }
-
     function escapeHtml(text) {
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return text.replace(/[&<>"']/g, m => map[m]);
+      return String(text).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
     }
-
     function updateLineNumbers(code) {
-      const lineNumbers = document.getElementById('lineNumbers');
-      if (!lineNumbers) return;
-      const lines = code.split('\n').length;
-      lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
+      $('lineNumbers').innerHTML = code.split('\n').map((_, i) => i + 1).join('<br>');
     }
 
     function initializeGame() {
-      const languageSelect = document.getElementById('languageSelect');
-      const codeDisplay = document.getElementById('codeDisplay');
-      const codeInput = document.getElementById('codeInput');
-      const statsDisplay = document.getElementById('statsDisplay');
-      const runButton = document.getElementById('runButton');
-      const resultModal = document.getElementById('resultModal');
-      const consoleOutput = document.getElementById('consoleOutput');
-      const lineNumbers = document.getElementById('lineNumbers');
-
-      if (!codeDisplay || !codeInput || !statsDisplay || !runButton || !consoleOutput || !resultModal || !languageSelect || !lineNumbers) {
-        console.error('DOM elementlari topilmadi');
-        return;
-      }
-
-      currentLanguage = languageSelect.value;
-      startTime = Date.now();
-      totalChars = 0;
-      correctChars = 0;
-      errors = 0;
-      consoleLogs = [];
-
-      const snippets = codeSnippets[currentLanguage] || codeSnippets.python;
-      const randomSnippet = snippets[Math.floor(Math.random() * snippets.length)];
-      currentCode = randomSnippet.code;
-      currentOutput = typeof randomSnippet.output === 'function' ? randomSnippet.output() : randomSnippet.output;
-
-      codeDisplay.innerHTML = escapeHtml(currentCode).replace(/\n/g, '<br>');
+      currentLanguage = $('languageSelect').value;
+      const snippets = (codeSnippets[currentLanguage] || codeSnippets.python).filter(s => s.code);
+      let idx;
+      do { idx = Math.floor(Math.random() * snippets.length); } while (snippets.length > 1 && idx === lastSnippet);
+      lastSnippet = idx;
+      const snip = snippets[idx];
+      currentCode = norm(snip.code);
+      currentOutput = typeof snip.output === 'function' ? snip.output() : snip.output;
+      startTime = 0;
+      finished = false;
+      keystrokes = 0;
+      mistakes = 0;
+      prevLen = 0;
+      const input = $('codeInput');
+      input.value = '';
+      input.disabled = false;
       updateLineNumbers(currentCode);
-      codeInput.value = '';
-      codeInput.focus();
-      statsDisplay.innerHTML = `Vaqt: 0s | WPM: 0 | Aniqlik: 100%`;
-      consoleOutput.innerHTML = '';
-      runButton.disabled = true;
-      resultModal.classList.remove('show');
-      logToConsole(`Yangi kod: ${currentLanguage.toUpperCase()}`, 'code');
+      updateCodeDisplay('');
+      updateStats();
+      $('runButton').disabled = true;
+      $('resultModal').classList.remove('show');
+      logToConsole(`Yangi kod (${currentLanguage.toUpperCase()}): ${currentCode.split('\n').length} qator. Vaqt birinchi belgidan hisoblanadi. Enter chekinishni o'zi qo'yadi.`, 'info');
+      input.focus();
     }
 
     function updateCodeDisplay(input) {
-      const codeDisplay = document.getElementById('codeDisplay');
-      if (!codeDisplay) return;
-      const inputChars = input.replace(/\t/g, '    ').split('');
-      const codeChars = currentCode.replace(/\t/g, '    ').split('');
       let html = '';
-      let i = 0;
-      while (i < codeChars.length) {
-        if (i < inputChars.length) {
-          if (inputChars[i] === codeChars[i]) {
-            html += `<span class="correct">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
-          } else {
-            html += `<span class="error">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
-          }
-        } else {
-          html += `<span class="current">${codeChars[i] === '\n' ? '' : escapeHtml(codeChars[i])}</span>`;
-        }
-        if (codeChars[i] === '\n' || i === codeChars.length - 1) {
-          html += codeChars[i] === '\n' ? '<br>' : '';
-        }
-        i++;
+      for (let i = 0; i < currentCode.length; i++) {
+        const ch = currentCode[i];
+        let cls = '';
+        if (i < input.length) cls = input[i] === ch ? 'correct' : 'error';
+        else if (i === input.length) cls = 'current';
+        const shown = ch === '\n' ? (cls === 'error' || cls === 'current' ? '↵' : '') : escapeHtml(ch);
+        html += cls ? `<span class="${cls}">${shown}</span>` : shown;
+        if (ch === '\n') html += '\n';
       }
-      codeDisplay.innerHTML = html;
+      $('codeDisplay').innerHTML = html;
     }
 
+    function calc() {
+      const input = norm($('codeInput').value);
+      let correct = 0;
+      for (let i = 0; i < input.length && i < currentCode.length; i++) if (input[i] === currentCode[i]) correct++;
+      const elapsed = startTime ? ((finished || Date.now()) - startTime) / 1000 : 0;
+      const wpm = elapsed > 1 ? Math.round((correct / 5) / (elapsed / 60)) : 0;
+      const accuracy = keystrokes ? Math.max(0, Math.round((1 - mistakes / keystrokes) * 100)) : 100;
+      const progress = Math.round(Math.min(correct, currentCode.length) / currentCode.length * 100);
+      return { elapsed, wpm, accuracy, progress };
+    }
     function updateStats() {
-      const statsDisplay = document.getElementById('statsDisplay');
-      if (!statsDisplay) return;
-      const elapsed = (Date.now() - startTime) / 1000;
-      const wpm = totalChars > 0 ? Math.round((totalChars / 5) / (elapsed / 60)) : 0;
-      const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
-      statsDisplay.innerHTML = `Vaqt: ${Math.floor(elapsed)}s | WPM: ${wpm} | Aniqlik: ${accuracy}%`;
+      const s = calc();
+      $('statsDisplay').innerHTML = `Vaqt: ${Math.floor(s.elapsed)}s | WPM: ${s.wpm} | Aniqlik: ${s.accuracy}% | Bajarildi: ${s.progress}%`;
+    }
+
+    function finish() {
+      if (finished) return;
+      finished = Date.now();
+      const s = calc();
+      $('codeInput').disabled = true;
+      $('runButton').disabled = false;
+      logToConsole(`✔ Kod to'liq va to'g'ri yozildi! ${s.wpm} WPM, aniqlik ${s.accuracy}%. "Run" tugmasini bosing (yoki Ctrl+Enter).`, 'code');
+      Neo.sound.play('ok');
+      $('runButton').focus();
     }
 
     function runCode() {
-      const codeInput = document.getElementById('codeInput');
-      const resultModal = document.getElementById('resultModal');
-      const resultOutput = document.getElementById('resultOutput');
-      if (!codeInput || !resultModal || !resultOutput) return;
-      const normalizedInput = codeInput.value.replace(/\t/g, '    ').trim();
-      const normalizedCode = currentCode.replace(/\t/g, '    ').trim();
-      if (normalizedInput === normalizedCode) {
-        resultOutput.innerText = `Ajoyib ish! Kod to‘g‘ri kiritildi.\nNatija: ${currentOutput}`;
-        resultModal.classList.add('show');
-        playSound('run');
-        setTimeout(() => {
-          resultModal.classList.remove('show');
-          initializeGame();
-        }, 3000);
-      } else {
-        logToConsole('Xato: Kod to‘liq yoki to‘g‘ri kiritilmadi', 'error');
-        playSound('error');
-      }
-    }
-
-    function playSound(type) {
-      const audio = new Audio();
-      if (type === 'success') audio.src = 'https://cdn.pixabay.com/audio/2023/02/28/audio_4e5a696f62.mp3';
-      else if (type === 'error') audio.src = 'https://cdn.pixabay.com/audio/2022/01/25/audio_d6c577e705.mp3';
-      else if (type === 'run') audio.src = 'https://cdn.pixabay.com/audio/2024/03/29/audio_4f6b3b23b5.mp3';
-      audio.play().catch(() => {});
-    }
-
-    window.onload = function() {
-      const languageSelect = document.getElementById('languageSelect');
-      const codeInput = document.getElementById('codeInput');
-      const runButton = document.getElementById('runButton');
-      const codeDisplay = document.getElementById('codeDisplay');
-      const lineNumbers = document.getElementById('lineNumbers');
-
-      if (!languageSelect || !codeInput || !runButton || !codeDisplay || !lineNumbers) {
-        console.error('DOM elementlari topilmadi');
+      if (!finished) {
+        logToConsole("Xato: kod hali to'liq yoki to'g'ri yozilmagan", 'error');
+        Neo.sound.play('error');
         return;
       }
-
-      codeDisplay.addEventListener('copy', (e) => e.preventDefault());
-      codeDisplay.addEventListener('cut', (e) => e.preventDefault());
-      codeDisplay.addEventListener('contextmenu', (e) => e.preventDefault());
-
-      languageSelect.addEventListener('change', () => {
-        currentLanguage = languageSelect.value;
-        initializeGame();
+      const s = calc();
+      const score = Math.round(s.wpm * s.accuracy / 100);
+      const res = Neo.stats.record('fastcoder', { score, wpm: s.wpm, accuracy: s.accuracy, lang: currentLanguage });
+      logToConsole(`>>> ${currentLanguage} run`, 'info');
+      String(currentOutput).split('\n').forEach(l => logToConsole(l, 'code'));
+      Neo.gameOver({
+        title: 'Ajoyib! Kod ishladi ✅',
+        subtitle: String(currentOutput).split('\n')[0],
+        win: true,
+        isBest: res.isBest,
+        rows: [['WPM', s.wpm], ['Aniqlik', s.accuracy + '%'], ['Vaqt', Math.round(s.elapsed) + 's'], ['Rekord ball', res.best]],
+        restartText: 'Keyingi kod',
+        onRestart: initializeGame,
       });
+    }
 
-      codeInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Tab') {
+    window.onload = function () {
+      Neo.addMuteButton();
+      const codeInput = $('codeInput');
+      const codeDisplay = $('codeDisplay');
+      ['copy', 'cut', 'contextmenu'].forEach(ev => codeDisplay.addEventListener(ev, e => e.preventDefault()));
+      codeInput.addEventListener('paste', e => { e.preventDefault(); logToConsole("Nusxa qo'yish mumkin emas — o'zingiz yozing 🙂", 'error'); });
+      $('languageSelect').addEventListener('change', initializeGame);
+
+      codeInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runCode(); return; }
+        const pos = codeInput.selectionStart;
+        const insert = text => {
           e.preventDefault();
-          const start = codeInput.selectionStart;
-          const end = codeInput.selectionEnd;
-          codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
-          codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+          const v = codeInput.value;
+          codeInput.value = v.slice(0, pos) + text + v.slice(codeInput.selectionEnd);
+          codeInput.selectionStart = codeInput.selectionEnd = pos + text.length;
+          codeInput.dispatchEvent(new Event('input'));
+        };
+        if (e.key === 'Tab') {
+          insert('    ');
+        } else if (e.key === 'Enter') {
+          // IDE kabi: yangi qatorning chekinishini avtomatik qo'yish
+          const typed = norm(codeInput.value.slice(0, pos));
+          let indent;
+          if (typed === currentCode.slice(0, typed.length) && currentCode[typed.length] === '\n') {
+            indent = (currentCode.slice(typed.length + 1).match(/^ */) || [''])[0];
+          } else {
+            indent = (typed.split('\n').pop().match(/^ */) || [''])[0];
+          }
+          insert('\n' + indent);
         }
       });
 
       codeInput.addEventListener('input', () => {
-        const input = codeInput.value.replace(/\t/g, '    ').trim();
-        totalChars = input.length;
-        correctChars = 0;
-        const codeChars = currentCode.replace(/\t/g, '    ').split('');
-        const inputChars = input.split('');
-        for (let i = 0; i < inputChars.length && i < codeChars.length; i++) {
-          if (inputChars[i] === codeChars[i]) {
-            correctChars++;
-            if (i === inputChars.length - 1) {
-              playSound('success');
-              logToConsole(`To‘g‘ri belgi: ${inputChars[i] === '\n' ? '\\n' : inputChars[i] === ' ' ? '[space]' : inputChars[i]}`, 'code');
-            }
-          } else {
-            errors++;
-            playSound('error');
-            logToConsole(`Xato belgi: ${inputChars[i] === '\n' ? '\\n' : inputChars[i] === ' ' ? '[space]' : inputChars[i]} (kerak edi: ${codeChars[i] === '\n' ? '\\n' : codeChars[i] === ' ' ? '[space]' : codeChars[i]})`, 'error');
+        if (finished) return;
+        const input = norm(codeInput.value);
+        if (!startTime && input.length) startTime = Date.now();
+        // Faqat yangi qo'shilgan belgilar hisoblanadi (o'chirish xato hisoblanmaydi)
+        if (input.length > prevLen) {
+          let autoIndent = false;
+          for (let i = prevLen; i < input.length; i++) {
+            if (input[i] === '\n') autoIndent = true;
+            else if (input[i] !== ' ') autoIndent = false;
+            if (autoIndent && input[i] === ' ') continue;
+            keystrokes++;
+            if (input[i] !== currentCode[i]) mistakes++;
           }
+          const last = input.length - 1;
+          if (input[last] !== currentCode[last]) Neo.sound.play('error');
         }
+        prevLen = input.length;
         updateCodeDisplay(input);
         updateStats();
-        runButton.disabled = input !== currentCode.replace(/\t/g, '    ').trim();
+        if (input.trimEnd() === currentCode.trimEnd()) finish();
       });
-
-      runButton.addEventListener('click', runCode);
-
-      setInterval(updateStats, 1000);
+      $('runButton').addEventListener('click', runCode);
+      setInterval(() => { if (startTime && !finished) updateStats(); }, 500);
       initializeGame();
     };
   </script>

@@ -448,6 +448,16 @@
       .brand-icon { width: 35px; height: 35px; font-size: 1.6rem; }
       .brand-text { font-size: 1.8rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    .keyboard { max-width: 100%; overflow-x: auto; }
+    .key.wrong { animation: wrongKey .22s; box-shadow: 0 0 12px #ef4444; background: linear-gradient(145deg, #7f1d1d, #b91c1c); }
+    @keyframes wrongKey { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+    .timer-bar.low { background: linear-gradient(90deg, #ef4444, #f97316) !important; }
+    .time-choice { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+    .time-choice button { padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: transparent; color: inherit; cursor: pointer; font: inherit; }
+    .time-choice button.active { background: rgba(255,255,255,.2); border-color: #fff; }
+    .best-line { margin-top: 6px; opacity: .85; }
   </style>
 </head>
 <body>
@@ -545,6 +555,7 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     // Cosmic background with stars and comets
     const canvas = document.getElementById('starsCanvas');
@@ -666,28 +677,58 @@
       'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
       'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', ' '
     ];
-
-    const inputKeys = [
-      'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\\',
-      'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'',
-      'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', ' ',
-      'tab', 'capslock', 'shift', 'ctrl', 'alt', 'enter'
-    ];
+    // Klaviatura tartibidan qat'i nazar (kirill, o'zbek) jismoniy tugmani aniqlaymiz
+    const CODE_MAP = {
+      BracketLeft: '[', BracketRight: ']', Backslash: '\\', Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/',
+      Space: ' ', Tab: 'tab', CapsLock: 'capslock', ShiftLeft: 'shift', ShiftRight: 'shift', ControlLeft: 'ctrl', ControlRight: 'ctrl',
+      AltLeft: 'alt', AltRight: 'alt', Enter: 'enter',
+    };
+    function keyFromEvent(e) {
+      if (/^Key[A-Z]$/.test(e.code)) return e.code.slice(3).toLowerCase();
+      if (CODE_MAP[e.code]) return CODE_MAP[e.code];
+      return null;
+    }
+    const keyEls = {};
+    document.querySelectorAll('.key[data-letter]').forEach(el => {
+      (keyEls[el.dataset.letter] = keyEls[el.dataset.letter] || []).push(el);
+    });
 
     let currentKeys = [];
     let correctCount = 0;
     let wrongCount = 0;
     let gameActive = false;
-    let timeLeft = 120;
-    let totalTime = 120;
+    let totalTime = 60;
+    let timeLeft = totalTime;
     let timer = null;
     let difficulty = null;
     let timerStarted = false;
-    const difficultyStarCount = {
-      easy: 1,
-      medium: 2,
-      hard: 3
-    };
+    let streak = 0;
+    let bestStreak = 0;
+    let reactionSum = 0;
+    let starShownAt = 0;
+    const difficultyStarCount = { easy: 1, medium: 2, hard: 3 };
+
+    // Vaqtni tanlash tugmalari
+    (function addTimeChoice() {
+      const wrap = document.createElement('div');
+      wrap.className = 'time-choice';
+      wrap.innerHTML = [30, 60, 120].map(t => `<button type="button" data-time="${t}" class="${t === totalTime ? 'active' : ''}">${t}s</button>`).join('');
+      difficultyModal.insertBefore(wrap, difficultyModal.querySelector('.difficulty-btn'));
+      wrap.addEventListener('click', e => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        totalTime = timeLeft = +b.dataset.time;
+        wrap.querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+        timerText.innerText = `${totalTime}s`;
+      });
+      const best = Neo.stats.best('warmup');
+      if (best != null) {
+        const p = document.createElement('p');
+        p.className = 'best-line';
+        p.textContent = `🏆 Rekord: ${best} ball`;
+        difficultyModal.appendChild(p);
+      }
+    })();
 
     function setDifficulty(newDifficulty) {
       difficulty = newDifficulty;
@@ -695,114 +736,82 @@
       timerBarContainer.style.display = 'block';
       keyboard.style.display = 'flex';
       correctDisplay.parentElement.style.display = 'flex';
+      timeLeft = totalTime;
+      timerText.innerText = `${totalTime}s`;
+      timerBar.style.width = '100%';
       placeStars();
       gameActive = true;
     }
-
-    difficultyButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        setDifficulty(btn.dataset.difficulty);
-      });
-    });
+    difficultyButtons.forEach(btn => btn.addEventListener('click', () => setDifficulty(btn.dataset.difficulty)));
 
     function placeStars() {
-      // Clear existing stars
       document.querySelectorAll('.key .star').forEach(star => star.remove());
-      currentKeys = [];
-
-      const starCount = difficultyStarCount[difficulty];
-      let availableKeys = [...starKeys];
-
-      // Shuffle availableKeys to ensure random selection
-      for (let i = availableKeys.length - 1; i > 0; i--) {
+      const pool = starKeys.filter(k => !currentKeys.includes(k));
+      for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [availableKeys[i], availableKeys[j]] = [availableKeys[j], availableKeys[i]];
+        [pool[i], pool[j]] = [pool[j], pool[i]];
       }
-
-      // Place stars on keys
-      for (let i = 0; i < starCount && availableKeys.length > 0; i++) {
-        const selectedKey = availableKeys.pop();
-        currentKeys.push(selectedKey);
-        const keyElement = document.querySelector(`.key[data-letter="${selectedKey}"]`);
-        if (keyElement) {
-          const star = document.createElement('div');
-          star.className = 'star';
-          star.innerText = '⭐';
-          keyElement.appendChild(star);
-        } else {
-          console.warn(`Key element for "${selectedKey}" not found`);
-        }
+      currentKeys = pool.slice(0, difficultyStarCount[difficulty]);
+      for (const k of currentKeys) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.innerText = '⭐';
+        keyEls[k][0].appendChild(star);
       }
-
-      // If no stars were placed and there are available keys, retry
-      if (currentKeys.length < starCount && starKeys.length > 0) {
-        console.warn(`Failed to place ${starCount} stars, placed ${currentKeys.length}, retrying...`);
-        placeStars();
-      }
-    }
-
-    function playSound(frequency, duration) {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      oscillator.start();
-      setTimeout(() => oscillator.stop(), duration * 1000);
-    }
-
-    function triggerVibration() {
-      if (navigator.vibrate) {
-        navigator.vibrate(80);
-      } else {
-        playSound(200, 0.1);
-      }
+      starShownAt = performance.now();
     }
 
     function startTimer() {
+      clearInterval(timer);
       timer = setInterval(() => {
-        if (!gameActive) {
-          clearInterval(timer);
-          return;
-        }
+        if (!gameActive) return clearInterval(timer);
         timeLeft--;
-        const percentage = (timeLeft / totalTime) * 100;
-        timerBar.style.width = `${percentage}%`;
+        timerBar.style.width = `${(timeLeft / totalTime) * 100}%`;
         timerText.innerText = `${timeLeft}s`;
-        if (timeLeft <= 0) {
-          gameActive = false;
-          clearInterval(timer);
-          gameOver();
-        }
+        if (timeLeft <= 10) timerBar.classList.add('low');
+        if (timeLeft <= 0) gameOver();
       }, 1000);
+    }
+
+    function score() {
+      return Math.max(0, correctCount * 10 * difficultyStarCount[difficulty] - wrongCount * 5);
+    }
+    function updateBoard() {
+      correctDisplay.innerText = `To'g'ri: ${correctCount}`;
+      wrongDisplay.innerText = `Xato: ${wrongCount} · Seriya: ${streak}`;
     }
 
     function gameOver() {
       gameActive = false;
+      clearInterval(timer);
       document.querySelectorAll('.key .star').forEach(star => star.remove());
       currentKeys = [];
-      gameOverText.innerText = `O'yin tugadi!\nTo'g'ri: ${correctCount}\nXato: ${wrongCount}`;
-      gameOverModal.style.display = 'block';
-      playSound(250, 0.2);
+      const total = correctCount + wrongCount;
+      const acc = total ? Math.round(correctCount / total * 100) : 100;
+      const avg = correctCount ? Math.round(reactionSum / correctCount) : 0;
+      const sc = score();
+      const res = Neo.stats.record('warmup', { score: sc, correct: correctCount, wrong: wrongCount, accuracy: acc, difficulty, time: totalTime });
+      Neo.gameOver({
+        title: 'Vaqt tugadi ⏱️',
+        subtitle: `${{ easy: 'Oson', medium: "O'rta", hard: 'Qiyin' }[difficulty]} daraja · ${totalTime} soniya`,
+        isBest: res.isBest,
+        rows: [['Ball', sc], ['Aniqlik', acc + '%'], ["To'g'ri / Xato", `${correctCount} / ${wrongCount}`], ["O'rtacha reaksiya", avg + ' ms'], ['Eng uzun seriya', bestStreak], ['Rekord', res.best]],
+        onRestart: restartGame,
+      });
     }
 
     function restartGame() {
-      correctCount = 0;
-      wrongCount = 0;
-      timeLeft = 120;
-      totalTime = 120;
+      correctCount = wrongCount = streak = bestStreak = reactionSum = 0;
+      timeLeft = totalTime;
       gameActive = false;
       timerStarted = false;
-      correctDisplay.innerText = `To'g'ri: 0`;
-      wrongDisplay.innerText = `Xato: 0`;
+      clearInterval(timer);
+      updateBoard();
       timerBar.style.width = '100%';
-      timerText.innerText = '120s';
+      timerBar.classList.remove('low');
+      timerText.innerText = `${totalTime}s`;
       gameOverModal.style.display = 'none';
       currentKeys = [];
-      if (timer) clearInterval(timer);
       difficultyModal.style.display = 'flex';
       timerBarContainer.style.display = 'none';
       keyboard.style.display = 'none';
@@ -810,48 +819,50 @@
       document.querySelectorAll('.key .star').forEach(star => star.remove());
     }
 
-    document.addEventListener('keydown', (e) => {
-      if (!gameActive || gameOverModal.style.display === 'block' || difficultyModal.style.display === 'flex') return;
+    function flash(k, cls) {
+      (keyEls[k] || []).forEach(el => {
+        el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+        setTimeout(() => el.classList.remove(cls), 220);
+      });
+    }
 
-      let key = e.key.toLowerCase();
-      if (key === ' ') key = ' ';
-      if (!inputKeys.includes(key)) return;
-
+    document.addEventListener('keydown', e => {
+      if (!gameActive || difficultyModal.style.display === 'flex') return;
+      const key = keyFromEvent(e);
+      if (!key) return;
+      e.preventDefault(); // probel sahifani aylantirmasin, Tab fokusni olmasin
+      if (e.repeat) return;
       if (!timerStarted && starKeys.includes(key)) {
         timerStarted = true;
         startTimer();
       }
-
-      const currentKeyElement = document.querySelector(`.key[data-letter="${key}"]`);
       if (currentKeys.includes(key)) {
         correctCount++;
-        correctDisplay.innerText = `To'g'ri: ${correctCount}`;
-        if (currentKeyElement) {
-          currentKeyElement.classList.add('correct');
-          setTimeout(() => currentKeyElement.classList.remove('correct'), 200);
-          const star = currentKeyElement.querySelector('.star');
-          if (star) star.remove();
-        } else {
-          console.warn(`Key element for "${key}" not found during keydown`);
-        }
+        streak++;
+        bestStreak = Math.max(bestStreak, streak);
+        reactionSum += performance.now() - starShownAt;
+        flash(key, 'correct');
+        const star = keyEls[key][0].querySelector('.star');
+        if (star) star.remove();
         currentKeys = currentKeys.filter(k => k !== key);
-        if (currentKeys.length === 0) {
-          placeStars();
-        }
-        playSound(400, 0.1);
+        if (currentKeys.length === 0) placeStars();
+        Neo.sound.play('key');
       } else {
         wrongCount++;
-        wrongDisplay.innerText = `Xato: ${wrongCount}`;
-        triggerVibration();
+        streak = 0;
+        flash(key, 'wrong');
+        if (navigator.vibrate) navigator.vibrate(60);
+        Neo.sound.play('error');
       }
+      updateBoard();
     });
 
-    // Initialize game state
+    // Boshlang'ich holat
+    Neo.addMuteButton();
     difficultyModal.style.display = 'flex';
     timerBarContainer.style.display = 'none';
     keyboard.style.display = 'none';
     correctDisplay.parentElement.style.display = 'none';
-
     restartButton.addEventListener('click', restartGame);
   </script>
 </body>

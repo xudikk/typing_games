@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dars — NeoCoder</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5; --secondary: #f59e0b; --accent: #a5b4fc; --text: #fff;
+      --bg-dark: #0f172a; --bg-light: #1e293b; --ok: #22c55e; --bad: #ef4444;
+      --f-pinkie: #f472b6; --f-ring: #a78bfa; --f-middle: #60a5fa; --f-index: #34d399; --f-thumb: #fbbf24;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Inter, sans-serif; background: linear-gradient(135deg, var(--bg-dark), var(--bg-light)); color: var(--text); min-height: 100vh; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; background: rgba(15, 23, 42, .95); box-shadow: 0 8px 20px rgba(0, 0, 0, .5); }
+    .logo { display: flex; align-items: center; gap: 14px; }
+    .brand-icon { width: 46px; height: 46px; background: var(--secondary); border-radius: 12px; display: grid; place-items: center; font-size: 1.6rem; }
+    .brand-text { color: var(--accent); font-size: 1.8rem; font-weight: 900; }
+    .nav-links { display: flex; gap: 14px; }
+    .nav-btn { background: linear-gradient(45deg, var(--primary), #7c3aed); border: 0; border-radius: 12px; padding: 11px 22px; font: 700 1.05rem Inter, sans-serif; cursor: pointer; }
+    .nav-btn a { color: #fff; text-decoration: none; }
+
+    main { max-width: 1100px; margin: 26px auto; padding: 0 16px; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    .top h1 { font-size: 2rem; color: var(--accent); }
+    .top p { color: #c7d2fe; margin-top: 4px; }
+    .back { color: var(--secondary); text-decoration: none; font-weight: 700; }
+    .steps { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .step { padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .08); font-size: .9rem; color: #c7d2fe; }
+    .step.on { background: var(--secondary); color: #1e1b4b; font-weight: 700; }
+    .step.done { background: rgba(34, 197, 94, .25); color: #bbf7d0; }
+
+    .panel { background: rgba(15, 23, 42, .65); border: 1px solid rgba(165, 180, 252, .25); border-radius: 18px; padding: 24px; }
+    .hud { display: flex; gap: 22px; justify-content: center; margin-bottom: 16px; color: var(--accent); font-weight: 700; flex-wrap: wrap; }
+    .hud b { color: #fff; }
+    .text { font: 1.7rem/1.9 'JetBrains Mono', Consolas, monospace; letter-spacing: .5px; min-height: 3.8em; text-align: center; word-break: break-word; cursor: text; user-select: none; }
+    .text span { color: #64748b; border-radius: 3px; }
+    .text span.done { color: #e2e8f0; }
+    .text span.err { color: var(--bad); background: rgba(239, 68, 68, .18); }
+    .text span.cur { color: #0f172a; background: var(--secondary); box-shadow: 0 0 0 2px var(--secondary); animation: pulse 1s infinite; }
+    .text span.sp.cur { background: rgba(245, 158, 11, .6); }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, .4); } }
+    .hint { text-align: center; margin: 12px 0 4px; color: #c7d2fe; min-height: 1.5em; }
+    .hint b { padding: 1px 8px; border-radius: 6px; color: #0f172a; }
+    .focus-note { text-align: center; color: var(--secondary); margin-top: 8px; display: none; }
+    .focus-note.show { display: block; }
+    #capture { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+
+    .kb { margin: 22px auto 0; display: flex; flex-direction: column; gap: 6px; align-items: center; max-width: 100%; overflow-x: auto; padding-bottom: 6px; }
+    .kb-row { display: flex; gap: 6px; }
+    .k { --w: 1; width: calc(var(--w) * 46px); height: 46px; border-radius: 8px; display: grid; place-items: center; font: 600 .95rem Inter, sans-serif;
+      background: #1e293b; border: 2px solid transparent; border-bottom-width: 4px; color: #cbd5e1; transition: transform .08s, background .15s; position: relative; flex-shrink: 0; }
+    .k[data-f="pinkie"] { border-color: var(--f-pinkie); }
+    .k[data-f="ring"] { border-color: var(--f-ring); }
+    .k[data-f="middle"] { border-color: var(--f-middle); }
+    .k[data-f="index"] { border-color: var(--f-index); }
+    .k[data-f="thumb"] { border-color: var(--f-thumb); }
+    .k.focus-key { background: #334155; color: #fff; }
+    .k.next { background: var(--secondary); color: #0f172a; transform: translateY(-2px); box-shadow: 0 0 16px rgba(245, 158, 11, .7); }
+    .k.press { transform: translateY(2px); }
+    .k.wrong { background: var(--bad); color: #fff; }
+    .k.home::after { content: ''; position: absolute; bottom: 6px; width: 10px; height: 2px; background: currentColor; border-radius: 2px; }
+    .legend { display: flex; gap: 14px; justify-content: center; margin-top: 12px; flex-wrap: wrap; font-size: .85rem; color: #cbd5e1; }
+    .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+    .result { display: none; text-align: center; }
+    .result.show { display: block; }
+    .stars { font-size: 3rem; letter-spacing: 6px; margin: 10px 0; }
+    .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 520px; margin: 18px auto; }
+    .res-grid div { background: rgba(255, 255, 255, .07); border-radius: 14px; padding: 14px; }
+    .res-grid b { display: block; font-size: 1.8rem; color: var(--secondary); }
+    .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .btn { padding: 12px 22px; border-radius: 12px; border: 0; cursor: pointer; font: 700 1rem Inter, sans-serif; color: #fff; text-decoration: none;
+      background: linear-gradient(45deg, var(--primary), #7c3aed); }
+    .btn.alt { background: rgba(255, 255, 255, .12); }
+    .btn.go { background: linear-gradient(45deg, #22c55e, #16a34a); }
+    .footer { text-align: center; padding: 24px; color: #94a3b8; }
+    @media (max-width: 768px) { .text { font-size: 1.25rem; } .k { width: calc(var(--w) * 30px); height: 34px; font-size: .75rem; } .kb-row { gap: 4px; } .res-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon"><i class="fas fa-rocket"></i></div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="top">
+      <div>
+        <a class="back" href="lessons.html">← Barcha darslar</a>
+        <h1 id="lessonTitle">Dars</h1>
+        <p id="lessonFocus"></p>
+      </div>
+    </div>
+    <div class="steps" id="steps"></div>
+
+    <section class="panel" id="practice">
+      <div class="hud">
+        <span>Mashq: <b id="hStep">1/3</b></span>
+        <span>WPM: <b id="hWpm">0</b></span>
+        <span>Aniqlik: <b id="hAcc">100%</b></span>
+        <span>Xatolar: <b id="hErr">0</b></span>
+      </div>
+      <div class="text" id="text" tabindex="0" aria-label="Yoziladigan matn"></div>
+      <p class="hint" id="hint"></p>
+      <p class="focus-note" id="focusNote">Yozishni davom ettirish uchun matnni bosing</p>
+      <input id="capture" autocomplete="off" autocapitalize="off" spellcheck="false" aria-hidden="true">
+      <div class="kb" id="kb"></div>
+      <div class="legend">
+        <span><i style="background:var(--f-pinkie)"></i>Jimjiloq</span>
+        <span><i style="background:var(--f-ring)"></i>Nomsiz</span>
+        <span><i style="background:var(--f-middle)"></i>O'rta</span>
+        <span><i style="background:var(--f-index)"></i>Ko'rsatkich</span>
+        <span><i style="background:var(--f-thumb)"></i>Bosh barmoq</span>
+      </div>
+    </section>
+
+    <section class="panel result" id="result">
+      <h2 id="resTitle">Dars tugadi!</h2>
+      <div class="stars" id="stars">★★★</div>
+      <div class="res-grid">
+        <div><b id="rWpm">0</b>WPM</div>
+        <div><b id="rAcc">0%</b>Aniqlik</div>
+        <div><b id="rTime">0s</b>Vaqt</div>
+      </div>
+      <p id="resTip"></p>
+      <div class="btns">
+        <button class="btn alt" id="retry">↻ Qayta urinish</button>
+        <a class="btn go" id="nextLesson" href="#">Keyingi dars →</a>
+        <a class="btn alt" href="lessons.html">Darslar ro'yxati</a>
+      </div>
+    </section>
+  </main>
+  <footer class="footer">© 2025 NeoCoder</footer>
+
+  <script src="assets/neo.js"></script>
+  <script>
+    (function () {
+      // ---------- Darslar ----------
+      const W = s => s.split(' ');
+      const LESSONS = [
+        { title: 'Asosiy qator', drill: 'asdfjkl', focus: 'Asosiy qator: A S D F — J K L ;', keys: 'asdfjkl;', words: W('as ad all ask add sad lad dad fall flask salad alas lass fad jak') },
+        { title: "Ko'rsatkich barmoqlar", drill: 'rtgvbyuhnm', focus: 'R T G V B va Y U H N M tugmalari', keys: 'asdfjkl;rtgvbyuhnm', words: W('jug hug run fun gun bun hut nut tug much hand land band sand fast last vast must hurt stand grand truth') },
+        { title: "O'rta barmoqlar", drill: 'edcik', focus: 'E D C va I K , tugmalari', keys: 'asdfjkl;rtgvbyuhnmedcik,', words: W('dice kick lick cake bike like mike nice rice desk disk deck kid ice cube edit idea need seed decide') },
+        { title: 'Nomsiz barmoqlar', drill: 'wsxol', focus: 'W S X va O L . tugmalari', keys: 'asdfjkl;rtgvbyuhnmedcik,wsxol.', words: W('low slow show snow wool owl soil solo wolf flow word world sword cool look book oil wax box fox') },
+        { title: 'Jimjiloq barmoqlar', drill: 'qazp', focus: 'Q A Z va P ; / tugmalari', keys: 'asdfjklrtgvbyuhnmedcikwsxolqazp;,./', words: W('quiz zap pizza plaza quip zoo puzzle quick equip apple zebra paper quote amaze people') },
+        { title: "Ko'p ishlatiladigan so'zlar", focus: "Eng ko'p uchraydigan so'zlar", text: true, words: W("men sen biz bu u va bilan uchun ham kun yil vaqt ish uy kitob do'st yaxshi katta yangi bor yo'q kel ket the and you that have for not with this but from they will") },
+        { title: 'Yakuniy test', focus: "To'liq gaplar", sentences: ["Bugun havo juda yaxshi, biz bog'ga boramiz.", "Dasturchi har kuni yangi narsa o'rganadi.", "Tez va to'g'ri yozish mashq bilan keladi.", "The quick brown fox jumps over the lazy dog.", "Klaviaturaga qaramasdan yozishga harakat qiling."] },
+        { title: "Murakkab so'zlar", focus: "Uzun va qiyin so'zlar", text: true, words: W("mustaqillik texnologiya universitet kutubxona matematika algoritm o'zgaruvchi funksiya dasturlash rivojlanish keyboard knowledge development experience beautiful necessary") },
+        { title: 'Tezlik mashqi', focus: "Qisqa so'zlar — iloji boricha tez", text: true, speed: true, words: W('va bu u kun uy ish men sen biz siz ota ona non suv oy yil the and is it to in on at of go') },
+        { title: 'Raqamlar qatori', focus: '1 2 3 4 5 6 7 8 9 0', keys: '1234567890', numbers: true, words: W('12 34 56 78 90 123 456 789 100 2025 1991 365 24 60 7') },
+        { title: 'Raqamlar amaliyoti', focus: "Matn ichidagi raqamlar", sentences: ['Sinfda 25 ta o\'quvchi bor.', 'Yilda 365 kun va 12 oy bor.', 'Narxi 15000 so\'m, chegirma 20 foiz.', 'Uchrashuv soat 9 da, 3-xonada.', 'Telefon: 90 123 45 67'] },
+        { title: 'Oddiy belgilar', focus: '. , ! ? \' " - :', sentences: ['Salom, dunyo!', 'Qalaysiz? Yaxshimisiz?', '"Bilim — kuch," dedi ustoz.', "Ro'yxat: olma, nok, uzum.", "Bu to'g'ri - u xato."] },
+        { title: 'Murakkab belgilar', focus: '@ # $ % & * ( ) _ + =', sentences: ['email@example.com', '#tag $100 50% A&B', '(2 + 3) * 4 = 20', 'user_name = "admin"', 'a += 1; b *= 2;'] },
+        { title: 'Belgilar kombinatsiyasi', focus: 'Kod parchalari', sentences: ['def add(a, b): return a + b', 'for i in range(10): print(i)', 'if (x > 0) { y = x * 2; }', 'const arr = [1, 2, 3];', "user = {'name': 'Ali', 'age': 20}"] },
+        { title: 'Raqamli klaviatura asoslari', focus: 'Numpad: 4 5 6 va 0 . Enter', numpad: true, words: W('4 5 6 45 56 64 456 654 40 50 60 0.5 4.5 5.6 6.0 44 55 66 465') },
+        { title: 'Raqamli klaviatura amaliyoti', focus: 'Numpad: 7 8 9 va 1 2 3', numpad: true, words: W('7 8 9 1 2 3 789 123 147 258 369 741 852 963 17 28 39 7.5 1.25') },
+        { title: 'Raqamli klaviatura tezligi', focus: 'Uzun raqamlar va hisob-kitob', numpad: true, words: W('1250 3780 9.99 45.5 100.25 2024 365.25 7890 12345 0.75 88.8 1500 64.32 999 4321') },
+      ];
+      const STORE = 'neo_lessons_v1';
+      const id = Math.max(1, Math.min(LESSONS.length, parseInt(new URLSearchParams(location.search).get('id')) || 1));
+      const L = LESSONS[id - 1];
+
+      // ---------- Klaviatura ----------
+      const ROWS = [
+        [['`', 'pinkie'], ['1', 'pinkie'], ['2', 'ring'], ['3', 'middle'], ['4', 'index'], ['5', 'index'], ['6', 'index'], ['7', 'index'], ['8', 'middle'], ['9', 'ring'], ['0', 'pinkie'], ['-', 'pinkie'], ['=', 'pinkie'], ['⌫', 'pinkie', 2]],
+        [['Tab', 'pinkie', 1.5], ['q', 'pinkie'], ['w', 'ring'], ['e', 'middle'], ['r', 'index'], ['t', 'index'], ['y', 'index'], ['u', 'index'], ['i', 'middle'], ['o', 'ring'], ['p', 'pinkie'], ['[', 'pinkie'], [']', 'pinkie'], ['\\', 'pinkie', 1.5]],
+        [['Caps', 'pinkie', 1.8], ['a', 'pinkie'], ['s', 'ring'], ['d', 'middle'], ['f', 'index'], ['g', 'index'], ['h', 'index'], ['j', 'index'], ['k', 'middle'], ['l', 'ring'], [';', 'pinkie'], ["'", 'pinkie'], ['Enter', 'pinkie', 2.2]],
+        [['Shift', 'pinkie', 2.4, 'lshift'], ['z', 'pinkie'], ['x', 'ring'], ['c', 'middle'], ['v', 'index'], ['b', 'index'], ['n', 'index'], ['m', 'index'], [',', 'middle'], ['.', 'ring'], ['/', 'pinkie'], ['Shift', 'pinkie', 2.6, 'rshift']],
+        [[' ', 'thumb', 7, 'space']],
+      ];
+      const SHIFTED = { '~': '`', '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', '&': '7', '*': '8', '(': '9', ')': '0', '_': '-', '+': '=', '{': '[', '}': ']', '|': '\\', ':': ';', '"': "'", '<': ',', '>': '.', '?': '/' };
+      const LEFT = new Set('`12345qwertasdfgzxcvb~!@#$%QWERTASDFGZXCVB'.split(''));
+      const FINGER_UZ = { pinkie: 'jimjiloq', ring: 'nomsiz', middle: "o'rta", index: "ko'rsatkich", thumb: 'bosh' };
+      const keyEls = {};
+      const kb = document.getElementById('kb');
+      ROWS.forEach(row => {
+        const r = document.createElement('div');
+        r.className = 'kb-row';
+        row.forEach(([k, f, w, name]) => {
+          const el = document.createElement('div');
+          el.className = 'k';
+          el.dataset.f = f;
+          if (w) el.style.setProperty('--w', w);
+          el.textContent = k === ' ' ? 'Probel' : k.length === 1 ? k.toUpperCase() : k;
+          if ('fj'.includes(k) && k.length === 1) el.classList.add('home');
+          const keyName = name || k;
+          keyEls[keyName] = el;
+          if (L.keys && L.keys.includes(k)) el.classList.add('focus-key');
+          r.appendChild(el);
+        });
+        kb.appendChild(r);
+      });
+      function baseKey(ch) {
+        if (ch === ' ') return 'space';
+        const lower = ch.toLowerCase();
+        if (keyEls[lower] && lower !== ch) return lower;      // katta harf
+        if (SHIFTED[ch]) return SHIFTED[ch];
+        if (ch === 'ʻ' || ch === '’') return "'";
+        return keyEls[ch] ? ch : null;
+      }
+      const needsShift = ch => (ch !== ch.toLowerCase()) || !!SHIFTED[ch];
+
+      // ---------- Mashqlar yaratish ----------
+      const rnd = a => a[Math.floor(Math.random() * a.length)];
+      function exercises() {
+        if (L.sentences) {
+          const s = L.sentences.slice().sort(() => Math.random() - .5);
+          return [s.slice(0, 2).join(' '), s.slice(2, 4).join(' '), s.slice(4).concat(s[0]).join(' ')];
+        }
+        const out = [];
+        if (L.keys && !L.numbers) {
+          // 1) tugmalar guruhlari 2) aralash 3) so'zlar
+          const k = L.keys.replace(/[;,./]/g, '').split('');
+          const focus = (L.drill || k.slice(-6).join('')).split('');
+          out.push(Array.from({ length: 10 }, () => Array.from({ length: 3 + (Math.random() * 2 | 0) }, () => rnd(focus)).join('')).join(' '));
+          out.push(Array.from({ length: 10 }, () => Array.from({ length: 3 + (Math.random() * 3 | 0) }, () => rnd(k)).join('')).join(' '));
+        }
+        const n = L.speed ? 18 : 12;
+        while (out.length < 3) out.push(Array.from({ length: n }, () => rnd(L.words)).join(' '));
+        return out;
+      }
+
+      // ---------- Holat ----------
+      let ex = exercises();
+      let step = 0, pos = 0, errorsHere = new Set();
+      let keystrokes = 0, mistakes = 0, typedChars = 0, startTime = 0;
+      const $ = id => document.getElementById(id);
+      const textEl = $('text');
+      const capture = $('capture');
+
+      document.title = `${id}-dars: ${L.title} — NeoCoder`;
+      $('lessonTitle').textContent = `${id}-dars. ${L.title}`;
+      $('lessonFocus').textContent = L.focus + (L.numpad ? ' (raqamli klaviatura bo\'lmasa, yuqori qatordagi raqamlardan foydalaning)' : '');
+
+      function renderSteps() {
+        $('steps').innerHTML = ex.map((_, i) => `<span class="step ${i < step ? 'done' : i === step ? 'on' : ''}">${i < step ? '✔ ' : ''}${i + 1}-mashq</span>`).join('');
+        $('hStep').textContent = `${Math.min(step + 1, ex.length)}/${ex.length}`;
+      }
+      function renderText() {
+        const t = ex[step];
+        textEl.innerHTML = t.split('').map((ch, i) => {
+          const cls = [ch === ' ' ? 'sp' : '', i < pos ? (errorsHere.has(i) ? 'err' : 'done') : '', i === pos ? 'cur' : ''].join(' ');
+          return `<span class="${cls}">${ch === ' ' ? '&nbsp;' : ch.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span>`;
+        }).join('');
+        highlightNext();
+      }
+      function highlightNext() {
+        Object.values(keyEls).forEach(el => el.classList.remove('next'));
+        const ch = ex[step][pos];
+        if (ch == null) return;
+        const k = baseKey(ch);
+        if (k && keyEls[k]) keyEls[k].classList.add('next');
+        let shiftNote = '';
+        if (needsShift(ch) && /[^0-9]/.test(ch)) {
+          const sideKey = LEFT.has(ch) ? 'rshift' : 'lshift';
+          keyEls[sideKey].classList.add('next');
+          shiftNote = ` + ${LEFT.has(ch) ? "o'ng" : 'chap'} Shift`;
+        }
+        const f = k && keyEls[k] ? keyEls[k].dataset.f : 'index';
+        const hand = ch === ' ' ? '' : (LEFT.has(ch) || LEFT.has(k) ? 'Chap qo\'l' : "O'ng qo'l") + ', ';
+        $('hint').innerHTML = `Keyingi: <b style="background:var(--f-${f})">${ch === ' ' ? 'Probel' : ch}</b> — ${hand}${FINGER_UZ[f]} barmoq${shiftNote}`;
+      }
+      function updateHud() {
+        const secs = startTime ? (Date.now() - startTime) / 1000 : 0;
+        const wpm = secs > 1 ? Math.round(typedChars / 5 / (secs / 60)) : 0;
+        const acc = keystrokes ? Math.round((1 - mistakes / keystrokes) * 100) : 100;
+        $('hWpm').textContent = wpm;
+        $('hAcc').textContent = acc + '%';
+        $('hErr').textContent = mistakes;
+        return { wpm, acc, secs };
+      }
+
+      function press(key) {
+        const el = keyEls[key];
+        if (!el) return;
+        el.classList.add('press');
+        setTimeout(() => el.classList.remove('press'), 100);
+      }
+
+      function onKey(e) {
+        if ($('result').classList.contains('show')) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        let ch = e.key;
+        if (ch === 'Shift' || ch === 'CapsLock' || ch.length !== 1) {
+          if (ch === 'Shift') press(e.code === 'ShiftRight' ? 'rshift' : 'lshift');
+          return;
+        }
+        e.preventDefault();
+        if (ch === 'ʻ' || ch === '’' || ch === '`' && ex[step][pos] === "'") ch = "'";
+        if (!startTime) startTime = Date.now();
+        const want = ex[step][pos];
+        keystrokes++;
+        const bk = baseKey(ch);
+        press(bk);
+        if (ch === want) {
+          pos++;
+          typedChars++;
+          Neo.sound.play('key');
+          if (pos >= ex[step].length) return nextStep();
+        } else {
+          mistakes++;
+          errorsHere.add(pos);
+          Neo.sound.play('error');
+          if (keyEls[bk]) { keyEls[bk].classList.add('wrong'); setTimeout(() => keyEls[bk].classList.remove('wrong'), 250); }
+        }
+        renderText();
+        updateHud();
+      }
+
+      function nextStep() {
+        step++;
+        pos = 0;
+        errorsHere = new Set();
+        renderSteps();
+        if (step >= ex.length) return finish();
+        Neo.sound.play('ok');
+        renderText();
+        updateHud();
+      }
+
+      function finish() {
+        const { wpm, acc, secs } = updateHud();
+        const target = L.speed ? 30 : id <= 5 ? 15 : 22;
+        const stars = acc >= 95 && wpm >= target ? 3 : acc >= 88 && wpm >= target * 0.6 ? 2 : 1;
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { /* e'tiborsiz */ }
+        const prev = saved[id];
+        if (!prev || stars > prev.stars || (stars === prev.stars && wpm > prev.wpm)) saved[id] = { stars, wpm, acc, at: Date.now() };
+        try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (e) { /* e'tiborsiz */ }
+        Neo.stats.record('lessons', { score: Object.keys(saved).length, lesson: id, wpm, accuracy: acc, stars });
+        $('practice').style.display = 'none';
+        $('result').classList.add('show');
+        $('resTitle').textContent = stars === 3 ? 'Ajoyib natija! 🎉' : stars === 2 ? 'Yaxshi! 👍' : 'Dars tugadi';
+        $('stars').innerHTML = '★'.repeat(stars).padEnd(3, '☆');
+        $('rWpm').textContent = wpm;
+        $('rAcc').textContent = acc + '%';
+        $('rTime').textContent = Math.round(secs) + 's';
+        $('resTip').textContent = stars === 3 ? 'Keyingi darsga o\'ting!' : acc < 95 ? `3 yulduz uchun aniqlik kamida 95% bo'lishi kerak.` : `3 yulduz uchun tezlik kamida ${target} WPM bo'lishi kerak.`;
+        const next = $('nextLesson');
+        if (id < LESSONS.length) next.href = `lesson.html?id=${id + 1}`; else { next.textContent = 'Tezlik testi →'; next.href = 'index.html'; }
+        Neo.sound.play(stars >= 2 ? 'win' : 'level');
+      }
+
+      function restart() {
+        ex = exercises();
+        step = 0; pos = 0; errorsHere = new Set();
+        keystrokes = 0; mistakes = 0; typedChars = 0; startTime = 0;
+        $('practice').style.display = '';
+        $('result').classList.remove('show');
+        renderSteps();
+        renderText();
+        updateHud();
+        focusInput();
+      }
+
+      // Mobil qurilmalarda klaviaturani ochish uchun yashirin input
+      function focusInput() { capture.focus({ preventScroll: true }); }
+      capture.addEventListener('keydown', onKey);
+      capture.addEventListener('input', () => {
+        const v = capture.value;
+        capture.value = '';
+        // Android klaviaturalari keydown'da "Unidentified" yuboradi
+        for (const ch of v) onKey({ key: ch, preventDefault() {}, code: '' });
+      });
+      capture.addEventListener('blur', () => $('focusNote').classList.add('show'));
+      capture.addEventListener('focus', () => $('focusNote').classList.remove('show'));
+      textEl.addEventListener('click', focusInput);
+      document.addEventListener('keydown', e => {
+        if (document.activeElement !== capture && e.key.length === 1 && !$('result').classList.contains('show') && !e.target.closest('input,textarea,select')) {
+          focusInput();
+          onKey(e);
+        }
+      });
+      $('retry').addEventListener('click', restart);
+      setInterval(() => { if (startTime && !$('result').classList.contains('show')) updateHud(); }, 500);
+
+      Neo.addMuteButton();
+      restart();
+    })();
+  </script>
+</body>
+</html>

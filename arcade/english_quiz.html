@@ -469,6 +469,22 @@
       .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
       .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    .option-btn { position: relative; }
+    .option-btn::before { content: attr(data-key); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: .75em; opacity: .55; }
+    #gameOverText { white-space: pre-line; }
+    #gameOverModal { max-height: 92vh; overflow: auto; }
+    .quiz-review { margin-top: 14px; text-align: left; font-size: 1rem; max-height: 45vh; overflow: auto; font-family: inherit; }
+    .quiz-review h3 { margin: 12px 0 8px; font-size: 1.1rem; }
+    .quiz-review ol { padding-left: 22px; }
+    .quiz-review li { margin-bottom: 10px; line-height: 1.45; }
+    .quiz-review .ok { color: #34d399; }
+    .quiz-review .bad { color: #f87171; }
+    /* Markazlashtirilgan oynalar animatsiyasi translate(-50%)ni buzmasin */
+    .difficulty-modal, #gameOverModal.show { animation-name: modalIn; max-width: min(550px, calc(100vw - 24px)); }
+    @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    @media (max-width: 480px) { .difficulty-modal { padding: 22px 16px; } .difficulty-modal h2 { font-size: 1.4rem; } .difficulty-btn { padding: 12px 16px; } }
   </style>
 </head>
 <body>
@@ -516,6 +532,7 @@
     <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     const questions = [
       // Beginner Level (60 quiz questions)
@@ -769,6 +786,9 @@
     let score = 0;
     let timerInterval;
     let timeLeft = 25;
+    let answered = false;
+    let mistakes = [];
+    let streak = 0;
 
     function shuffle(array) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -783,9 +803,9 @@
       console.log("Selected mode: " + level);
       if (level === "assessment") {
         currentQuestions = shuffle([
-          ...questions.filter(q => q.level === "beginner").slice(0, 17),
-          ...questions.filter(q => q.level === "intermediate").slice(0, 17),
-          ...questions.filter(q => q.level === "advanced").slice(0, 16)
+          ...shuffle(questions.filter(q => q.level === "beginner")).slice(0, 17),
+          ...shuffle(questions.filter(q => q.level === "intermediate")).slice(0, 17),
+          ...shuffle(questions.filter(q => q.level === "advanced")).slice(0, 16)
         ]).slice(0, 50);
         totalQuestionsDisplay.textContent = "50";
       } else {
@@ -800,6 +820,8 @@
       }
       currentQuestionIndex = 0;
       score = 0;
+      mistakes = [];
+      streak = 0;
       difficultyModal.classList.remove("show");
       difficultyModal.style.display = "none"; // Ensure modal is hidden
       timerBarContainer.style.display = "block";
@@ -823,16 +845,18 @@
       const question = currentQuestions[currentQuestionIndex];
       questionContainer.textContent = question.question;
       optionsContainer.innerHTML = "";
-      shuffle(question.options).forEach(option => {
+      shuffle(question.options).forEach((option, i) => {
         const btn = document.createElement("button");
         btn.classList.add("option-btn");
         btn.textContent = option;
+        btn.dataset.key = i + 1;
         btn.addEventListener("click", () => checkAnswer(option));
         optionsContainer.appendChild(btn);
       });
       currentQuestionDisplay.textContent = currentQuestionIndex + 1;
       scoreDisplay.textContent = score;
       timeLeft = 25;
+      answered = false;
       timerText.textContent = timeLeft;
       timerBar.style.width = "100%";
     }
@@ -850,16 +874,24 @@
     }
 
     function checkAnswer(selected) {
+      if (answered) return;
+      answered = true;
       clearInterval(timerInterval);
       const correctAnswer = currentQuestions[currentQuestionIndex].answer;
       const circle = progressBar.children[currentQuestionIndex];
       const isCorrect = selected === correctAnswer;
       if (isCorrect) {
         score += currentLevel === "assessment" ? 2 : 10;
+        streak++;
         circle.classList.add("correct");
+        Neo.sound.play("ok");
       } else {
+        streak = 0;
         circle.classList.add("incorrect");
+        mistakes.push({ q: currentQuestions[currentQuestionIndex].question, a: correctAnswer, you: selected });
+        Neo.sound.play("error");
       }
+      scoreDisplay.textContent = score;
       Array.from(optionsContainer.children).forEach(btn => {
         if (btn.textContent === correctAnswer) {
           btn.classList.add("correct");
@@ -870,9 +902,10 @@
       });
       setTimeout(() => {
         currentQuestionIndex++;
+        if (currentQuestionIndex >= currentQuestions.length) return endQuiz();
         displayQuestion();
         startTimer();
-      }, 1000);
+      }, isCorrect ? 900 : 1800);
     }
 
     function endQuiz() {
@@ -900,7 +933,22 @@
         resultText += `\nYour Estimated IELTS Level: ${ieltsLevel}`;
       }
       gameOverText.textContent = resultText;
+      const maxScore = currentLevel === "assessment" ? 100 : 200;
+      const res = Neo.stats.record("englishquiz", { score: Math.round(score / maxScore * 100), level: currentLevel });
+      const extra = document.createElement("div");
+      extra.className = "quiz-review";
+      extra.innerHTML = `<p>${res.isBest ? "🏆 Yangi rekord! " : ""}Natija: <b>${Math.round(score / maxScore * 100)}%</b> · Rekord: ${res.best}%</p>` +
+        (mistakes.length ? `<h3>Xatolar ustida ishlash (${mistakes.length})</h3><ol>` + mistakes.map(m =>
+          `<li><span>${escapeHtml(m.q)}</span><br><b class="ok">✔ ${escapeHtml(m.a)}</b>${m.you ? ` <s class="bad">${escapeHtml(m.you)}</s>` : ' <i class="bad">(vaqt tugadi)</i>'}</li>`).join("") + "</ol>" : "<p>Hamma javob to'g'ri! 🎉</p>");
+      gameOverText.appendChild(extra);
+      Neo.sound.play(score / maxScore >= 0.6 ? "win" : "lose");
     }
+    function escapeHtml(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+    document.addEventListener("keydown", e => {
+      if (answered || !optionsContainer.children.length) return;
+      const btn = optionsContainer.querySelector(`[data-key="${e.key}"]`);
+      if (btn) btn.click();
+    });
 
     document.addEventListener("DOMContentLoaded", () => {
       difficultyModal.classList.add("show");

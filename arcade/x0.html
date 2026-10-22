@@ -72,6 +72,22 @@
     @media (max-width:900px){.game-container{padding:30px;min-height:650px}.game-title{font-size:2.5rem}.header{padding:14px 20px}.brand-icon{width:40px;height:40px;font-size:1.5rem}.brand-text{font-size:1.6rem}.nav-btn{padding:10px 18px;font-size:1rem}.nav-btn:hover{transform:none;box-shadow:0 6px 12px rgba(79,70,229,.5)}:root{--cell:70px}}
     @media (max-width:768px){.game-container{padding:25px;min-height:600px}.game-title{font-size:2.2rem}.stats{flex-direction:column;gap:15px;font-size:1rem}.stats span:hover{transform:none;box-shadow:0 6px 12px rgba(165,180,252,.4)}.header{padding:12px 16px}.nav-links{flex-direction:column;gap:12px}.brand-icon{width:36px;height:36px;font-size:1.4rem}.brand-text{font-size:1.5rem}.nav-btn{padding:8px 16px;font-size:.95rem}.modal-content{max-width:450px}:root{--cell:60px}}
     @media (max-width:480px){.game-container{padding:20px;min-height:550px}.game-title{font-size:2rem}.stats{font-size:.95rem}.modal-content{padding:20px}.modal-content h2{font-size:2rem}.result-container h2{font-size:1.8rem}.result-container p{font-size:1.1rem}.header{padding:10px 12px}.brand-icon{width:32px;height:32px;font-size:1.3rem}.brand-text{font-size:1.4rem}.nav-btn{padding:6px 12px;font-size:.9rem}.mode-btn,.size-btn,.modal-content button{font-size:.95rem}.mode-btn:hover,.size-btn:hover,.modal-content button:hover{transform:none;box-shadow:0 6px 12px rgba(245,158,11,.5)}:root{--cell:50px}}
+
+    /* --- Yangilanishlar --- */
+    .game-container{min-height:0}
+    .turn{margin-top:18px;font-size:1.25rem;color:var(--accent);min-height:1.6em}
+    .p-X,.mark-X{color:#60a5fa}
+    .p-O,.mark-O{color:#f472b6}
+    .cell.placed{animation:placeIn .25s ease}
+    @keyframes placeIn{from{transform:scale(.3);opacity:0}}
+    .controls-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .ctl-btn{padding:10px 22px;font-size:1rem;border-radius:10px;border:2px solid var(--secondary);background:linear-gradient(45deg,var(--secondary),#facc15);color:var(--text);cursor:pointer;font-weight:600}
+    .ctl-btn.alt{background:transparent;border-color:var(--accent)}
+    .level-btn{padding:10px 18px;font-size:1rem;border-radius:10px;border:2px solid var(--secondary);background:transparent;color:var(--text);cursor:pointer}
+    .level-btn.active{background:linear-gradient(45deg,var(--secondary),#facc15)}
+    .hint{opacity:.8;font-size:.95rem;margin-bottom:12px}
+    #startGameBtn{margin-top:8px;padding:12px 30px;font-size:1.1rem;border-radius:10px;border:0;background:linear-gradient(45deg,#22c55e,#16a34a);color:#fff;cursor:pointer;font-weight:700}
+    .stats{flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -99,16 +115,22 @@
     <div class="game-container">
       <h2 class="game-title">XO O'yini</h2>
       <div class="stats">
-        <span>X ochkosi: <span id="xScore">0</span></span>
-        <span>O ochkosi: <span id="oScore">0</span></span>
+        <span class="sc-x">X: <span id="xScore">0</span></span>
+        <span>Durrang: <span id="drawScore">0</span></span>
+        <span class="sc-o">O: <span id="oScore">0</span></span>
       </div>
+      <div class="turn" id="turnInfo">Navbat: <b>X</b></div>
 
       <div id="board" class="board"></div>
+
+      <div class="controls-row">
+        <button id="restartGame" class="ctl-btn">↻ Yangi raund</button>
+        <button id="settingsBtn" class="ctl-btn alt">⚙ Sozlamalar</button>
+      </div>
 
       <div id="resultContainer" class="result-container">
         <h2 id="resultText">O'yin tugadi!</h2>
         <p id="winnerText"></p>
-        <button id="restartGame">Qayta boshlash</button>
       </div>
 
       <div class="modal" id="startGame">
@@ -116,8 +138,16 @@
           <h2>O'yin sozlamalari</h2>
           <p>O'yin rejimini tanlang:</p>
           <div class="mode-buttons">
-            <button class="mode-btn active" data-mode="human">Odam bilan</button>
-            <button class="mode-btn" data-mode="bot">Bot bilan</button>
+            <button class="mode-btn active" data-mode="human">👥 Odam bilan</button>
+            <button class="mode-btn" data-mode="bot">🤖 Bot bilan</button>
+          </div>
+          <div id="botLevelBox" style="display:none">
+            <p>Bot darajasi:</p>
+            <div class="mode-buttons">
+              <button class="level-btn" data-level="easy">Oson</button>
+              <button class="level-btn active" data-level="medium">O'rta</button>
+              <button class="level-btn" data-level="hard">Qiyin</button>
+            </div>
           </div>
           <p>Taxta hajmini tanlang:</p>
           <div class="size-buttons">
@@ -125,6 +155,7 @@
             <button class="size-btn" data-size="4">4x4</button>
             <button class="size-btn" data-size="5">5x5</button>
           </div>
+          <p class="hint" id="sizeHint">3 ta bir qatorda — g'alaba</p>
           <button id="startGameBtn">Boshlash</button>
         </div>
       </div>
@@ -135,317 +166,243 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
-    // Elements
-    const boardEl = document.getElementById("board");
-    const xScoreEl = document.getElementById("xScore");
-    const oScoreEl = document.getElementById("oScore");
-    const startModal = document.getElementById("startGame");
-    const resultBox = document.getElementById("resultContainer");
-    const resultText = document.getElementById("resultText");
-    const winnerText = document.getElementById("winnerText");
-    const startBtn = document.getElementById("startGameBtn");
-    const restartBtn = document.getElementById("restartGame");
-    const modeBtns = document.querySelectorAll(".mode-btn");
-    const sizeBtns = document.querySelectorAll(".size-btn");
+    const $ = id => document.getElementById(id);
+    const boardEl = $('board');
+    const startModal = $('startGame');
+    const resultBox = $('resultContainer');
 
-    // State
+    const WIN_LEN = { 3: 3, 4: 4, 5: 4 };
     let board = [];
-    let currentPlayer = "X";
+    let currentPlayer = 'X';
+    let starter = 'X';
     let gameOver = false;
-    let gameMode = "human";
+    let gameMode = 'human';
+    let botLevel = 'medium';
     let boardSize = 3;
     let winLen = 3;
-    let xScore = 0;
-    let oScore = 0;
-    let winningCells = []; // [{r,c}, ...]
+    let scores = { X: 0, O: 0, D: 0 };
+    let busy = false; // bot o'ylayotganda bosishni bloklash
+    const HUMAN = 'X', BOT = 'O';
 
-    // UI helpers
-    function setGrid(size){
-      boardEl.style.gridTemplateColumns = `repeat(${size}, var(--cell))`;
-    }
-
-    function initializeBoard(size){
-      board = Array.from({length:size}, ()=>Array(size).fill(""));
-      winLen = size === 3 ? 3 : size === 4 ? 4 : 5;
-      setGrid(size);
-      boardEl.innerHTML = "";
-      boardEl.classList.remove("game-over");
-
-      for(let r=0;r<size;r++){
-        for(let c=0;c<size;c++){
-          const cell = document.createElement("div");
-          cell.className = "cell";
+    function initializeBoard() {
+      board = Array.from({ length: boardSize }, () => Array(boardSize).fill(''));
+      winLen = WIN_LEN[boardSize];
+      boardEl.style.gridTemplateColumns = `repeat(${boardSize}, var(--cell))`;
+      boardEl.innerHTML = '';
+      boardEl.classList.remove('game-over');
+      boardEl.style.opacity = '1';
+      for (let r = 0; r < boardSize; r++) {
+        for (let c = 0; c < boardSize; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
           cell.dataset.row = r;
           cell.dataset.col = c;
-          cell.addEventListener("click", onCellClick, { once:false });
+          cell.addEventListener('click', onCellClick);
           boardEl.appendChild(cell);
         }
       }
-      winningCells = [];
     }
 
-    function onCellClick(e){
-      if(gameOver) return;
-      const row = +e.currentTarget.dataset.row;
-      const col = +e.currentTarget.dataset.col;
-      if(board[row][col] !== "") return;
-
-      placeMark(row, col, currentPlayer);
-
-      const win = checkWin(board, currentPlayer, winLen);
-      if(win){
-        gameOver = true;
-        winningCells = win.cells;
-        highlightWin(winningCells);
-        updateScore(currentPlayer);
-        showResult(`${currentPlayer} yutdi!`);
-        return;
-      }
-
-      if(isDraw(board)){
-        gameOver = true;
-        showResult("Durrang!");
-        return;
-      }
-
-      currentPlayer = (currentPlayer === "X") ? "O" : "X";
-
-      if(gameMode === "bot" && currentPlayer === "O" && !gameOver){
-        // Botga navbat – 3x3: minimax; 4+ : aqlli tezkor
-        setTimeout(()=>botMove(), 180);
-      }
+    function newRound() {
+      resultBox.style.display = 'none';
+      gameOver = false;
+      busy = false;
+      initializeBoard();
+      currentPlayer = starter;
+      updateTurn();
+      if (gameMode === 'bot' && currentPlayer === BOT) botTurn();
     }
 
-    function placeMark(r,c,player){
-      board[r][c] = player;
+    function updateTurn() {
+      const who = gameMode === 'bot' ? (currentPlayer === HUMAN ? 'Siz (X)' : 'Bot (O) o\'ylamoqda...') : currentPlayer;
+      $('turnInfo').innerHTML = gameOver ? '&nbsp;' : `Navbat: <b class="p-${currentPlayer}">${who}</b>`;
+    }
+
+    function onCellClick(e) {
+      if (gameOver || busy) return;
+      if (gameMode === 'bot' && currentPlayer !== HUMAN) return;
+      const r = +e.currentTarget.dataset.row, c = +e.currentTarget.dataset.col;
+      if (board[r][c] !== '') return;
+      play(r, c);
+      if (!gameOver && gameMode === 'bot') botTurn();
+    }
+
+    function play(r, c) {
+      board[r][c] = currentPlayer;
       const cell = boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
-      if(cell) cell.textContent = player;
+      cell.textContent = currentPlayer;
+      cell.classList.add('mark-' + currentPlayer, 'placed');
+      Neo.sound.play('click');
+      const win = checkWin(board, currentPlayer, winLen);
+      if (win) return finish(currentPlayer, win.cells);
+      if (isDraw(board)) return finish(null, []);
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      updateTurn();
     }
 
-    // Win check: returns {cells:[{r,c}...]} or null
-    function checkWin(b, player, k){
-      const n = b.length;
+    function finish(winner, cells) {
+      gameOver = true;
+      cells.forEach(({ r, c }) => boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`).classList.add('win'));
+      boardEl.classList.add('game-over');
+      if (winner) scores[winner]++; else scores.D++;
+      $('xScore').textContent = scores.X;
+      $('oScore').textContent = scores.O;
+      $('drawScore').textContent = scores.D;
+      let msg;
+      if (!winner) msg = 'Durrang! 🤝';
+      else if (gameMode === 'bot') msg = winner === HUMAN ? 'Siz yutdingiz! 🎉' : 'Bot yutdi 🤖';
+      else msg = `${winner} yutdi! 🎉`;
+      $('resultText').textContent = msg;
+      $('winnerText').textContent = 'Keyingi raundni boshqa o\'yinchi boshlaydi';
+      resultBox.style.display = 'block';
+      updateTurn();
+      if (gameMode === 'bot') {
+        Neo.stats.record('x0', { score: scores.X - scores.O, win: winner === HUMAN, size: boardSize, level: botLevel });
+        Neo.sound.play(winner === HUMAN ? 'win' : winner ? 'lose' : 'move');
+      } else Neo.sound.play(winner ? 'win' : 'move');
+      starter = starter === 'X' ? 'O' : 'X';
+    }
 
-      // Rows
-      for(let r=0;r<n;r++){
-        let count=0, start=0;
-        for(let c=0;c<n;c++){
-          if(b[r][c]===player){
-            if(count===0) start=c;
-            count++;
-            if(count>=k){
-              const cells=[]; for(let i=0;i<k;i++) cells.push({r, c:start+i});
-              return { cells };
-            }
-          } else {
-            count=0;
+    // Yutuq tekshiruvi: {cells:[{r,c}]} yoki null
+    const DIRS = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    function checkWin(b, p, k) {
+      const n = b.length;
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        if (b[r][c] !== p) continue;
+        for (const [dr, dc] of DIRS) {
+          const cells = [];
+          for (let t = 0; t < k; t++) {
+            const rr = r + dr * t, cc = c + dc * t;
+            if (rr < 0 || rr >= n || cc < 0 || cc >= n || b[rr][cc] !== p) break;
+            cells.push({ r: rr, c: cc });
           }
-        }
-      }
-      // Columns
-      for(let c=0;c<n;c++){
-        let count=0, start=0;
-        for(let r=0;r<n;r++){
-          if(b[r][c]===player){
-            if(count===0) start=r;
-            count++;
-            if(count>=k){
-              const cells=[]; for(let i=0;i<k;i++) cells.push({r:start+i, c});
-              return { cells };
-            }
-          } else {
-            count=0;
-          }
-        }
-      }
-      // Main diagonals (top-left to bottom-right)
-      for(let r0=0;r0<=n-k;r0++){
-        for(let c0=0;c0<=n-k;c0++){
-          let ok=true, cells=[];
-          for(let t=0;t<k;t++){
-            if(b[r0+t][c0+t]!==player){ ok=false; break; }
-            cells.push({r:r0+t, c:c0+t});
-          }
-          if(ok) return { cells };
-        }
-      }
-      // Anti-diagonals (top-right to bottom-left)
-      for(let r0=0;r0<=n-k;r0++){
-        for(let c0=k-1;c0<n;c0++){
-          let ok=true, cells=[];
-          for(let t=0;t<k;t++){
-            if(b[r0+t][c0-t]!==player){ ok=false; break; }
-            cells.push({r:r0+t, c:c0-t});
-          }
-          if(ok) return { cells };
+          if (cells.length === k) return { cells };
         }
       }
       return null;
     }
-
-    function highlightWin(cells){
-      cells.forEach(({r,c})=>{
-        const el = boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
-        if(el) el.classList.add("win");
-      });
-      boardEl.classList.add("game-over");
+    const isDraw = b => b.every(row => row.every(v => v !== ''));
+    function emptyCells(b) {
+      const a = [];
+      for (let r = 0; r < b.length; r++) for (let c = 0; c < b.length; c++) if (b[r][c] === '') a.push([r, c]);
+      return a;
     }
 
-    function isDraw(b){
-      return b.every(row => row.every(cell => cell !== ""));
+    /* ===== Bot ===== */
+    function botTurn() {
+      busy = true;
+      updateTurn();
+      setTimeout(() => {
+        busy = false;
+        if (gameOver) return;
+        const m = chooseMove();
+        if (m) play(m[0], m[1]);
+      }, 350);
     }
 
-    function updateScore(player){
-      if(player==="X"){ xScore++; xScoreEl.textContent=xScore; }
-      else { oScore++; oScoreEl.textContent=oScore; }
+    function chooseMove() {
+      const empties = emptyCells(board);
+      if (botLevel === 'easy' && Math.random() < 0.6) return empties[Math.floor(Math.random() * empties.length)];
+      if (boardSize === 3 && (botLevel === 'hard' || Math.random() < 0.7)) return bestMoveMinimax();
+      return bestMoveHeuristic(botLevel === 'hard' ? 1 : 0.85);
     }
 
-    function showResult(message){
-      resultText.textContent = "O'yin tugadi!";
-      winnerText.textContent = message;
-      resultBox.style.display = "block";
-      boardEl.style.opacity = "0.5";
-    }
-
-    // ===== Bot =====
-    function botMove(){
-      if(gameOver || currentPlayer!=="O") return;
-
-      let move;
-      if(boardSize===3){
-        move = bestMoveMinimax(); // mukammal
-      } else {
-        move = bestMoveHeuristic(); // tezkor
+    function bestMoveMinimax() {
+      let best = -Infinity, move = null;
+      for (const [r, c] of emptyCells(board)) {
+        board[r][c] = BOT;
+        const s = minimax(board, 0, false, -Infinity, Infinity);
+        board[r][c] = '';
+        if (s > best) { best = s; move = [r, c]; }
       }
-      if(move){
-        placeMark(move[0], move[1], "O");
-        const win = checkWin(board, "O", winLen);
-        if(win){
-          gameOver = true; winningCells = win.cells; highlightWin(winningCells);
-          updateScore("O"); showResult("O yutdi!"); return;
-        }
-        if(isDraw(board)){ gameOver=true; showResult("Durrang!"); return; }
-        currentPlayer = "X";
-      }
+      return move;
     }
-
-    // 3x3 – to'liq minimax (alpha-beta)
-    function bestMoveMinimax(){
-      let bestScore = -Infinity, best=null;
-      for(const [r,c] of emptyCells(board)){
-        board[r][c] = "O";
-        const score = minimax(board, 0, false, -Infinity, Infinity);
-        board[r][c] = "";
-        if(score > bestScore){ bestScore=score; best=[r,c]; }
+    function minimax(b, depth, isMax, alpha, beta) {
+      if (checkWin(b, BOT, winLen)) return 10 - depth;
+      if (checkWin(b, HUMAN, winLen)) return depth - 10;
+      if (isDraw(b)) return 0;
+      let best = isMax ? -Infinity : Infinity;
+      for (const [r, c] of emptyCells(b)) {
+        b[r][c] = isMax ? BOT : HUMAN;
+        const s = minimax(b, depth + 1, !isMax, alpha, beta);
+        b[r][c] = '';
+        if (isMax) { best = Math.max(best, s); alpha = Math.max(alpha, s); }
+        else { best = Math.min(best, s); beta = Math.min(beta, s); }
+        if (beta <= alpha) break;
       }
       return best;
     }
-    function minimax(b, depth, isMax, alpha, beta){
-      if(checkWin(b,"O",winLen)) return 10 - depth;
-      if(checkWin(b,"X",winLen)) return depth - 10;
-      if(isDraw(b)) return 0;
 
-      if(isMax){
-        let best=-Infinity;
-        for(const [r,c] of emptyCells(b)){
-          b[r][c]="O";
-          best=Math.max(best, minimax(b, depth+1, false, alpha, beta));
-          b[r][c]="";
-          alpha=Math.max(alpha,best);
-          if(beta<=alpha) break;
-        }
-        return best;
-      } else {
-        let best=Infinity;
-        for(const [r,c] of emptyCells(b)){
-          b[r][c]="X";
-          best=Math.min(best, minimax(b, depth+1, true, alpha, beta));
-          b[r][c]="";
-          beta=Math.min(beta,best);
-          if(beta<=alpha) break;
-        }
-        return best;
-      }
-    }
-
-    // 4x4/5x5 – tezkor strategiya
-    function bestMoveHeuristic(){
+    // Katta taxtalar uchun: har bir bo'sh katakning "chiziq potensiali"ni baholaydi
+    function bestMoveHeuristic(sharpness) {
       const empties = emptyCells(board);
-      // 1) yutish imkonini tekshir (O uchun)
-      for(const [r,c] of empties){
-        board[r][c]="O";
-        if(checkWin(board,"O",winLen)){ board[r][c]=""; return [r,c]; }
-        board[r][c]="";
-      }
-      // 2) raqibni blokla (X uchun)
-      for(const [r,c] of empties){
-        board[r][c]="X";
-        if(checkWin(board,"X",winLen)){ board[r][c]=""; return [r,c]; }
-        board[r][c]="";
-      }
-      // 3) markaz
-      const center = Math.floor(boardSize/2);
-      if(board[center] && board[center][center]==="") return [center, center];
-
-      // 4) burchaklar
-      const corners = [[0,0],[0,boardSize-1],[boardSize-1,0],[boardSize-1,boardSize-1]];
-      for(const [r,c] of corners){ if(board[r][c]==="") return [r,c]; }
-
-      // 5) qolganlar – tasodifiy
-      if(empties.length>0){
-        return empties[Math.floor(Math.random()*empties.length)];
-      }
-      return null;
-    }
-
-    function emptyCells(b){
-      const arr=[];
-      for(let r=0;r<b.length;r++){
-        for(let c=0;c<b.length;c++){
-          if(b[r][c]==="") arr.push([r,c]);
+      for (const p of [BOT, HUMAN]) {   // avval yutish, keyin bloklash
+        for (const [r, c] of empties) {
+          board[r][c] = p;
+          const w = checkWin(board, p, winLen);
+          board[r][c] = '';
+          if (w) return [r, c];
         }
       }
-      return arr;
+      const n = boardSize;
+      let best = -Infinity, moves = [];
+      for (const [r, c] of empties) {
+        let score = 0;
+        for (const [dr, dc] of DIRS) {
+          // Shu katakni o'z ichiga olgan barcha winLen uzunlikdagi oynalar
+          for (let off = -(winLen - 1); off <= 0; off++) {
+            let bot = 0, hum = 0, ok = true;
+            for (let t = 0; t < winLen; t++) {
+              const rr = r + dr * (off + t), cc = c + dc * (off + t);
+              if (rr < 0 || rr >= n || cc < 0 || cc >= n) { ok = false; break; }
+              if (board[rr][cc] === BOT) bot++;
+              else if (board[rr][cc] === HUMAN) hum++;
+            }
+            if (!ok) continue;
+            if (hum === 0) score += Math.pow(4, bot);          // hujum
+            if (bot === 0) score += Math.pow(4, hum) * 0.9;    // himoya
+          }
+        }
+        score += (n - Math.abs(r - (n - 1) / 2) - Math.abs(c - (n - 1) / 2)) * 0.1;
+        if (score > best + 1e-9) { best = score; moves = [[r, c]]; }
+        else if (Math.abs(score - best) < 1e-9) moves.push([r, c]);
+      }
+      if (Math.random() > sharpness && empties.length > 2) return empties[Math.floor(Math.random() * empties.length)];
+      return moves[Math.floor(Math.random() * moves.length)];
     }
 
-    // ===== Controls =====
-    modeBtns.forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        modeBtns.forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        gameMode = btn.dataset.mode;
-      });
+    /* ===== Boshqaruv ===== */
+    function pick(groupSel, btn) {
+      document.querySelectorAll(groupSel).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => {
+      pick('.mode-btn', b);
+      gameMode = b.dataset.mode;
+      $('botLevelBox').style.display = gameMode === 'bot' ? '' : 'none';
+    }));
+    document.querySelectorAll('.level-btn').forEach(b => b.addEventListener('click', () => { pick('.level-btn', b); botLevel = b.dataset.level; }));
+    document.querySelectorAll('.size-btn').forEach(b => b.addEventListener('click', () => {
+      pick('.size-btn', b);
+      boardSize = +b.dataset.size;
+      $('sizeHint').textContent = `${WIN_LEN[boardSize]} ta bir qatorda — g'alaba`;
+    }));
+    $('startGameBtn').addEventListener('click', () => {
+      startModal.style.display = 'none';
+      scores = { X: 0, O: 0, D: 0 };
+      ['xScore', 'oScore', 'drawScore'].forEach(id => $(id).textContent = '0');
+      document.querySelector('.sc-o').firstChild.textContent = gameMode === 'bot' ? 'Bot (O): ' : 'O: ';
+      document.querySelector('.sc-x').firstChild.textContent = gameMode === 'bot' ? 'Siz (X): ' : 'X: ';
+      starter = 'X';
+      newRound();
     });
-    sizeBtns.forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        sizeBtns.forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        boardSize = parseInt(btn.dataset.size,10);
-      });
-    });
+    $('restartGame').addEventListener('click', newRound);
+    $('settingsBtn').addEventListener('click', () => { startModal.style.display = 'flex'; });
 
-    startBtn.addEventListener("click", ()=>{
-      startModal.style.display = "none";
-      resultBox.style.display = "none";
-      boardEl.style.opacity = "1";
-      boardEl.classList.remove("game-over");
-      currentPlayer = "X";
-      gameOver = false;
-      initializeBoard(boardSize);
-    });
-
-    restartBtn.addEventListener("click", ()=>{
-      resultBox.style.display = "none";
-      boardEl.style.opacity = "1";
-      boardEl.classList.remove("game-over");
-      currentPlayer = "X";
-      gameOver = false;
-      initializeBoard(boardSize);
-    });
-
-    // Start
-    startModal.style.display = "flex";
+    Neo.addMuteButton();
+    startModal.style.display = 'flex';
   </script>
 </body>
 </html>

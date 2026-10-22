@@ -512,3 +512,17 @@ body {
         max-height: 300px;
     }
 }
+/* --- Yangilanishlar --- */
+.file-explorer li.file.done > span::after { content: ' ✔'; color: #2ecc71; font-weight: 700; }
+.file-explorer li.file.empty { opacity: .45; cursor: default; }
+.file-explorer li.file.empty:hover { transform: none; box-shadow: none; background: none; }
+.file-explorer li.folder.collapsed > ul { display: none; }
+.file-explorer li.folder > span { cursor: pointer; }
+.file-explorer li { padding: 8px 14px; }
+.code-content span.current { background: rgba(241, 196, 15, 0.35); border-radius: 2px; }
+.code-content span.error { background: rgba(231, 76, 60, 0.3); }
+#codeInput:disabled { opacity: .6; }
+@media (max-width: 900px) {
+  .editor-container { flex-direction: column; height: auto !important; }
+  .file-explorer { width: 100% !important; max-height: 260px; border-right: 0; }
+}

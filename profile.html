@@ -295,6 +295,53 @@
       from { opacity: 0; transform: translateY(40px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* --- Haqiqiy profil --- */
+    .profile-container { text-align: left; max-width: 1100px; }
+    .pf-head { display: flex; align-items: center; gap: 20px; margin-bottom: 26px; }
+    .avatar { width: 84px; height: 84px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 2.6rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--secondary), #ec4899); box-shadow: 0 0 25px rgba(245, 158, 11, .5); }
+    .pf-name { flex: 1; min-width: 0; }
+    .pf-name input { width: 100%; max-width: 420px; background: transparent; border: 0; border-bottom: 2px dashed rgba(165, 180, 252, .5); color: #fff;
+      font: 800 2rem Inter, sans-serif; padding: 4px 0; outline: none; }
+    .pf-name input:focus { border-bottom-color: var(--secondary); }
+    .level-line { margin: 8px 0 6px; color: var(--accent); font-weight: 700; }
+    .xp { height: 10px; max-width: 420px; background: rgba(255, 255, 255, .1); border-radius: 6px; overflow: hidden; }
+    #xpBar { height: 100%; width: 0; background: linear-gradient(90deg, #22c55e, #facc15); transition: width .6s; }
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+    .card { background: rgba(15, 23, 42, .55); border: 1px solid rgba(165, 180, 252, .25); border-radius: 16px; padding: 18px; text-align: center; }
+    .card b { display: block; font-size: 2.2rem; color: var(--secondary); }
+    .card span { color: #c7d2fe; font-size: .95rem; }
+    .pf-section { margin-bottom: 26px; }
+    .pf-section h3 { color: var(--accent); font-size: 1.4rem; margin-bottom: 12px; }
+    .chart { background: rgba(15, 23, 42, .55); border-radius: 16px; padding: 12px; }
+    .chart svg { width: 100%; height: auto; display: block; }
+    .chart .g { stroke: rgba(255, 255, 255, .08); }
+    .chart text { fill: #94a3b8; font-size: 11px; }
+    .chart .line { fill: none; stroke: #facc15; stroke-width: 3; stroke-linejoin: round; }
+    .chart .area { fill: rgba(250, 204, 21, .12); stroke: none; }
+    .chart circle { fill: #f59e0b; stroke: #0f172a; stroke-width: 2; }
+    .chart .empty { padding: 20px; color: #c7d2fe; }
+    .chart a, .stats-table a { color: var(--secondary); text-decoration: none; }
+    .table-wrap { overflow-x: auto; border-radius: 16px; background: rgba(15, 23, 42, .55); }
+    .stats-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    .stats-table th, .stats-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+    .stats-table th { color: var(--accent); font-size: .9rem; text-transform: uppercase; letter-spacing: .5px; }
+    .stats-table td a { color: #fff; }
+    .stats-table td a i { color: var(--accent); width: 20px; }
+    .stats-table tr.muted td { opacity: .45; }
+    .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .badge { background: rgba(15, 23, 42, .55); border-radius: 14px; padding: 14px; text-align: center; opacity: .35; filter: grayscale(1); transition: .3s; }
+    .badge.on { opacity: 1; filter: none; border: 1px solid rgba(250, 204, 21, .5); box-shadow: 0 0 18px rgba(250, 204, 21, .2); }
+    .badge span { display: block; font-size: 2rem; }
+    .badge b { display: block; margin: 4px 0; }
+    .badge small { color: #c7d2fe; font-size: .78rem; }
+    .pf-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .pf-btn { padding: 12px 20px; border-radius: 12px; border: 0; cursor: pointer; font: 700 1rem Inter, sans-serif; color: #fff; text-decoration: none;
+      background: linear-gradient(45deg, var(--primary), #7c3aed); }
+    .pf-btn.danger { background: rgba(239, 68, 68, .2); border: 1px solid rgba(239, 68, 68, .6); }
+    .pf-note { margin-top: 12px; color: #94a3b8; font-size: .9rem; }
+    @media (max-width: 768px) { .cards { grid-template-columns: repeat(2, 1fr); } .pf-name input { font-size: 1.5rem; } .avatar { width: 64px; height: 64px; font-size: 2rem; } }
   </style>
 </head>
 <body>
@@ -321,14 +368,164 @@
       <div class="floating-icon"><i class="fas fa-bolt"></i></div>
     </div>
     <div class="profile-container">
-      <h2 class="profile-title">Sizning Profilingiz</h2>
-      <div class="coming-soon-message">Biz buning ustida ishlayapmiz. Tez orada profilingiz tayyor bo‘ladi</div>
-      <div class="profile-icon"><i class="fas fa-tools"></i></div>
+      <div class="pf-head">
+        <div class="avatar" id="avatar">N</div>
+        <div class="pf-name">
+          <input id="nameInput" maxlength="30" placeholder="Ismingizni kiriting" aria-label="Ism">
+          <p id="levelLine" class="level-line"></p>
+          <div class="xp"><div id="xpBar"></div></div>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card"><b id="sTyping">—</b><span>Eng yaxshi WPM</span></div>
+        <div class="card"><b id="sPlays">0</b><span>Jami o'yinlar</span></div>
+        <div class="card"><b id="sGames">0</b><span>Sinab ko'rilgan o'yinlar</span></div>
+        <div class="card"><b id="sLessons">0</b><span>Tugatilgan darslar</span></div>
+      </div>
+
+      <section class="pf-section">
+        <h3>Tezlik testi tarixi</h3>
+        <div id="chart" class="chart"></div>
+      </section>
+
+      <section class="pf-section">
+        <h3>O'yinlar bo'yicha natijalar</h3>
+        <div class="table-wrap">
+          <table class="stats-table">
+            <thead><tr><th>O'yin</th><th>Rekord</th><th>O'yinlar</th><th>G'alabalar</th><th>Oxirgi marta</th></tr></thead>
+            <tbody id="statsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="pf-section">
+        <h3>Yutuqlar</h3>
+        <div class="badges" id="badges"></div>
+      </section>
+
+      <div class="pf-actions">
+        <a class="pf-btn" href="index.html">⌨ Tezlik testi</a>
+        <a class="pf-btn" href="games.html">🎮 Arcade</a>
+        <button class="pf-btn danger" id="resetBtn">🗑 Statistikani tozalash</button>
+      </div>
+      <p class="pf-note">Natijalar shu brauzerda saqlanadi.</p>
     </div>
   </div>
 
   <footer class="footer">
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
+  <script src="assets/neo.js"></script>
+  <script>
+    (function () {
+      const $ = id => document.getElementById(id);
+      const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const NAME_KEY = 'neo_profile_name';
+
+      function ago(t) {
+        if (!t) return '—';
+        const m = Math.round((Date.now() - t) / 60000);
+        if (m < 1) return 'hozirgina';
+        if (m < 60) return `${m} daqiqa oldin`;
+        const h = Math.round(m / 60);
+        if (h < 24) return `${h} soat oldin`;
+        const d = Math.round(h / 24);
+        return d < 30 ? `${d} kun oldin` : new Date(t).toLocaleDateString();
+      }
+
+      function lessonsDone() {
+        try { return Object.keys(JSON.parse(localStorage.getItem('neo_lessons_v1')) || {}).length; } catch (e) { return 0; }
+      }
+
+      function render() {
+        const all = Neo.stats.all();
+        const ids = Object.keys(all).filter(id => Neo.games[id]);
+        const plays = ids.reduce((a, id) => a + (all[id].plays || 0), 0);
+        const typing = all.typing;
+        const done = lessonsDone();
+        $('sTyping').textContent = typing && typing.best != null ? typing.best : '—';
+        $('sPlays').textContent = plays;
+        $('sGames').textContent = `${ids.filter(i => i !== 'typing' && i !== 'lessons').length}/16`;
+        $('sLessons').textContent = `${done}/17`;
+
+        // Daraja (XP): har bir o'yin 10 XP, har bir dars 50 XP
+        const xp = plays * 10 + done * 50 + (typing && typing.best ? typing.best * 2 : 0);
+        const level = Math.floor(Math.sqrt(xp / 40)) + 1;
+        const cur = 40 * (level - 1) ** 2, next = 40 * level ** 2;
+        $('levelLine').textContent = `${level}-daraja · ${xp} XP`;
+        $('xpBar').style.width = Math.min(100, (xp - cur) / (next - cur) * 100) + '%';
+
+        // Jadval
+        const rows = Object.entries(Neo.games).filter(([id]) => id !== 'lessons').map(([id, g]) => {
+          const s = all[id];
+          const unit = id === 'typing' || id === 'fastcoder' ? ' WPM' : ['englishquiz', 'translation', 'codingquiz'].includes(id) ? '%' : '';
+          return `<tr class="${s ? '' : 'muted'}"><td><a href="${g.url}"><i class="fas ${g.icon}"></i> ${esc(g.title)}</a></td>
+            <td>${s && s.best != null ? s.best + unit : '—'}</td><td>${s ? s.plays : 0}</td><td>${s ? (s.wins || 0) : '—'}</td><td>${s ? ago(s.last && s.last.at) : '—'}</td></tr>`;
+        });
+        $('statsBody').innerHTML = rows.join('');
+
+        renderChart(typing ? typing.history || [] : []);
+        renderBadges(all, done);
+      }
+
+      function renderChart(hist) {
+        const el = $('chart');
+        if (hist.length < 2) {
+          el.innerHTML = `<p class="empty">${hist.length ? 'Grafik uchun yana bitta test topshiring.' : "Hali test topshirilmagan."} <a href="index.html">Tezlik testini boshlash →</a></p>`;
+          return;
+        }
+        const W = 640, H = 200, P = 30;
+        const vals = hist.map(h => h.wpm || h.score || 0);
+        const max = Math.max(20, ...vals) * 1.15;
+        const x = i => P + i * (W - 2 * P) / (vals.length - 1);
+        const y = v => H - P - v / max * (H - 2 * P);
+        const pts = vals.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+        const grid = [0, 0.25, 0.5, 0.75, 1].map(f => {
+          const v = Math.round(max * f);
+          return `<line x1="${P}" x2="${W - P}" y1="${y(v)}" y2="${y(v)}" class="g"/><text x="${P - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+        }).join('');
+        const dots = vals.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4"><title>${v} WPM · ${hist[i].accuracy ?? '?'}% · ${new Date(hist[i].at).toLocaleString()}</title></circle>`).join('');
+        el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="WPM tarixi">${grid}
+          <polyline points="${P},${H - P} ${pts} ${x(vals.length - 1)},${H - P}" class="area"/>
+          <polyline points="${pts}" class="line"/>${dots}</svg>`;
+      }
+
+      function renderBadges(all, done) {
+        const t = all.typing || {};
+        const list = [
+          ['⌨️', 'Birinchi qadam', 'Birinchi tezlik testini topshirish', (t.plays || 0) >= 1],
+          ['🐇', '40 WPM', "Tezlik testida 40 WPM", (t.best || 0) >= 40],
+          ['⚡', '60 WPM', "Tezlik testida 60 WPM", (t.best || 0) >= 60],
+          ['🚀', '80 WPM', "Tezlik testida 80 WPM", (t.best || 0) >= 80],
+          ['🎮', "O'yinchi", "5 xil o'yinni sinash", Object.keys(all).filter(i => Neo.games[i] && i !== 'typing' && i !== 'lessons').length >= 5],
+          ['🏆', 'Kolleksioner', "Barcha 16 o'yinni sinash", Object.keys(all).filter(i => Neo.games[i] && i !== 'typing' && i !== 'lessons').length >= 16],
+          ['♟️', 'Grossmeyster', 'Shaxmatda botni yutish', (all.chess && all.chess.wins) > 0],
+          ['🧩', 'Mantiq ustasi', 'Sudoku yechish', (all.sudoku && all.sudoku.wins) > 0],
+          ['📚', "O'quvchi", '5 ta darsni tugatish', done >= 5],
+          ['🎓', 'Bitiruvchi', 'Barcha 17 darsni tugatish', done >= 17],
+        ];
+        $('badges').innerHTML = list.map(([ic, name, desc, ok]) =>
+          `<div class="badge ${ok ? 'on' : ''}" title="${esc(desc)}"><span>${ic}</span><b>${esc(name)}</b><small>${esc(desc)}</small></div>`).join('');
+      }
+
+      // Ism
+      const nameInput = $('nameInput');
+      try { nameInput.value = localStorage.getItem(NAME_KEY) || ''; } catch (e) { /* e'tiborsiz */ }
+      const setAvatar = () => { $('avatar').textContent = (nameInput.value.trim()[0] || 'N').toUpperCase(); };
+      setAvatar();
+      nameInput.addEventListener('input', () => {
+        setAvatar();
+        try { localStorage.setItem(NAME_KEY, nameInput.value.trim()); } catch (e) { /* e'tiborsiz */ }
+      });
+
+      $('resetBtn').addEventListener('click', () => {
+        if (!confirm("Barcha o'yin natijalari o'chiriladi. Davom etasizmi?")) return;
+        Neo.stats.clear();
+        render();
+      });
+      render();
+    })();
+  </script>
 </body>
 </html>

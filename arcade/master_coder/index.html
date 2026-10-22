@@ -60,6 +60,7 @@
         © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
     </footer>
 
+    <script src="../../assets/neo.js"></script>
     <script>
         let currentFile = null;
         let currentCode = '';
@@ -67,13 +68,7 @@
         let correctChars = 0;
         let errors = 0;
 
-        const map = {
-            '&': '&',
-            '<': '<',
-            '>': '>',
-            '"': '"',
-            "'": "'"
-        };
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
 
         function escapeHtml(text) {
             if (!text) return '';
@@ -562,163 +557,210 @@
             ],
         };
 
-        function updateLineNumbersDynamic(code, elementId) {
-            const lineNumbers = document.getElementById(elementId);
-            if (!lineNumbers) return;
-            const lines = (code || '').split('\n').length;
-            lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => i + 1).join('<br>');
-            lineNumbers.style.height = `${lineNumbers.scrollHeight}px`;
+        // --- O'yin mantig'i ---
+        const STORE = 'mastercoder_v2';
+        const norm = s => (s || '').replace(/\t/g, '    ').replace(/\r/g, '');
+        // Bir qatorli HTML shablonlarni o'qish oson bo'lishi uchun qatorlarga bo'lamiz
+        function prettify(item) {
+            if (!item.name.endsWith('.html')) return norm(item.content);
+            return norm(item.content).replace(/(>|%\})(?=\s*(<|\{%))/g, '$1\n').replace(/\n\s+/g, '\n');
+        }
+        function loadState() {
+            try { return JSON.parse(localStorage.getItem(STORE)) || { inputs: {}, done: {} }; } catch (e) { return { inputs: {}, done: {} }; }
+        }
+        function saveState() {
+            try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* e'tiborsiz */ }
+        }
+        const state = loadState();
+        let currentPath = '';
+        let startTime = 0;
+        let keystrokes = 0;
+        let mistakes = 0;
+        let prevLen = 0;
+        const files = [];   // {path, item, code}
+
+        const refNumbers = document.querySelectorAll('.line-numbers')[0];
+        const inputNumbers = document.querySelectorAll('.line-numbers')[1];
+        const codeInput = document.getElementById('codeInput');
+
+        function updateLineNumbers(el, code) {
+            if (!el) return;
+            el.innerHTML = (code || '').split('\n').map((_, i) => i + 1).join('<br>');
         }
 
         function updateCodeDisplay(input) {
-            const codeDisplay = document.getElementById('codeDisplay');
-            const overlay = codeDisplay.querySelector('.code-overlay-display .code-content');
-            if (!codeDisplay || !overlay || !currentCode) return;
-
-            const inputChars = input.replace(/\t/g, '    ').split('');
-            const codeChars = currentCode.replace(/\t/g, '    ').split('');
+            const overlay = document.querySelector('#codeDisplay .code-content');
             let html = '';
-            let i = 0;
-            while (i < Math.max(inputChars.length, codeChars.length)) {
-                if (i < inputChars.length && i < codeChars.length) {
-                    if (inputChars[i] === codeChars[i]) {
-                        html += `<span class="correct">${escapeHtml(codeChars[i])}</span>`;
-                    } else {
-                        html += `<span class="error">${escapeHtml(codeChars[i])}</span>`;
-                    }
-                } else if (i < codeChars.length) {
-                    html += `<span class="default">${escapeHtml(codeChars[i])}</span>`;
-                } else {
-                    html += `<span class="error">${escapeHtml(inputChars[i])}</span>`;
-                }
-                if (codeChars[i] === '\n' || i === codeChars.length - 1) {
-                    html += '<br>';
-                }
-                i++;
+            for (let i = 0; i < currentCode.length; i++) {
+                const ch = currentCode[i];
+                let cls = 'default';
+                if (i < input.length) cls = input[i] === ch ? 'correct' : 'error';
+                else if (i === input.length) cls = 'current';
+                html += `<span class="${cls}">${ch === '\n' ? (cls === 'error' || cls === 'current' ? '↵' : '') : escapeHtml(ch)}</span>`;
+                if (ch === '\n') html += '\n';
             }
+            if (input.length > currentCode.length) html += `<span class="error">${escapeHtml(input.slice(currentCode.length))}</span>`;
             overlay.innerHTML = html;
+            const cur = overlay.querySelector('.current');
+            if (cur) cur.scrollIntoView({ block: 'nearest' });
         }
 
         function updateStats() {
             const statsDisplay = document.getElementById('statsDisplay');
-            if (!statsDisplay || !currentCode) return;
-            const codeLength = currentCode.replace(/\t/g, '    ').trim().length;
-            const accuracy = codeLength > 0 ? Math.round((correctChars / codeLength) * 100) : 0;
-            statsDisplay.innerHTML = `Aniqlik: ${accuracy}% | Xatolar: ${errors}`;
+            const input = norm(codeInput.value);
+            let correct = 0;
+            for (let i = 0; i < input.length && i < currentCode.length; i++) if (input[i] === currentCode[i]) correct++;
+            const progress = currentCode.length ? Math.round(correct / currentCode.length * 100) : 100;
+            const acc = keystrokes ? Math.round((1 - mistakes / keystrokes) * 100) : 100;
+            const secs = startTime ? (Date.now() - startTime) / 1000 : 0;
+            const wpm = secs > 2 ? Math.round(correct / 5 / (secs / 60)) : 0;
+            const doneCount = files.filter(f => state.done[f.path]).length;
+            statsDisplay.innerHTML = `Bajarildi: ${progress}% | Aniqlik: ${acc}% | WPM: ${wpm} | Loyiha: ${doneCount}/${files.length} fayl`;
+            return { progress, acc, wpm, secs };
+        }
+
+        function markTree() {
+            document.querySelectorAll('#fileTree li.file').forEach(li => {
+                li.classList.toggle('done', !!state.done[li.dataset.path]);
+                li.classList.toggle('active', li.dataset.path === currentPath);
+            });
+        }
+
+        function openFile(path) {
+            const f = files.find(x => x.path === path);
+            if (!f) return;
+            currentFile = f.item;
+            currentPath = path;
+            currentCode = f.code;
+            codeInput.value = state.inputs[path] || '';
+            codeInput.disabled = !!state.done[path];
+            prevLen = norm(codeInput.value).length;
+            startTime = 0; keystrokes = 0; mistakes = 0;
+            updateCodeDisplay(norm(codeInput.value));
+            updateLineNumbers(refNumbers, currentCode);
+            updateLineNumbers(inputNumbers, codeInput.value);
+            markTree();
+            updateStats();
+            if (!codeInput.disabled) codeInput.focus();
         }
 
         function renderFileTree(structure, parentUl, prefix = '') {
             structure.forEach(item => {
+                if (item.name === '__init__..py') item.name = '__init__.py';
+                const path = prefix ? `${prefix}/${item.name}` : item.name;
                 const li = document.createElement('li');
                 li.className = item.type;
-                li.dataset.path = prefix ? `${prefix}/${item.name}` : item.name;
-                li.innerHTML = `${item.name}`;
+                li.dataset.path = path;
+                const label = document.createElement('span');
+                label.textContent = item.name;
+                li.appendChild(label);
                 if (item.type === 'file') {
-                    li.addEventListener('click', () => {
-                        currentFile = item;
-                        currentCode = currentFile.content;
-                        updateCodeDisplay(currentCode);
-                        document.getElementById('codeInput').value = localStorage.getItem(`code_${currentFile.name}`) || '';
-                        document.querySelectorAll('#fileTree li').forEach(el => el.classList.remove('active'));
-                        li.classList.add('active');
-                        updateLineNumbersDynamic(currentCode, 'refLineNumbers');
-                        updateLineNumbersDynamic(document.getElementById('codeInput').value, 'inputLineNumbers');
-                        updateStats();
-                        const runButton = document.querySelector('#runButton');
-                        if (runButton) runButton.disabled = document.getElementById('codeInput').value !== currentCode.replace(/\t/g, '    ').trim();
-                    });
+                    const code = prettify(item);
+                    if (!code.trim()) {
+                        // Bo'sh fayl (__init__.py) — yozishga hojat yo'q
+                        li.classList.add('empty');
+                        li.title = "Bo'sh fayl — Python paket belgisi";
+                    } else {
+                        files.push({ path, item, code });
+                        li.addEventListener('click', e => { e.stopPropagation(); openFile(path); });
+                    }
                 }
                 if (item.type === 'folder' && item.children) {
                     const ul = document.createElement('ul');
                     li.appendChild(ul);
-                    renderFileTree(item.children, ul, prefix ? `${prefix}/${item.name}` : item.name);
+                    label.addEventListener('click', e => { e.stopPropagation(); li.classList.toggle('collapsed'); });
+                    renderFileTree(item.children, ul, path);
                 }
                 parentUl.appendChild(li);
             });
         }
 
         function downloadCode() {
-            if (currentFile) {
-                const blob = new Blob([document.getElementById('codeInput').value], { type: 'text/plain' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `${currentFile.name}`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }
+            if (!currentFile) return;
+            const blob = new Blob([codeInput.value || currentCode], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = currentFile.name;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         }
 
-        window.onload = function() {
-            const codeInput = document.getElementById('codeInput');
+        function completeFile() {
+            const s = updateStats();
+            state.done[currentPath] = { wpm: s.wpm, acc: s.acc, at: Date.now() };
+            saveState();
+            codeInput.disabled = true;
+            markTree();
+            const doneCount = files.filter(f => state.done[f.path]).length;
+            const res = Neo.stats.record('mastercoder', { score: doneCount, wpm: s.wpm, accuracy: s.acc, file: currentPath });
+            const nextFile = files.find(f => !state.done[f.path]);
+            Neo.gameOver({
+                title: doneCount === files.length ? "Loyiha tayyor! 🎉" : 'Fayl tayyor ✅',
+                subtitle: currentPath,
+                win: true,
+                isBest: res.isBest && doneCount === files.length,
+                rows: [['WPM', s.wpm], ['Aniqlik', s.acc + '%'], ['Vaqt', Math.round(s.secs) + 's'], ['Loyiha', `${doneCount}/${files.length}`]],
+                restartText: nextFile ? 'Keyingi fayl' : 'Qaytadan boshlash',
+                onRestart: () => {
+                    if (nextFile) openFile(nextFile.path);
+                    else { state.inputs = {}; state.done = {}; saveState(); openFile(files[0].path); }
+                },
+            });
+        }
+
+        window.onload = function () {
+            Neo.addMuteButton();
             const fileTree = document.getElementById('fileTree');
-            const downloadBtn = document.getElementById('downloadBtn');
+            renderFileTree(projectTemplates['django'], fileTree);
 
-            if (!codeInput || !fileTree || !downloadBtn) {
-                return;
-            }
-
-            codeInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Tab') {
+            codeInput.addEventListener('paste', e => e.preventDefault());
+            codeInput.addEventListener('keydown', e => {
+                const pos = codeInput.selectionStart;
+                const insert = text => {
                     e.preventDefault();
-                    const start = codeInput.selectionStart;
-                    const end = codeInput.selectionEnd;
-                    codeInput.value = codeInput.value.substring(0, start) + '    ' + codeInput.value.substring(end);
-                    codeInput.selectionStart = codeInput.selectionEnd = start + 4;
+                    codeInput.setRangeText(text, pos, codeInput.selectionEnd, 'end');
+                    codeInput.dispatchEvent(new Event('input'));
+                };
+                if (e.key === 'Tab') insert('    ');
+                else if (e.key === 'Enter') {
+                    const typed = norm(codeInput.value.slice(0, pos));
+                    let indent;
+                    if (typed === currentCode.slice(0, typed.length) && currentCode[typed.length] === '\n') {
+                        indent = (currentCode.slice(typed.length + 1).match(/^ */) || [''])[0];
+                    } else {
+                        indent = (typed.split('\n').pop().match(/^ */) || [''])[0];
+                    }
+                    insert('\n' + indent);
                 }
             });
 
             codeInput.addEventListener('input', () => {
-                const input = codeInput.value.replace(/\t/g, '    ').trim();
-                totalChars = input.length;
-                correctChars = 0;
-                errors = 0;
-                const codeChars = currentCode.replace(/\t/g, '    ').split('');
-                const inputChars = input.split('');
-                for (let i = 0; i < inputChars.length && i < codeChars.length; i++) {
-                    if (inputChars[i] === codeChars[i]) {
-                        correctChars++;
-                    } else {
-                        errors++;
+                const input = norm(codeInput.value);
+                if (!startTime && input.length) startTime = Date.now();
+                if (input.length > prevLen) {
+                    let auto = false;
+                    for (let i = prevLen; i < input.length; i++) {
+                        if (input[i] === '\n') auto = true;
+                        else if (input[i] !== ' ') auto = false;
+                        if (auto && input[i] === ' ') continue;
+                        keystrokes++;
+                        if (input[i] !== currentCode[i]) mistakes++;
                     }
+                    if (input[input.length - 1] !== currentCode[input.length - 1]) Neo.sound.play('error');
                 }
+                prevLen = input.length;
                 updateCodeDisplay(input);
+                updateLineNumbers(inputNumbers, codeInput.value);
+                state.inputs[currentPath] = codeInput.value;
+                saveState();
                 updateStats();
-                const runButton = document.querySelector('#runButton');
-                if (runButton) runButton.disabled = input !== currentCode.replace(/\t/g, '    ').trim();
-                localStorage.setItem(`code_${currentFile.name}`, codeInput.value);
-                updateLineNumbersDynamic(codeInput.value, 'inputLineNumbers');
-                codeInput.style.height = `${Math.max(codeInput.scrollHeight, 200)}px`;
+                if (input.trimEnd() === currentCode.trimEnd()) completeFile();
             });
 
-            downloadBtn.addEventListener('click', downloadCode);
-
-            renderFileTree(projectTemplates['django'], fileTree);
-
-            let firstFile = null;
-            function findFirstFile(structure) {
-                for (const item of structure) {
-                    if (item.type === 'file') {
-                        firstFile = item;
-                        return true;
-                    }
-                    if (item.children && findFirstFile(item.children)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            if (findFirstFile(projectTemplates['django']) && firstFile) {
-                currentFile = firstFile;
-                currentCode = currentFile.content;
-                updateCodeDisplay(currentCode);
-                codeInput.value = localStorage.getItem(`code_${currentFile.name}`) || '';
-                fileTree.querySelector(`li[data-path="${firstFile.name}"]`).classList.add('active');
-                updateLineNumbersDynamic(currentCode, 'refLineNumbers');
-                updateLineNumbersDynamic(codeInput.value, 'inputLineNumbers');
-                updateStats();
-                codeInput.style.height = `${Math.max(codeInput.scrollHeight, 200)}px`;
-            }
+            document.getElementById('downloadBtn').addEventListener('click', downloadCode);
+            const first = files.find(f => !state.done[f.path]) || files[0];
+            openFile(first.path);
+            setInterval(() => { if (startTime && !codeInput.disabled) updateStats(); }, 1000);
         };
     </script>
 </body>

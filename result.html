@@ -399,6 +399,13 @@
       0% { transform: scale(0.9); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
+
+    .extra-info { margin: 18px 0 8px; position: relative; z-index: 1; }
+    .extra-info p { margin: 6px 0; font-size: 1.15rem; color: #e0e7ff; }
+    .extra-info .rating { font-size: 1.4rem; font-weight: 800; color: var(--secondary); }
+    .extra-info .best-info { color: #facc15; font-weight: 700; }
+    .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+    .restart-btn.alt { background: rgba(255, 255, 255, .12) !important; }
   </style>
 </head>
 <body>
@@ -447,7 +454,16 @@
           <p class="gauge-label">WPM: <span id="wpmValue"></span></p>
         </div>
       </div>
-      <button class="restart-btn" onclick="window.location.href='index.html'">Qayta Boshlash</button>
+      <div class="extra-info">
+        <p id="rating" class="rating"></p>
+        <p id="details"></p>
+        <p id="bestInfo" class="best-info"></p>
+      </div>
+      <div class="result-actions">
+        <button class="restart-btn" onclick="window.location.href='index.html'">Qayta boshlash</button>
+        <button class="restart-btn alt" onclick="window.location.href='lessons.html'">Darslarga o'tish</button>
+        <button class="restart-btn alt" onclick="window.location.href='profile.html'">Statistikam</button>
+      </div>
     </div>
   </div>
 
@@ -455,6 +471,7 @@
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
 
+  <script src="assets/neo.js"></script>
   <script>
     // URL dan parametrlarni olish
     const urlParams = new URLSearchParams(window.location.search);
@@ -467,6 +484,17 @@
     document.getElementById('wpmValue').textContent = wpm;
     document.getElementById('resultValue').textContent = wpm;
     document.getElementById('timeValue').textContent = time;
+    const wordsOk = parseInt(urlParams.get('words')) || 0;
+    const wordsBad = parseInt(urlParams.get('wrong')) || 0;
+    const levels = [[20, "Boshlang'ich 🐢"], [35, "O'rtacha 🙂"], [50, 'Yaxshi 👍'], [70, 'Tez ⚡'], [100, 'Juda tez 🚀'], [Infinity, 'Professional 🏆']];
+    document.getElementById('rating').textContent = 'Daraja: ' + levels.find(([m]) => wpm < m)[1];
+    document.getElementById('details').textContent = `To'g'ri so'zlar: ${wordsOk} · Xato so'zlar: ${wordsBad}`;
+    if (window.Neo) {
+      const best = Neo.stats.best('typing');
+      document.getElementById('bestInfo').textContent = urlParams.get('best') === '1' ? '🏆 Yangi rekord!' : (best ? `Rekordingiz: ${best} WPM` : '');
+      if (urlParams.get('best') === '1') Neo.sound.play('win');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') location.href = 'index.html'; });
 
     // SVG speedometr yaratish funksiyasi
     function createGauge(svgId, value, maxValue, label) {

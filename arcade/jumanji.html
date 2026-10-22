@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="color-scheme" content="dark light">
-  <title>Jumanchi — Jumanji uslubida (refactor v6)</title>
+  <title>Jumanchi — NeoCoder</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap">
   <style>
     :root{
@@ -228,6 +228,14 @@
     @media (max-width:1200px){ :root{--cell:56px} }
     @media (max-width:900px){ :root{--cell:52px} }
     @media (max-width:640px){ :root{--cell:46px} }
+
+    /* --- Yangilanishlar --- */
+    .legend{margin-top:6px;font-size:.8rem;opacity:.9;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .lg{padding:1px 7px;border-radius:6px;color:#fff}
+    .lg.green{background:#16a34a}.lg.red{background:#dc2626}.lg.brown{background:#7c3aed}.lg.black{background:#111827}
+    .legend kbd{padding:0 5px;border-radius:4px;background:rgba(0,0,0,.35)}
+    .opts label input{vertical-align:middle;margin-right:6px}
+    .neo-mute{bottom:90px}
   </style>
 </head>
 <body>
@@ -294,6 +302,7 @@
 
       <div class="group">
         <div id="status" class="status" role="status" aria-live="polite">Tayyor.</div>
+        <div class="legend"><span class="lg green">+ oldinga</span><span class="lg red">− orqaga</span><span class="lg brown">yana tashlash</span><span class="lg black">boshga qaytish</span> · <kbd>Probel</kbd> — tosh</div>
         <div id="winners" class="winners" aria-live="polite"></div>
       </div>
     </div>
@@ -307,11 +316,14 @@
       <div class="opts">
         <label for="playersSelect">O‘yinchilar:</label>
         <select id="playersSelect">
-          <option value="1" selected>1</option>
-          <option value="2">2</option>
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
           <option value="3">3</option>
           <option value="4">4</option>
         </select>
+      </div>
+      <div class="opts">
+        <label for="botsCheck"><input type="checkbox" id="botsCheck" checked> 1-o‘yinchidan boshqalari — kompyuter 🤖</label>
       </div>
       <div class="actions">
         <button id="startBtn" class="btn">Qo‘llash</button>
@@ -320,6 +332,7 @@
     </div>
   </div>
 
+  <script src="../assets/neo.js"></script>
   <script>
     /* ====== Asosiy param va elementlar ====== */
     const COLS=13, ROWS=10, CELLS=COLS*ROWS;
@@ -348,6 +361,8 @@
     let finishedOrder=[];
     let animating=false;
     let extraRoll = false;
+    let bots = true;
+    const isBot = i => bots && i > 0;
 
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -544,7 +559,7 @@
 
     /* ====== O'yin oqimi ====== */
     function setStatus(msg){ statusEl.textContent=msg; }
-    function playerName(i=current){ return `O‘yinchi ${i+1}`; }
+    function playerName(i=current){ return isBot(i) ? `Kompyuter ${i}` : (bots ? 'Siz' : `O‘yinchi ${i+1}`); }
 
     function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
@@ -561,6 +576,7 @@
       const roll = Math.floor(Math.random()*6)+1;
       rollValueEl.textContent = roll;
       animateCube(roll);
+      Neo.sound.play('click');
 
       animating=true;
       await wait(prefersReduced ? 100 : 750);
@@ -579,8 +595,10 @@
         extraRoll = false;
         setStatus(`${playerName()} siyohrang katakka tushdi! Yana bir marta tosh tashlaydi.`);
         rollBtn.textContent = 'Yana tashla';
+        Neo.sound.play('skill');
         await wait(500);
         animating = false;
+        maybeBot();
         return; // Yana tashlash uchun navbat saqlanadi
       } else {
         rollBtn.textContent = 'Toshni tashla';
@@ -599,6 +617,7 @@
         setStatus(`${playerName()} ${typeUz} katakka tushdi!`);
         await wait(prefersReduced ? 100 : 220);
 
+        Neo.sound.play(special.type === 'green' ? 'level' : special.type === 'brown' ? 'ok' : 'error');
         if(special.type === 'green'){
           await stepMove(current, pos, Math.min(pos + (special.value||0), CELLS), prefersReduced ? 40 : 220);
         } else if(special.type === 'red'){
@@ -615,6 +634,7 @@
       const forward = to >= from;
       for(let now=from + (forward?1:-1); forward ? now<=to : now>=to; now += (forward?1:-1)){
         positions[p]=now; placeToken(p,now);
+        Neo.sound.play('key');
         await wait(speed);
       }
     }
@@ -625,7 +645,15 @@
         if(!finishedOrder.includes(current)) finishedOrder.push(current);
         setStatus(`${playerName()} — FINISH! 🏁`);
         updateWinners();
-        if(finishedOrder.length===playing){ setStatus('O‘yin tugadi!'); rollBtn.disabled=true; return; }
+        Neo.sound.play('level');
+        // Bitta o'yinchi qolganda o'yin tugaydi
+        const left = Array.from({length:playing},(_,i)=>i).filter(i=>!finishedOrder.includes(i));
+        if(finishedOrder.length===playing || (playing>1 && left.length===1)){
+          left.forEach(i=>finishedOrder.push(i));
+          updateWinners();
+          endGame();
+          return;
+        }
       }
       nextTurn();
     }
@@ -637,6 +665,28 @@
         safety++;
       }while(finishedOrder.includes(current) && safety<playing+1);
       highlightTurn();
+      maybeBot();
+    }
+
+    function maybeBot(){
+      rollBtn.disabled = isBot(current);
+      if(isBot(current) && !finishedOrder.includes(current) && startModal.style.display !== 'flex'){
+        setTimeout(()=>{ if(isBot(current) && !animating) { rollBtn.disabled=false; rollTosh(); } }, 700);
+      }
+    }
+
+    function endGame(){
+      rollBtn.disabled = true;
+      setStatus('O‘yin tugadi!');
+      const place = finishedOrder.indexOf(0) + 1;
+      if(bots && playing > 1) Neo.stats.record('jumanji', { score: (playing - place + 1) * 100, win: place === 1, players: playing });
+      Neo.gameOver({
+        title: playing === 1 ? 'Finish! 🏁' : (bots ? (place === 1 ? 'Siz g‘olib bo‘ldingiz! 🏆' : `Siz ${place}-o‘rindasiz`) : `${playerName(finishedOrder[0])} g‘olib! 🏆`),
+        subtitle: 'Jungli sarguzashti yakunlandi',
+        win: place === 1,
+        rows: finishedOrder.slice(0, 4).map((p, i) => [`${i + 1}-o‘rin`, playerName(p)]),
+        onRestart: resetGame,
+      });
     }
 
     function highlightTurn(){
@@ -669,6 +719,7 @@
     }
     function resetGame(){
       createTokens(playing);
+      animating=false; extraRoll=false;
       current=0; rollBtn.disabled=false; rollBtn.textContent='Toshni tashla'; highlightTurn();
     }
 
@@ -703,6 +754,7 @@
     function applySettingsAndStart(){
       const newPlaying = parseInt(playersSelect.value,10);
       playing = newPlaying;
+      bots = document.getElementById('botsCheck').checked && playing > 1;
       drawBoardPath();
       generateSpecialCells();
       resetGame(); // har doim qayta yaratamiz
@@ -727,8 +779,13 @@
     }
 
     /* ====== Eventlar ====== */
-    rollBtn.addEventListener('click', rollTosh);
-    rollBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); rollTosh(); }});
+    rollBtn.addEventListener('click', ()=>{ if(!isBot(current)) rollTosh(); });
+    document.addEventListener('keydown', e=>{
+      if(e.code==='Space' && startModal.style.display!=='flex' && document.activeElement!==rollBtn && !isBot(current) && !rollBtn.disabled){
+        e.preventDefault(); rollTosh();
+      }
+    });
+    rollBtn.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); if(!isBot(current)) rollTosh(); }});
 
     newMapBtn.addEventListener('click', newMap);
     resetBtn.addEventListener('click', resetGame);
@@ -738,6 +795,7 @@
     startModal.addEventListener('click', (e)=>{ if(e.target===startModal) closeStartModal(); });
 
     init();
+    Neo.addMuteButton();
   </script>
 </body>
 </html>

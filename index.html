@@ -487,6 +487,25 @@
       0% { transform: scale(0.9); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
+
+    /* --- Yangilangan tezlik testi --- */
+    .typing-text { height: calc(1.5rem * 1.8 * 3 + 24px); overflow: hidden; text-align: left; max-width: 900px; margin: 0 auto 30px;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace; font-size: 1.55rem; line-height: 1.8; white-space: normal; cursor: text; }
+    .typing-text .word { display: inline-block; margin: 0 .25em 8px 0; animation: none; border-radius: 4px; }
+    .typing-text .ch { display: inline; animation: none; color: #94a3b8; position: relative; }
+    .typing-text .ch.ok { color: #f8fafc; text-shadow: none; }
+    .typing-text .ch.bad { color: var(--alert-red); text-decoration: underline; }
+    .typing-text .ch.extra { color: #fca5a5; opacity: .8; }
+    .typing-text .word.wrong { text-decoration: underline wavy rgba(239, 68, 68, .7); text-underline-offset: 6px; }
+    .typing-text .word.current { background: rgba(165, 180, 252, .12); }
+    .typing-text .ch.caret::before { content: ''; position: absolute; left: -1px; top: 10%; bottom: 10%; width: 2px; background: var(--secondary); animation: caretBlink 1s steps(1) infinite; }
+    .typing-text .ch.caret.end { display: inline-block; width: 2px; }
+    @keyframes caretBlink { 50% { opacity: 0; } }
+    #typingInput.incorrect { color: var(--alert-red); border-bottom-color: var(--alert-red); }
+    .typing-hint { margin-top: 12px; color: #c7d2fe; opacity: .75; font-size: .95rem; position: relative; z-index: 1; }
+    .best-line { margin-top: 14px; color: var(--secondary); font-weight: 700; position: relative; z-index: 1; }
+    .options select option { color: #1e293b; }
+    @media (max-width: 768px) { .typing-text { font-size: 1.2rem; height: calc(1.2rem * 1.8 * 3 + 24px); } }
   </style>
 </head>
 <body>
@@ -515,25 +534,29 @@
     <div class="typing-container">
       <h2 class="typing-title"><span id="title-typing">Tezlik Testi</span></h2>
       <div class="options">
-        <select id="language">
-          <option value="en" style="color: #FFA11E;">English</option>
-          <option value="uz" style="color: #FFA11E;">O‘zbek</option>
+        <select id="language" aria-label="Til">
+          <option value="uz" selected>O‘zbek</option>
+          <option value="en">English</option>
+          <option value="ru">Русский</option>
+          <option value="code">Kod so‘zlari</option>
         </select>
-        <select id="timeMode">
-          <option value="15" style="color: #FFA11E;">15 <span id="option_lang">soniya</span></option>
-          <option value="30" style="color: #FFA11E;">30 <span id="option_lang">soniya</span></option>
-          <option value="60" style="color: #FFA11E;">60 <span id="option_lang">soniya</span></option>
-          <option value="120" style="color: #FFA11E;">120 <span id="option_lang">soniya</span></option>
+        <select id="timeMode" aria-label="Vaqt">
+          <option value="15">15 soniya</option>
+          <option value="30">30 soniya</option>
+          <option value="60" selected>60 soniya</option>
+          <option value="120">120 soniya</option>
         </select>
-        <button id="restartBtn">Restart</button>
+        <button id="restartBtn">Qayta boshlash</button>
       </div>
       <div id="typingText" class="typing-text"></div>
-      <input type="text" id="typingInput" autocomplete="off">
+      <input type="text" id="typingInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Shu yerga yozing">
+      <p class="typing-hint" id="typingHint"></p>
       <div class="stats">
-        <span>Time: <span id="time">60s</span></span>
-        <span>WPM: <span id="wpm">0</span></span>
-        <span>Accuracy: <span id="accuracy">100</span>%</span>
+        <span><span id="lblTime">Vaqt</span>: <span id="time">60s</span></span>
+        <span><span id="lblWpm">WPM</span>: <span id="wpm">0</span></span>
+        <span><span id="lblAcc">Aniqlik</span>: <span id="accuracy">100</span>%</span>
       </div>
+      <p class="best-line" id="bestLine"></p>
     </div>
   </div>
 
@@ -551,6 +574,7 @@
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
 
+  <script src="assets/neo.js"></script>
   <script src="scripts.js"></script>
 </body>
 </html>

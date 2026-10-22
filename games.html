@@ -471,6 +471,22 @@
       text-transform: uppercase;
     }
 
+
+    /* --- Arcade yangilanishlari --- */
+    .arcade-tools { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 0 auto 30px; position: relative; z-index: 3; }
+    #gameSearch { width: min(520px, 100%); padding: 14px 18px; border-radius: 14px; border: 2px solid rgba(165, 180, 252, .4);
+      background: rgba(15, 23, 42, .7); color: #fff; font: 600 1.1rem Inter, sans-serif; outline: none; }
+    #gameSearch:focus { border-color: var(--secondary); box-shadow: 0 0 18px rgba(245, 158, 11, .35); }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .chip { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(165, 180, 252, .4); background: rgba(15, 23, 42, .6); color: #e0e7ff;
+      font: 600 .95rem Inter, sans-serif; cursor: pointer; }
+    .chip.active { background: linear-gradient(45deg, var(--secondary), #facc15); color: #1e1b4b; border-color: transparent; }
+    .best-badge { margin-top: 12px; display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgba(34, 197, 94, .18);
+      border: 1px solid rgba(34, 197, 94, .5); color: #bbf7d0; font-size: .85rem; font-weight: 700; }
+    .soon-toggle { cursor: pointer; user-select: none; }
+    .soon-arrow { display: inline-block; transition: transform .3s; }
+    .category.collapsed .game-grid { display: none; }
+    .category.collapsed .soon-arrow { transform: rotate(-90deg); }
   </style>
 </head>
 <body>
@@ -498,6 +514,16 @@
     </div>
     <div class="game-container">
       <h2 class="game-title">O‘yinlar Bo‘limi</h2>
+      <div class="arcade-tools">
+        <input type="search" id="gameSearch" placeholder="🔎 O‘yin qidirish..." aria-label="O‘yin qidirish">
+        <div class="chips" id="chips">
+          <button class="chip active" data-tag="all">Hammasi</button>
+          <button class="chip" data-tag="typing">⌨ Yozish</button>
+          <button class="chip" data-tag="code">💻 Dasturlash</button>
+          <button class="chip" data-tag="quiz">❓ Viktorina</button>
+          <button class="chip" data-tag="board">♟ Stol o‘yinlari</button>
+        </div>
+      </div>
       <div class="game-category">
         <div class="category">
           <h3 class="category-title">Faol O‘yinlar</h3>
@@ -508,7 +534,7 @@
                 <circle cx="18" cy="18" r="16" />
               </svg>
               <h3>Kod Defender</h3>
-              <p>Kosmosdagi kemalarni so‘zlarni kiritib yo‘q qiling.</p>
+              <p>Python kodlarini yozib serverni viruslardan himoya qiling.</p>
               <a href="arcade/codedefender.html" class="game-link">O‘ynash</a>
             </div>
             <div class="game-card">
@@ -671,7 +697,7 @@
           </div>
         </div>
         <div class="category">
-          <h3 class="category-title">Tez Kunda</h3>
+          <h3 class="category-title soon-toggle" id="soonToggle" role="button" tabindex="0" aria-expanded="false">Tez Kunda <span class="soon-arrow">▾</span></h3>
           <div class="game-grid">
             <div class="game-card disabled">
               <span class="card-icon"><i class="fas fa-ship"></i></span>
@@ -979,5 +1005,62 @@
   <footer class="footer">
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
+
+  <script src="assets/neo.js"></script>
+  <script>
+    (function () {
+      // Har bir o'yin kartasiga teg va rekord qo'shamiz
+      const META = {
+        'codedefender': ['codedefender', 'typing code'], 'fast-coder': ['fastcoder', 'typing code'], 'zombie-defence': ['zombie', 'typing'],
+        'tower-war': ['towerwar', 'typing'], 'wordrain': ['wordrain', 'typing'], 'wordtetris': ['wordtetris', 'typing'], 'warm-up': ['warmup', 'typing'],
+        'master_coder': ['mastercoder', 'typing code'], 'english_quiz': ['englishquiz', 'quiz'], 'translation': ['translation', 'quiz typing'],
+        'coding_quiz': ['codingquiz', 'quiz code'], 'x0': ['x0', 'board'], 'chess': ['chess', 'board'], 'shashka': ['shashka', 'board'],
+        'sudoku': ['sudoku', 'board'], 'jumanji': ['jumanji', 'board'], 'pycharm': [null, 'code'],
+      };
+      const UNIT = { fastcoder: ' ball', englishquiz: '%', translation: '%', codingquiz: '%', mastercoder: ' fayl' };
+      const cards = [...document.querySelectorAll('.game-card')];
+      cards.forEach(card => {
+        const a = card.querySelector('a.game-link');
+        if (!a) { card.dataset.tags = 'soon'; return; }
+        const key = Object.keys(META).find(k => a.getAttribute('href').includes(k));
+        if (!key) return;
+        const [id, tags] = META[key];
+        card.dataset.tags = tags;
+        const st = id && Neo.stats.get(id);
+        if (st) {
+          const b = document.createElement('div');
+          b.className = 'best-badge';
+          b.textContent = st.best != null && st.best > 0 ? `🏆 ${st.best}${UNIT[id] || ''} · ${st.plays} marta` : `▶ ${st.plays} marta o'ynalgan`;
+          card.appendChild(b);
+        }
+      });
+      const search = document.getElementById('gameSearch');
+      let tag = 'all';
+      function filter() {
+        const q = search.value.trim().toLowerCase();
+        cards.forEach(card => {
+          if (card.dataset.tags === 'soon') return;
+          const text = card.textContent.toLowerCase();
+          const okTag = tag === 'all' || (card.dataset.tags || '').split(' ').includes(tag);
+          card.style.display = okTag && (!q || text.includes(q)) ? '' : 'none';
+        });
+      }
+      search.addEventListener('input', filter);
+      document.getElementById('chips').addEventListener('click', e => {
+        const b = e.target.closest('.chip');
+        if (!b) return;
+        tag = b.dataset.tag;
+        document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c === b));
+        filter();
+      });
+      // "Tez kunda" bo'limi yig'ilgan holda
+      const toggle = document.getElementById('soonToggle');
+      const soon = toggle.closest('.category');
+      soon.classList.add('collapsed');
+      const flip = () => { soon.classList.toggle('collapsed'); toggle.setAttribute('aria-expanded', !soon.classList.contains('collapsed')); };
+      toggle.addEventListener('click', flip);
+      toggle.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+    })();
+  </script>
 </body>
 </html>

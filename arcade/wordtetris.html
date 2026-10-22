@@ -400,6 +400,20 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* --- Yangilanishlar --- */
+    .cell.ghost { background: transparent; border: 1px dashed rgba(255, 255, 255, 0.45); }
+    .word-overlay { left: 50%; transform: translateX(-50%); z-index: 3; white-space: nowrap; pointer-events: none; font-size: 15px; }
+    .word-overlay .typed { color: #4ade80; }
+    .game-board.flash { animation: boardFlash .4s; }
+    @keyframes boardFlash { 50% { box-shadow: 0 0 40px rgba(250, 204, 21, 0.9); } }
+    #wordInput.bad { border-color: #ef4444 !important; }
+    #scoreDisplay small { font-size: .75em; opacity: .85; }
+    .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .controls button { padding: 8px 0; border: 0; border-radius: 6px; font-size: 1.1rem; cursor: pointer; color: #fff;
+      background: rgba(109, 40, 217, 0.6); }
+    .controls button:active { transform: scale(.94); }
+    .input-card.help { font-size: .85rem; opacity: .8; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -442,6 +456,14 @@
           <div class="input-card">
             <input type="text" id="wordInput" placeholder="So‘zni kiriting" autocomplete="off">
           </div>
+          <div class="input-card controls">
+            <button data-ctl="left" title="Chapga (←)">◀</button>
+            <button data-ctl="rot" title="Aylantirish (↑)">⟳</button>
+            <button data-ctl="right" title="O'ngga (→)">▶</button>
+            <button data-ctl="down" title="Pastga (↓)">▼</button>
+            <button data-ctl="drop" title="Tashlash (Enter / Probel)">⤓</button>
+          </div>
+          <div class="input-card help">So'zni yozing → 🔑 qulf ochiladi<br>← → ↑ ↓, Enter — tashlash</div>
           <div class="input-card">
             <button id="restartButton">Qayta boshlash</button>
           </div>
@@ -454,346 +476,270 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
+    // So'z Tetrisi: bo'lak qulflangan holda tushadi — ustidagi so'zni yozsangiz, uni boshqarish mumkin bo'ladi
     const cols = 10;
     const rows = 20;
-    let grid;
-    let currentPiece;
-    let nextPiece;
-    let score = 0;
-    let highScore = 0;
-    let gameOver = false;
-    let currentWord;
-    let gameInterval;
-    const words = ["olma", "kitob", "daraxt", "uy", "gul", "suv", "yulduz", "quyosh", "oy", "shahar"];
-    const pieces = [
-      [[1, 1, 1, 1]], // I
-      [[1, 1], [1, 1]], // O
-      [[1, 1, 1], [0, 1, 0]], // T
-      [[1, 1, 1], [1, 0, 0]], // L
-      [[1, 1, 1], [0, 0, 1]], // J
-      [[1, 1, 0], [0, 1, 1]], // S
-      [[0, 1, 1], [1, 1, 0]], // Z
-      [[1, 0, 1], [1, 1, 1]], // U
-      [[0, 1, 0], [1, 1, 1], [0, 1, 0]], // Plus
-      [[1, 1, 0], [1, 0, 0], [1, 0, 0]], // Corner
-      [[1, 1, 1]], // Line3
-      [[0, 1, 0], [1, 1, 1], [0, 1, 0]], // Cross
-      [[1, 0, 1], [1, 1, 1], [1, 0, 1]], // H
-      [[1, 1], [1, 1]] // Square2
+    const WORDS = {
+      1: ["olma", "uy", "gul", "suv", "oy", "kun", "non", "ota", "ona", "qor", "tog", "yer", "bola", "kuz", "yoz", "qush", "baliq", "ot", "it", "mushuk"],
+      2: ["kitob", "daraxt", "yulduz", "quyosh", "shahar", "maktab", "daftar", "qalam", "sinf", "bahor", "osmon", "dengiz", "daryo", "bog'", "ko'cha", "do'st", "o'yin", "dastur", "sayt", "tarmoq"],
+      3: ["kompyuter", "dasturchi", "klaviatura", "algoritm", "o'zgaruvchi", "funksiya", "massiv", "sikl", "shartli", "internet", "kutubxona", "universitet", "matematika", "geografiya", "tarjimon", "musiqachi", "sayohatchi", "mustaqillik", "kelajak", "texnologiya"],
+    };
+    const PIECES = [
+      { shape: [[1, 1, 1, 1]], color: '#22d3ee' },          // I
+      { shape: [[1, 1], [1, 1]], color: '#facc15' },        // O
+      { shape: [[1, 1, 1], [0, 1, 0]], color: '#a855f7' },  // T
+      { shape: [[1, 1, 1], [1, 0, 0]], color: '#fb923c' },  // L
+      { shape: [[1, 1, 1], [0, 0, 1]], color: '#3b82f6' },  // J
+      { shape: [[0, 1, 1], [1, 1, 0]], color: '#22c55e' },  // S
+      { shape: [[1, 1, 0], [0, 1, 1]], color: '#ef4444' },  // Z
     ];
-    const colors = [
-      '#ff5555', // Qizil (I)
-      '#55ff55', // Yashil (O)
-      '#5555ff', // Ko‘k (T)
-      '#ffff55', // Sariq (L)
-      '#ff55ff', // Pushti (J)
-      '#55ffff', // Moviy (S)
-      '#ffaa00', // To‘q sariq (Z)
-      '#aa55ff', // Binafsha (U)
-      '#55aa55', // To‘q yashil (Plus)
-      '#ff5555', // Qizil (Corner)
-      '#55aaff', // Ochiq ko‘k (Line3)
-      '#ff7777', // Ochiq qizil (Cross)
-      '#77ff77', // Ochiq yashil (H)
-      '#7777ff'  // Ochiq ko‘k (Square2)
-    ];
+    const LINE_SCORES = [0, 100, 300, 500, 800];
 
-    function initializeGame() {
-      grid = createGrid();
-      currentPiece = createPiece();
-      nextPiece = createPiece();
-      currentWord = words[Math.floor(Math.random() * words.length)];
-      currentPiece.isLocked = true;
-      score = 0;
-      gameOver = false;
-      document.getElementById('scoreDisplay').innerHTML = 'Ochko: ' + score;
-      document.getElementById('gameOverMessage').innerHTML = 'Rekord: ' + highScore;
-      document.getElementById('restartButton').style.display = 'none';
-      renderGrid();
-      renderNextPiece();
-      startGameLoop();
-      setTimeout(() => {
-        document.getElementById('wordInput').focus();
-      }, 100);
-    }
+    const $ = id => document.getElementById(id);
+    const input = $('wordInput');
+    let grid, cells, current, next, currentWord, score, lines, level, words, gameOver = true, timer = null, bag = [];
 
-    function createGrid() {
-      const grid = [];
+    const normalize = s => s.toLowerCase().replace(/[‘’ʻʼ`´]/g, "'").trim();
+
+    function buildBoard() {
+      const board = $('gameBoard');
+      board.innerHTML = '';
+      cells = [];
       for (let y = 0; y < rows; y++) {
-        grid[y] = new Array(cols).fill(0);
-      }
-      const gameBoard = document.getElementById('gameBoard');
-      gameBoard.innerHTML = '';
-      for (let y = 0; y < rows; y++) {
+        cells[y] = [];
         for (let x = 0; x < cols; x++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.dataset.x = x;
-          cell.dataset.y = y;
-          gameBoard.appendChild(cell);
+          const c = document.createElement('div');
+          c.className = 'cell';
+          board.appendChild(c);
+          cells[y][x] = c;
         }
       }
-      return grid;
+      const ov = document.createElement('div');
+      ov.className = 'word-overlay';
+      ov.id = 'wordOverlay';
+      board.appendChild(ov);
     }
 
+    function pickWord() {
+      const tier = Math.min(3, 1 + Math.floor((level - 1) / 2));
+      const pool = WORDS[tier];
+      let w;
+      do { w = pool[Math.floor(Math.random() * pool.length)]; } while (w === currentWord);
+      return w;
+    }
     function createPiece() {
-      const index = Math.floor(Math.random() * pieces.length);
-      return {
-        shape: pieces[index],
-        color: colors[index],
-        x: Math.floor(cols / 2) - Math.floor(pieces[index][0].length / 2),
-        y: 0,
-        isLocked: true
-      };
+      if (!bag.length) bag = PIECES.map((_, i) => i).sort(() => Math.random() - 0.5);
+      const p = PIECES[bag.pop()];
+      return { shape: p.shape.map(r => r.slice()), color: p.color, x: Math.floor(cols / 2) - Math.floor(p.shape[0].length / 2), y: 0, isLocked: true };
     }
 
-    function renderGrid() {
-      const cells = document.querySelectorAll('#gameBoard .cell');
-      cells.forEach(cell => {
-        const x = parseInt(cell.dataset.x);
-        const y = parseInt(cell.dataset.y);
-        cell.classList.remove('filled', 'locked');
-        cell.style.background = '';
-        if (grid[y][x]) {
-          cell.classList.add('filled');
-          cell.style.background = grid[y][x];
-        }
-      });
-      // Joriy tetrominoni chizish
-      for (let y = 0; y < currentPiece.shape.length; y++) {
-        for (let x = 0; x < currentPiece.shape[y].length; x++) {
-          if (currentPiece.shape[y][x]) {
-            const newX = currentPiece.x + x;
-            const newY = currentPiece.y + y;
-            if (newY >= 0 && newY < rows && newX >= 0 && newX < cols) {
-              const cell = document.querySelector(`#gameBoard .cell[data-x="${newX}"][data-y="${newY}"]`);
-              if (cell) {
-                cell.classList.add('filled');
-                cell.style.background = currentPiece.color;
-                if (currentPiece.isLocked) {
-                  cell.classList.add('locked');
-                }
-              }
-            }
-          }
-        }
-      }
-      // So‘z va kalit ikonkasini tepada o‘rtada chizish
-      const existingOverlay = document.querySelector('.word-overlay');
-      if (existingOverlay) existingOverlay.remove();
-      if (currentPiece.isLocked) {
-        const overlay = document.createElement('div');
-        overlay.className = 'word-overlay';
-        overlay.innerHTML = `${currentWord} 🔑`;
-        const cellSize = parseFloat(getComputedStyle(document.querySelector('.cell')).width);
-        const top = currentPiece.y * cellSize - 20;
-        overlay.style.top = `${top}px`;
-        document.getElementById('gameBoard').appendChild(overlay);
-      }
-    }
-
-    function renderNextPiece() {
-      const nextPieceContainer = document.getElementById('nextPiece');
-      nextPieceContainer.innerHTML = '';
-      for (let y = 0; y < 4; y++) {
-        for (let x = 0; x < 4; x++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          if (nextPiece.shape[y] && nextPiece.shape[y][x]) {
-            cell.classList.add('filled');
-            cell.style.background = nextPiece.color;
-          }
-          nextPieceContainer.appendChild(cell);
-        }
-      }
-    }
-
-    function checkWord() {
-      const input = document.getElementById('wordInput');
-      if (input.value.toLowerCase() === currentWord) {
-        input.value = '';
-        currentPiece.isLocked = false;
-        renderGrid();
-        setTimeout(() => {
-          input.focus();
-        }, 100);
-      }
-    }
-
-    function placePiece() {
-      while (canMove(currentPiece, 0, 1)) {
-        currentPiece.y++;
-      }
-      mergePiece();
-      currentPiece = nextPiece;
-      nextPiece = createPiece();
-      currentWord = words[Math.floor(Math.random() * words.length)];
-      renderGrid();
-      renderNextPiece();
-      if (!canMove(currentPiece, 0, 0)) {
-        gameOver = true;
-        stopGameLoop();
-        highScore = Math.max(highScore, score);
-        document.getElementById('gameOverMessage').innerHTML = 'O‘yin tugadi! Rekord: ' + highScore;
-        document.getElementById('restartButton').style.display = 'block';
-      } else {
-        clearLines();
-      }
-    }
-
-    function mergePiece() {
-      for (let y = 0; y < currentPiece.shape.length; y++) {
-        for (let x = 0; x < currentPiece.shape[y].length; x++) {
-          if (currentPiece.shape[y][x]) {
-            const newY = currentPiece.y + y;
-            const newX = currentPiece.x + x;
-            if (newY >= 0 && newY < rows && newX >= 0 && newX < cols) {
-              grid[newY][newX] = currentPiece.color;
-            }
-          }
-        }
-      }
-    }
-
-    function canMove(piece, dx, dy) {
-      for (let y = 0; y < piece.shape.length; y++) {
-        for (let x = 0; x < piece.shape[y].length; x++) {
-          if (piece.shape[y][x]) {
-            const newX = piece.x + x + dx;
-            const newY = piece.y + y + dy;
-            if (newX < 0 || newX >= cols || newY >= rows || (newY >= 0 && grid[newY][newX])) {
-              return false;
-            }
-          }
+    function canMove(piece, dx, dy, shape = piece.shape) {
+      for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < shape[y].length; x++) {
+          if (!shape[y][x]) continue;
+          const nx = piece.x + x + dx, ny = piece.y + y + dy;
+          if (nx < 0 || nx >= cols || ny >= rows || (ny >= 0 && grid[ny][nx])) return false;
         }
       }
       return true;
     }
 
-    function movePieceDown() {
-      if (canMove(currentPiece, 0, 1)) {
-        currentPiece.y++;
-        renderGrid();
-      } else {
-        mergePiece();
-        currentPiece = nextPiece;
-        nextPiece = createPiece();
-        currentWord = words[Math.floor(Math.random() * words.length)];
-        renderGrid();
-        renderNextPiece();
-        if (!canMove(currentPiece, 0, 0)) {
-          gameOver = true;
-          stopGameLoop();
-          highScore = Math.max(highScore, score);
-          document.getElementById('gameOverMessage').innerHTML = 'O‘yin tugadi! Rekord: ' + highScore;
-          document.getElementById('restartButton').style.display = 'block';
-        } else {
-          clearLines();
+    function renderGrid() {
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const c = cells[y][x];
+          c.className = grid[y][x] ? 'cell filled' : 'cell';
+          c.style.background = grid[y][x] || '';
         }
       }
+      if (!current) return;
+      // Qayerga tushishini ko'rsatuvchi "soya"
+      let gy = 0;
+      while (canMove(current, 0, gy + 1)) gy++;
+      const draw = (oy, cls) => current.shape.forEach((row, y) => row.forEach((v, x) => {
+        const ny = current.y + y + oy, nx = current.x + x;
+        if (v && ny >= 0 && ny < rows) {
+          const c = cells[ny][nx];
+          c.className = 'cell ' + cls;
+          if (cls.includes('filled')) c.style.background = current.color;
+        }
+      }));
+      if (gy > 0 && !current.isLocked) draw(gy, 'ghost');
+      draw(0, current.isLocked ? 'filled locked' : 'filled');
+
+      const ov = $('wordOverlay');
+      ov.style.display = current.isLocked ? '' : 'none';
+      if (current.isLocked) {
+        const typed = normalize(input.value);
+        const ok = typed && normalize(currentWord).startsWith(typed);
+        ov.innerHTML = ok ? `<span class="typed">${currentWord.slice(0, typed.length)}</span>${currentWord.slice(typed.length)} 🔑` : `${currentWord} 🔑`;
+        const size = cells[0][0].getBoundingClientRect().height + 1;
+        ov.style.top = Math.max(0, current.y * size - 30) + 'px';
+      }
+    }
+
+    function renderNextPiece() {
+      const box = $('nextPiece');
+      box.innerHTML = '';
+      for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+        const c = document.createElement('div');
+        c.className = 'cell';
+        if (next.shape[y] && next.shape[y][x]) { c.classList.add('filled'); c.style.background = next.color; }
+        box.appendChild(c);
+      }
+    }
+
+    function updateHUD() {
+      $('scoreDisplay').innerHTML = `Ochko: ${score}<br><small>Qatorlar: ${lines} · Daraja: ${level} · So'zlar: ${words}</small>`;
+      const best = Neo.stats.best('wordtetris');
+      $('gameOverMessage').innerHTML = 'Rekord: ' + Math.max(best || 0, score);
+    }
+
+    function speed() { return Math.max(150, 1000 - (level - 1) * 85); }
+    function restartTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => { if (!gameOver) movePieceDown(); }, speed());
+    }
+
+    function lockAndNext() {
+      current.shape.forEach((row, y) => row.forEach((v, x) => {
+        const ny = current.y + y;
+        if (v && ny >= 0) grid[ny][current.x + x] = current.color;
+      }));
+      clearLines();
+      current = next;
+      next = createPiece();
+      currentWord = pickWord();
+      input.value = '';
+      if (!canMove(current, 0, 0)) return endGame();
+      renderGrid();
+      renderNextPiece();
+      updateHUD();
     }
 
     function clearLines() {
-      let linesCleared = 0;
+      let n = 0;
       for (let y = rows - 1; y >= 0; y--) {
-        let lineFull = true;
-        for (let x = 0; x < cols; x++) {
-          if (!grid[y][x]) {
-            lineFull = false;
-            break;
-          }
-        }
-        if (lineFull) {
+        if (grid[y].every(Boolean)) {
           grid.splice(y, 1);
           grid.unshift(new Array(cols).fill(0));
-          linesCleared++;
+          n++;
           y++;
         }
       }
-      if (linesCleared > 0) {
-        score += linesCleared * 100;
-        document.getElementById('scoreDisplay').innerHTML = 'Ochko: ' + score;
-        document.getElementById('gameOverMessage').innerHTML = 'Rekord: ' + highScore;
-      }
-      renderGrid();
+      if (!n) { Neo.sound.play('move'); return; }
+      score += LINE_SCORES[n] * level;
+      const before = level;
+      lines += n;
+      level = 1 + Math.floor(lines / 8);
+      Neo.sound.play(level > before ? 'level' : 'ok');
+      if (level > before) restartTimer();
+      const board = $('gameBoard');
+      board.classList.remove('flash'); void board.offsetWidth; board.classList.add('flash');
     }
 
+    function movePieceDown() {
+      if (canMove(current, 0, 1)) { current.y++; renderGrid(); }
+      else lockAndNext();
+    }
+    function hardDrop() {
+      if (current.isLocked) return;
+      let d = 0;
+      while (canMove(current, 0, 1)) { current.y++; d++; }
+      score += d * 2;
+      lockAndNext();
+    }
+    function move(dx) {
+      if (!current.isLocked && canMove(current, dx, 0)) { current.x += dx; renderGrid(); }
+    }
     function rotatePiece() {
-      if (currentPiece.isLocked) return;
-      const newShape = [];
-      for (let x = 0; x < currentPiece.shape[0].length; x++) {
-        newShape[x] = [];
-        for (let y = 0; y < currentPiece.shape.length; y++) {
-          newShape[x][y] = currentPiece.shape[currentPiece.shape.length - 1 - y][x];
-        }
+      if (current.isLocked) return;
+      const s = current.shape;
+      const r = s[0].map((_, x) => s.map(row => row[x]).reverse());
+      // Devorga tegsa biroz surib ko'ramiz (wall kick)
+      for (const dx of [0, -1, 1, -2, 2]) {
+        if (canMove(current, dx, 0, r)) { current.shape = r; current.x += dx; renderGrid(); return; }
       }
-      const tempShape = currentPiece.shape;
-      currentPiece.shape = newShape;
-      if (!canMove(currentPiece, 0, 0)) {
-        currentPiece.shape = tempShape;
+    }
+
+    function checkWord() {
+      if (gameOver) return;
+      if (current.isLocked && normalize(input.value) === normalize(currentWord)) {
+        input.value = '';
+        current.isLocked = false;
+        words++;
+        score += 10 * level;
+        Neo.sound.play('ok');
+        updateHUD();
       }
+      input.classList.toggle('bad', current.isLocked && !!input.value && !normalize(currentWord).startsWith(normalize(input.value)));
       renderGrid();
     }
 
-    function startGameLoop() {
-      if (!gameInterval) {
-        gameInterval = setInterval(() => {
-          if (!gameOver) {
-            movePieceDown();
-          }
-        }, 1000);
-      }
+    function endGame() {
+      gameOver = true;
+      clearInterval(timer);
+      renderGrid();
+      const res = Neo.stats.record('wordtetris', { score, lines, level });
+      $('restartButton').style.display = 'block';
+      Neo.gameOver({
+        title: "O'yin tugadi 🧱",
+        subtitle: `${level}-darajagacha yetdingiz`,
+        isBest: res.isBest,
+        rows: [['Ochko', score], ['Rekord', res.best], ['Qatorlar', lines], ["Yozilgan so'zlar", words]],
+        onRestart: initializeGame,
+      });
     }
 
-    function stopGameLoop() {
-      if (gameInterval) {
-        clearInterval(gameInterval);
-        gameInterval = null;
-      }
+    function initializeGame() {
+      Neo.closeOverlay();
+      grid = Array.from({ length: rows }, () => new Array(cols).fill(0));
+      score = 0; lines = 0; level = 1; words = 0;
+      bag = [];
+      current = createPiece();
+      next = createPiece();
+      currentWord = pickWord();
+      gameOver = false;
+      input.value = '';
+      input.disabled = false;
+      $('restartButton').style.display = 'block';
+      renderGrid();
+      renderNextPiece();
+      updateHUD();
+      restartTimer();
+      setTimeout(() => input.focus(), 50);
     }
 
-    function restartGame() {
-      stopGameLoop();
-      initializeGame();
-    }
-
-    function handleKeyPress(event) {
+    function handleKey(e) {
       if (gameOver) return;
-      switch (event.key) {
-        case 'ArrowLeft':
-          if (!currentPiece.isLocked && canMove(currentPiece, -1, 0)) {
-            currentPiece.x--;
-            renderGrid();
-          }
-          break;
-        case 'ArrowRight':
-          if (!currentPiece.isLocked && canMove(currentPiece, 1, 0)) {
-            currentPiece.x++;
-            renderGrid();
-          }
-          break;
-        case 'ArrowDown':
-          movePieceDown();
-          break;
-        case 'ArrowUp':
-          if (!currentPiece.isLocked) {
-            rotatePiece();
-          }
-          break;
-        case 'Enter':
-          if (!currentPiece.isLocked) {
-            placePiece();
-          }
-          break;
+      const actions = {
+        ArrowLeft: () => move(-1), ArrowRight: () => move(1), ArrowDown: () => { movePieceDown(); score += current && !current.isLocked ? 1 : 0; },
+        ArrowUp: rotatePiece, Enter: hardDrop,
+      };
+      if (actions[e.key]) {
+        e.preventDefault();
+        actions[e.key]();
+        if (e.key === 'Enter') input.value = '';
+      } else if (e.key === ' ' && !current.isLocked) {
+        e.preventDefault();
+        hardDrop();
       }
     }
 
-    window.onload = function() {
+    window.onload = function () {
+      Neo.addMuteButton();
+      buildBoard();
+      input.addEventListener('input', checkWord);
+      $('restartButton').addEventListener('click', initializeGame);
+      document.addEventListener('keydown', handleKey);
+      document.querySelectorAll('[data-ctl]').forEach(b => b.addEventListener('click', () => {
+        if (gameOver) return;
+        ({ left: () => move(-1), right: () => move(1), rot: rotatePiece, down: movePieceDown, drop: hardDrop })[b.dataset.ctl]();
+        input.focus();
+      }));
       initializeGame();
-      document.getElementById('wordInput').addEventListener('input', checkWord);
-      document.getElementById('restartButton').addEventListener('click', restartGame);
-      document.addEventListener('keydown', handleKeyPress);
     };
   </script>
 </body>
