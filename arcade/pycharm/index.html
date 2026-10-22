@@ -30,7 +30,14 @@
             <hr>
             <button data-act="save"><span>Saqlash</span><kbd>Ctrl+S</kbd></button>
             <button data-act="downloadFile"><span>Faylni yuklab olish</span></button>
-            <button data-act="downloadZip"><span>Loyihani .zip qilib olish</span></button>
+            <hr>
+            <button data-act="openFolder"><span>📂 Kompyuterdagi papkani ochish...</span></button>
+            <button data-act="saveToFolder"><span>💾 Qurilmaga saqlash (papkaga)...</span></button>
+            <button data-act="refreshFolder"><span>⟳ Papka bilan sinxronlash</span></button>
+            <button data-act="unlinkFolder"><span>Papkani uzish</span></button>
+            <hr>
+            <button data-act="downloadZip"><span>🗜 ZIP qilib yuklab olish</span></button>
+            <button data-act="importZip"><span>📦 ZIP'dan import...</span></button>
             <hr>
             <button data-act="resetProject"><span>Loyihani boshlang'ich holatga qaytarish</span></button>
             <button data-act="exit"><span>Arcade'ga qaytish</span></button>
@@ -84,6 +91,8 @@
         <button id="btnRun" class="tool run" title="Ishga tushirish (Shift+F10)"><i class="fa-solid fa-play"></i></button>
         <button id="btnTests" class="tool test" title="Testlarni ishga tushirish (Ctrl+Shift+T)"><i class="fa-solid fa-flask-vial"></i></button>
         <button id="btnFormat" class="tool" title="Formatlash (Ctrl+Alt+L)"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+        <button class="tool" data-act="saveToDevice" title="Qurilmaga saqlash (papka yoki ZIP)"><i class="fa-solid fa-floppy-disk"></i></button>
+        <button class="tool" data-act="downloadZip" title="ZIP qilib yuklab olish"><i class="fa-solid fa-file-zipper"></i></button>
       </div>
     </header>
 
@@ -170,6 +179,7 @@
     <!-- Holat satri -->
     <footer class="statusbar">
       <span id="pyStatus"><span class="dot loading"></span> Python yuklanmoqda...</span>
+      <span id="folderStatus" class="folder-status" role="button" tabindex="0"><i class="fa-solid fa-database"></i> IndexedDB</span>
       <span class="grow" id="statusMsg"></span>
       <span id="cursorPos">1:1</span>
       <span>LF</span>
@@ -193,6 +203,7 @@
   </div>
   <div class="toast" id="toast"></div>
   <input type="file" id="fileUpload" multiple hidden>
+  <input type="file" id="zipUpload" accept=".zip,application/zip" hidden>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
@@ -209,6 +220,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
   <script src="app.js"></script>
 </body>

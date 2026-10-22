@@ -24,6 +24,7 @@
     sudoku: { title: 'Sudoku', icon: 'fa-puzzle-piece', url: 'arcade/sudoku.html' },
     jumanji: { title: 'Jumanchi', icon: 'fa-dice-six', url: 'arcade/jumanji.html' },
     lessons: { title: 'Darslar', icon: 'fa-graduation-cap', url: 'lessons.html' },
+    python: { title: 'Python kursi', icon: 'fa-laptop-code', url: 'python/index.html' },
   };
 
   /* ---------- Xavfsiz localStorage ---------- */
@@ -232,7 +233,8 @@
     injectCSS();
     const path = location.pathname.replace(/\\/g, '/');
     let section = 'games.html';
-    if (/\/(index\.html)?$/.test(path) && !/arcade\//.test(path)) section = 'index.html';
+    if (/\/python\//.test(path)) section = 'lessons.html';
+    else if (/\/(index\.html)?$/.test(path) && !/arcade\//.test(path)) section = 'index.html';
     else if (/lessons?\.html$|lesson\.html/.test(path)) section = 'lessons.html';
     else if (/profile\.html$/.test(path)) section = 'profile.html';
     else if (/result\.html$/.test(path)) section = 'index.html';

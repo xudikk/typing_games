@@ -308,7 +308,7 @@
     .level-line { margin: 8px 0 6px; color: var(--accent); font-weight: 700; }
     .xp { height: 10px; max-width: 420px; background: rgba(255, 255, 255, .1); border-radius: 6px; overflow: hidden; }
     #xpBar { height: 100%; width: 0; background: linear-gradient(90deg, #22c55e, #facc15); transition: width .6s; }
-    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+    .cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 26px; }
     .card { background: rgba(15, 23, 42, .55); border: 1px solid rgba(165, 180, 252, .25); border-radius: 16px; padding: 18px; text-align: center; }
     .card b { display: block; font-size: 2.2rem; color: var(--secondary); }
     .card span { color: #c7d2fe; font-size: .95rem; }
@@ -381,7 +381,8 @@
         <div class="card"><b id="sTyping">—</b><span>Eng yaxshi WPM</span></div>
         <div class="card"><b id="sPlays">0</b><span>Jami o'yinlar</span></div>
         <div class="card"><b id="sGames">0</b><span>Sinab ko'rilgan o'yinlar</span></div>
-        <div class="card"><b id="sLessons">0</b><span>Tugatilgan darslar</span></div>
+        <div class="card"><b id="sLessons">0</b><span>Yozish darslari</span></div>
+        <div class="card"><b id="sPython">0</b><span>Python darslari</span></div>
       </div>
 
       <section class="pf-section">
@@ -438,9 +439,13 @@
         try { return Object.keys(JSON.parse(localStorage.getItem('neo_lessons_v1')) || {}).length; } catch (e) { return 0; }
       }
 
+      function pythonDone() {
+        try { return Object.values((JSON.parse(localStorage.getItem('neo_python_v1')) || {}).lessons || {}).filter(l => l.done).length; } catch (e) { return 0; }
+      }
+
       function render() {
         const all = Neo.stats.all();
-        const ids = Object.keys(all).filter(id => Neo.games[id]);
+        const ids = Object.keys(all).filter(id => Neo.games[id] && id !== 'python');
         const plays = ids.reduce((a, id) => a + (all[id].plays || 0), 0);
         const typing = all.typing;
         const done = lessonsDone();
@@ -448,16 +453,18 @@
         $('sPlays').textContent = plays;
         $('sGames').textContent = `${ids.filter(i => i !== 'typing' && i !== 'lessons').length}/16`;
         $('sLessons').textContent = `${done}/17`;
+        const pyDone = pythonDone();
+        $('sPython').textContent = `${pyDone}/26`;
 
         // Daraja (XP): har bir o'yin 10 XP, har bir dars 50 XP
-        const xp = plays * 10 + done * 50 + (typing && typing.best ? typing.best * 2 : 0);
+        const xp = plays * 10 + done * 50 + pyDone * 80 + (typing && typing.best ? typing.best * 2 : 0);
         const level = Math.floor(Math.sqrt(xp / 40)) + 1;
         const cur = 40 * (level - 1) ** 2, next = 40 * level ** 2;
         $('levelLine').textContent = `${level}-daraja · ${xp} XP`;
         $('xpBar').style.width = Math.min(100, (xp - cur) / (next - cur) * 100) + '%';
 
         // Jadval
-        const rows = Object.entries(Neo.games).filter(([id]) => id !== 'lessons').map(([id, g]) => {
+        const rows = Object.entries(Neo.games).filter(([id]) => id !== 'lessons' && id !== 'python').map(([id, g]) => {
           const s = all[id];
           const unit = id === 'typing' || id === 'fastcoder' ? ' WPM' : ['englishquiz', 'translation', 'codingquiz'].includes(id) ? '%' : '';
           return `<tr class="${s ? '' : 'muted'}"><td><a href="${g.url}"><i class="fas ${g.icon}"></i> ${esc(g.title)}</a></td>
@@ -466,7 +473,7 @@
         $('statsBody').innerHTML = rows.join('');
 
         renderChart(typing ? typing.history || [] : []);
-        renderBadges(all, done);
+        renderBadges(all, done, pyDone);
       }
 
       function renderChart(hist) {
@@ -491,7 +498,7 @@
           <polyline points="${pts}" class="line"/>${dots}</svg>`;
       }
 
-      function renderBadges(all, done) {
+      function renderBadges(all, done, pyDone) {
         const t = all.typing || {};
         const list = [
           ['⌨️', 'Birinchi qadam', 'Birinchi tezlik testini topshirish', (t.plays || 0) >= 1],
@@ -504,6 +511,8 @@
           ['🧩', 'Mantiq ustasi', 'Sudoku yechish', (all.sudoku && all.sudoku.wins) > 0],
           ['📚', "O'quvchi", '5 ta darsni tugatish', done >= 5],
           ['🎓', 'Bitiruvchi', 'Barcha 17 darsni tugatish', done >= 17],
+          ['🐍', 'Pythonchi', '5 ta Python darsini tugatish', pyDone >= 5],
+          ['🧙', 'Python ustasi', "Python kursini to'liq tugatish", pyDone >= 26],
         ];
         $('badges').innerHTML = list.map(([ic, name, desc, ok]) =>
           `<div class="badge ${ok ? 'on' : ''}" title="${esc(desc)}"><span>${ic}</span><b>${esc(name)}</b><small>${esc(desc)}</small></div>`).join('');

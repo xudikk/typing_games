@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python kursi — NeoCoder</title>
+  <meta name="description" content="Noldan professional darajagacha: 26 ta qadamma-qadam Python darsi, brauzerda ishlaydigan misollar va avtomatik tekshiriladigan topshiriqlar.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="course.css">
+</head>
+<body>
+  <header class="header">
+    <div class="logo">
+      <div class="brand-icon"><i class="fas fa-rocket"></i></div>
+      <span class="brand-text">NeoCoder</span>
+    </div>
+    <nav class="nav-links">
+      <button class="nav-btn"><a href="../index.html">Bosh sahifa</a></button>
+      <button class="nav-btn"><a href="../lessons.html">Darslar</a></button>
+      <button class="nav-btn"><a href="../games.html">Arcade</a></button>
+      <button class="nav-btn"><a href="../profile.html">Profil</a></button>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-head">
+        <a href="../lessons.html" class="back">← Darslar</a>
+        <h2><i class="fab fa-python"></i> Python kursi</h2>
+        <div class="overall"><div id="overallBar"></div></div>
+        <p id="overallText">0/26 dars</p>
+      </div>
+      <nav id="toc"></nav>
+    </aside>
+
+    <main class="content" id="content">
+      <button class="toc-toggle" id="tocToggle"><i class="fa-solid fa-list"></i> Mundarija</button>
+      <div id="view"></div>
+    </main>
+  </div>
+
+  <div class="py-status" id="pyStatus"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+  <script src="../assets/neo.js"></script>
+  <script src="course1.js"></script>
+  <script src="course2.js"></script>
+  <script src="course.js"></script>
+</body>
+</html>

@@ -97,7 +97,55 @@ let py = null, pyReady = false, running = false;
 let jediReady = false, pyflakesReady = false;
 let writtenPaths = new Set();
 
-function load() {
+/* ---------- IndexedDB: fayllar foydalanuvchi qurilmasida, brauzer bazasida saqlanadi ---------- */
+const IDB_NAME = 'pycharm_online', IDB_STORE = 'kv';
+let idbPromise = null;
+function idb() {
+  if (!idbPromise) {
+    idbPromise = new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('IndexedDB yo\'q'));
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  return idbPromise;
+}
+async function idbGet(key) {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction(IDB_STORE).objectStore(IDB_STORE).get(key);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbDel(key) {
+  const db = await idb();
+  return new Promise(resolve => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+let storageKind = 'IndexedDB';
+
+async function load() {
+  try {
+    const s = await idbGet('project');
+    if (s && s.files && Object.keys(s.files).length) { state = Object.assign(state, s); return; }
+  } catch (e) { storageKind = 'localStorage'; }
+  // Eski versiyadan (localStorage) ko'chirib olish
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) {
@@ -118,7 +166,15 @@ function resetState() {
 let saveTimer;
 function persist() {
   for (const p in docs) if (p in state.files) state.files[p] = docs[p].getValue();
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* e'tiborsiz */ }
+  if (storageKind === 'IndexedDB') {
+    idbSet('project', JSON.parse(JSON.stringify(state))).catch(() => {
+      storageKind = 'localStorage';
+      persist();
+    });
+  } else {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* e'tiborsiz */ }
+  }
+  folderSyncSoon();
 }
 function scheduleSave() {
   clearTimeout(saveTimer);
@@ -1048,19 +1104,319 @@ function downloadFile(p = state.active) {
   persist();
   downloadBlob(new Blob([state.files[p]], { type: 'text/plain' }), baseName(p));
 }
-async function downloadZip() {
-  if (!await ensureReady()) return;
-  persist(); syncFS();
-  py.runPython(`
-import zipfile, os
-with zipfile.ZipFile('/tmp/project.zip', 'w', zipfile.ZIP_DEFLATED) as z:
-    for d, _, fs in os.walk(ROOT):
-        if '__pycache__' in d: continue
-        for f in fs:
-            full = os.path.join(d, f)
-            z.write(full, os.path.join('project', os.path.relpath(full, ROOT)))
-`);
-  downloadBlob(new Blob([py.FS.readFile('/tmp/project.zip')], { type: 'application/zip' }), 'project.zip');
+/* ---------- ZIP (Python kerak emas — fflate kutubxonasi) ---------- */
+function projectName() {
+  return (dirHandle && dirHandle.name) || 'project';
+}
+function downloadZip() {
+  persist();
+  if (!window.fflate) return toast('ZIP kutubxonasi yuklanmadi. Internetni tekshiring.', 'error');
+  const name = projectName();
+  const entries = {};
+  for (const [p, content] of Object.entries(state.files)) entries[`${name}/${p}`] = fflate.strToU8(content);
+  for (const f of state.folders) if (!Object.keys(state.files).some(p => p.startsWith(f + '/'))) entries[`${name}/${f}/`] = new Uint8Array(0);
+  const zip = fflate.zipSync(entries, { level: 6 });
+  downloadBlob(new Blob([zip], { type: 'application/zip' }), `${name}.zip`);
+  toast(`<i class="fa-solid fa-file-zipper"></i> ${name}.zip yuklab olindi`, 'success');
+}
+function importZip() {
+  if (!window.fflate) return toast('ZIP kutubxonasi yuklanmadi. Internetni tekshiring.', 'error');
+  $('#zipUpload').click();
+}
+$('#zipUpload').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  let entries;
+  try { entries = fflate.unzipSync(new Uint8Array(await file.arrayBuffer())); }
+  catch (err) { return toast("ZIP faylni o'qib bo'lmadi", 'error'); }
+  const files = {};
+  const dec = new TextDecoder('utf-8', { fatal: true });
+  let skipped = 0;
+  for (const [p, data] of Object.entries(entries)) {
+    if (p.endsWith('/') || skipName(p)) continue;
+    try { files[p] = dec.decode(data); } catch (err) { skipped++; }
+  }
+  const paths = Object.keys(files);
+  if (!paths.length) return toast("ZIP ichida matnli fayl topilmadi", 'error');
+  // Hamma fayl bitta papka ichida bo'lsa, o'sha papkani olib tashlaymiz
+  const first = paths[0].split('/')[0];
+  if (paths.every(p => p.startsWith(first + '/'))) {
+    for (const p of paths) { files[p.slice(first.length + 1)] = files[p]; delete files[p]; }
+  }
+  const replace = await modal({
+    title: 'ZIP import',
+    body: `<b>${Object.keys(files).length}</b> ta fayl topildi${skipped ? ` (${skipped} ta ikkilik fayl o'tkazib yuborildi)` : ''}.<br><br>
+      <b>OK</b> — joriy loyihani shu ZIP bilan almashtirish.<br><b>Bekor qilish</b> — fayllarni joriy loyihaga qo'shish.`,
+    okText: 'Almashtirish',
+  });
+  if (replace) replaceProject(files);
+  else mergeFiles(files);
+  toast(`<i class="fa-solid fa-check"></i> ZIP import qilindi`, 'success');
+});
+
+/* ---------- Kompyuterdagi papka (File System Access API) ---------- */
+const FSA_OK = 'showDirectoryPicker' in window;
+const SKIP_DIRS = new Set(['__pycache__', 'node_modules', '.git', '.idea', '.vscode', 'venv', '.venv', 'env', 'dist', 'build']);
+const MAX_FILE = 1024 * 1024;
+let dirHandle = null;     // ulangan papka
+let folderLinked = false; // ruxsat berilganmi
+let folderBusy = false;
+function skipName(p) {
+  return p.split('/').some(part => SKIP_DIRS.has(part) || part.startsWith('.') && part !== '.gitignore' && part !== '.env.example');
+}
+
+async function readFolder(handle, prefix = '', out = { files: {}, folders: [], skipped: 0 }) {
+  for await (const [name, h] of handle.entries()) {
+    const path = prefix ? `${prefix}/${name}` : name;
+    if (skipName(path)) continue;
+    if (h.kind === 'directory') {
+      out.folders.push(path);
+      await readFolder(h, path, out);
+    } else {
+      if (Object.keys(out.files).length >= 800) { out.skipped++; continue; }
+      const f = await h.getFile();
+      if (f.size > MAX_FILE) { out.skipped++; continue; }
+      try { out.files[path] = new TextDecoder('utf-8', { fatal: true }).decode(await f.arrayBuffer()); }
+      catch (e) { out.skipped++; }
+    }
+  }
+  return out;
+}
+async function dirFor(path, create) {
+  let d = dirHandle;
+  const parts = path.split('/');
+  parts.pop();
+  for (const part of parts) d = await d.getDirectoryHandle(part, { create });
+  return d;
+}
+async function writeDiskFile(path, content) {
+  const d = await dirFor(path, true);
+  const fh = await d.getFileHandle(baseName(path), { create: true });
+  const w = await fh.createWritable();
+  await w.write(content);
+  await w.close();
+}
+async function removeDiskFile(path) {
+  try { const d = await dirFor(path, false); await d.removeEntry(baseName(path)); } catch (e) { /* allaqachon yo'q */ }
+}
+
+function updateFolderStatus(msg) {
+  const el = $('#folderStatus');
+  if (!dirHandle) { el.innerHTML = `<i class="fa-solid fa-database"></i> ${storageKind}`; el.title = "Fayllar shu brauzerda (qurilmangizda) saqlanadi"; el.className = ''; return; }
+  if (!folderLinked) {
+    el.innerHTML = `<i class="fa-solid fa-link-slash"></i> 📁 ${esc(dirHandle.name)} — ulanish uchun bosing`;
+    el.className = 'warn';
+    el.title = 'Brauzer papkaga qayta ruxsat so\'raydi';
+    return;
+  }
+  el.className = 'ok';
+  el.innerHTML = `<i class="fa-solid fa-folder-open"></i> ${esc(dirHandle.name)}${msg ? ' · ' + msg : ''}`;
+  el.title = 'Fayllar kompyuteringizdagi shu papkaga avtomatik yoziladi';
+}
+
+let folderTimer;
+function folderSyncSoon() {
+  if (!folderLinked) return;
+  clearTimeout(folderTimer);
+  folderTimer = setTimeout(syncFolder, 700);
+}
+// Brauzerdagi fayllarni papkaga yozish (faqat o'zgarganlarini)
+async function syncFolder() {
+  if (!folderLinked || folderBusy) return;
+  folderBusy = true;
+  try {
+    state.synced = state.synced || {};
+    let n = 0;
+    for (const [p, content] of Object.entries(state.files)) {
+      const val = docs[p] ? docs[p].getValue() : content;
+      if (state.synced[p] !== val) { await writeDiskFile(p, val); state.synced[p] = val; n++; }
+    }
+    for (const p of Object.keys(state.synced)) {
+      if (!(p in state.files)) { await removeDiskFile(p); delete state.synced[p]; n++; }
+    }
+    for (const f of state.folders) await dirFor(f + '/x', true);
+    if (n) idbSet('project', JSON.parse(JSON.stringify(state))).catch(() => {});
+    updateFolderStatus('saqlandi ' + new Date().toLocaleTimeString().slice(0, 5));
+  } catch (e) {
+    if (e.name === 'NotAllowedError' || e.name === 'SecurityError') { folderLinked = false; updateFolderStatus(); }
+    else toast('Papkaga yozishda xato: ' + esc(e.message), 'error');
+  } finally {
+    folderBusy = false;
+  }
+}
+
+function replaceProject(files, folders = []) {
+  for (const k in docs) delete docs[k];
+  for (const k in problems) { clearLint(k); delete problems[k]; }
+  state.files = files;
+  state.folders = folders;
+  state.expanded = { '': true };
+  const pyFiles = Object.keys(files).filter(isPy).sort();
+  const main = ['main.py', 'app.py', 'manage.py'].find(f => f in files) || pyFiles[0] || Object.keys(files)[0] || null;
+  state.open = main ? [main] : [];
+  state.active = main;
+  state.runConfig = '';
+  if (main) openFile(main); else renderAll();
+  persist(); syncFS(); renderProblems();
+}
+function mergeFiles(files) {
+  for (const [p, c] of Object.entries(files)) { state.files[p] = c; if (docs[p]) docs[p].setValue(c); }
+  renderAll(); persist(); syncFS();
+}
+
+function needFSA() {
+  if (FSA_OK) return true;
+  modal({
+    title: "Brauzeringiz papka bilan ishlashni qo'llamaydi",
+    body: "Kompyuterdagi papkaga to'g'ridan-to'g'ri saqlash Chrome, Edge yoki Opera brauzerlarida (kompyuterda) ishlaydi.<br><br>Hozircha <b>ZIP yuklab olish</b> va <b>ZIP import</b>dan foydalaning — fayllaringiz baribir shu brauzerda avtomatik saqlanadi.",
+    cancel: false,
+  });
+  return false;
+}
+
+async function linkFolder(handle) {
+  dirHandle = handle;
+  folderLinked = true;
+  await idbSet('dirHandle', handle).catch(() => {});
+  updateFolderStatus();
+}
+
+// Papkani ochish: papkadagi fayllar IDE'ga yuklanadi
+async function openFolder() {
+  if (!needFSA()) return;
+  let h;
+  try { h = await showDirectoryPicker({ id: 'pycharm-online', mode: 'readwrite' }); } catch (e) { return; }
+  status('Papka o\'qilmoqda...');
+  const data = await readFolder(h);
+  const count = Object.keys(data.files).length;
+  if (!count) {
+    const ok = await modal({ title: "Papka bo'sh", body: `<code>${esc(h.name)}</code> papkasida fayl yo'q. Joriy loyihani shu papkaga saqlaymizmi?`, okText: 'Saqlash' });
+    if (!ok) return;
+    await linkFolder(h);
+    state.synced = {};
+    await syncFolder();
+    toast(`📁 Loyiha <b>${esc(h.name)}</b> papkasiga saqlandi`, 'success');
+    return;
+  }
+  const ok = await modal({
+    title: 'Papkani ochish',
+    body: `<code>${esc(h.name)}</code> papkasidan <b>${count}</b> ta fayl ochiladi${data.skipped ? ` (${data.skipped} ta katta/ikkilik fayl o'tkazib yuborildi)` : ''}.<br>Brauzerdagi joriy loyiha shu papka bilan almashtiriladi.<br><br>Keyingi o'zgarishlar papkaga avtomatik yoziladi.`,
+    okText: 'Ochish',
+  });
+  if (!ok) return;
+  await linkFolder(h);
+  state.synced = { ...data.files };
+  replaceProject(data.files, data.folders);
+  toast(`📁 <b>${esc(h.name)}</b> ochildi`, 'success');
+}
+
+// Qurilmaga saqlash: joriy loyiha tanlangan papkaga yoziladi
+async function saveToFolder() {
+  if (!needFSA()) return;
+  let h;
+  try { h = await showDirectoryPicker({ id: 'pycharm-online', mode: 'readwrite' }); } catch (e) { return; }
+  let existing = 0;
+  for await (const _ of h.values()) { existing++; break; }
+  if (existing) {
+    const ok = await modal({ title: 'Papkaga saqlash', body: `<code>${esc(h.name)}</code> papkasi bo'sh emas. Bir xil nomli fayllar ustidan yoziladi. Davom etilsinmi?`, okText: 'Saqlash' });
+    if (!ok) return;
+  }
+  persist();
+  await linkFolder(h);
+  state.synced = {};
+  await syncFolder();
+  toast(`💾 Loyiha <b>${esc(h.name)}</b> papkasiga saqlandi. Endi o'zgarishlar avtomatik yoziladi.`, 'success');
+}
+
+// Papka va brauzerdagi nusxani solishtirib birlashtirish
+async function reconcileFolder() {
+  const data = await readFolder(dirHandle);
+  state.synced = state.synced || {};
+  let fromDisk = 0, conflicts = 0;
+  for (const [p, disk] of Object.entries(data.files)) {
+    const mine = p in state.files ? (docs[p] ? docs[p].getValue() : state.files[p]) : undefined;
+    const base = state.synced[p];
+    if (mine === disk) { state.synced[p] = disk; continue; }
+    if (mine === undefined || mine === base) {
+      // Diskda yangiroq versiya (masalan, VS Code'da o'zgartirilgan)
+      state.files[p] = disk;
+      if (docs[p]) docs[p].setValue(disk);
+      state.synced[p] = disk;
+      fromDisk++;
+    } else if (base !== undefined && disk !== base) {
+      // Ikkala joyda ham o'zgargan — diskdagini olamiz, brauzerdagini nusxa qilib saqlaymiz
+      const copy = p.replace(/(\.\w+)?$/, '.brauzer$1');
+      state.files[copy] = mine;
+      state.files[p] = disk;
+      if (docs[p]) docs[p].setValue(disk);
+      state.synced[p] = disk;
+      conflicts++;
+    }
+  }
+  // Diskda o'chirilgan (brauzerda o'zgarmagan) fayllarni olib tashlaymiz
+  for (const p of Object.keys(state.synced)) {
+    if (!(p in data.files) && p in state.files && state.files[p] === state.synced[p]) {
+      delete state.files[p]; delete docs[p]; delete state.synced[p];
+      state.open = state.open.filter(o => o !== p);
+      if (state.active === p) state.active = state.open[0] || null;
+    }
+  }
+  for (const f of data.folders) if (!state.folders.includes(f)) state.folders.push(f);
+  if (state.active && editor.getDoc().__path !== state.active) editor.swapDoc(getDoc(state.active));
+  renderAll();
+  persist();
+  syncFS();
+  await syncFolder();
+  if (fromDisk || conflicts) toast(`📁 Papkadan ${fromDisk} ta fayl yangilandi${conflicts ? `, ${conflicts} ta ziddiyat (.brauzer nusxalari yaratildi)` : ''}`, conflicts ? 'error' : 'success');
+}
+
+async function reconnectFolder() {
+  if (!dirHandle) return;
+  try {
+    const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return;
+  } catch (e) { return; }
+  folderLinked = true;
+  updateFolderStatus();
+  await reconcileFolder();
+}
+async function refreshFolder() {
+  if (!dirHandle) return needFSA() && toast('Avval "Kompyuterdagi papkani ochish" orqali papka tanlang', '');
+  if (!folderLinked) return reconnectFolder();
+  await reconcileFolder();
+  toast('📁 Papka bilan sinxronlandi', 'success');
+}
+async function unlinkFolder() {
+  if (!dirHandle) return;
+  const ok = await modal({ title: 'Papkani uzish', body: `Fayllar brauzerda qoladi, lekin <code>${esc(dirHandle.name)}</code> papkasiga boshqa yozilmaydi.`, okText: 'Uzish' });
+  if (!ok) return;
+  dirHandle = null;
+  folderLinked = false;
+  state.synced = {};
+  await idbDel('dirHandle');
+  persist();
+  updateFolderStatus();
+}
+async function restoreFolder() {
+  if (!FSA_OK || storageKind !== 'IndexedDB') return updateFolderStatus();
+  try {
+    const h = await idbGet('dirHandle');
+    if (h) {
+      dirHandle = h;
+      folderLinked = (await h.queryPermission({ mode: 'readwrite' })) === 'granted';
+      if (folderLinked) await reconcileFolder();
+    }
+  } catch (e) { dirHandle = null; }
+  updateFolderStatus();
+}
+// Tez saqlash tugmasi: ulangan papka bo'lsa — darhol yozadi, bo'lmasa papka tanlatadi yoki ZIP beradi
+async function saveToDevice() {
+  persist();
+  if (folderLinked) { await syncFolder(); return toast('💾 Papkaga saqlandi', 'success'); }
+  if (dirHandle) return reconnectFolder();
+  if (FSA_OK) return saveToFolder();
+  downloadZip();
 }
 $('#fileUpload').addEventListener('change', async e => {
   const dir = state.active ? dirName(state.active) : '';
@@ -1086,9 +1442,20 @@ const actions = {
   newFile: () => newFile(),
   newFolder: () => newFolder(state.active ? dirName(state.active) : ''),
   upload: () => $('#fileUpload').click(),
-  save: () => { persist(); syncFS(); status('Barcha fayllar saqlandi'); toast('<i class="fa-solid fa-check"></i> Saqlandi', 'success'); },
+  save: () => {
+    persist(); syncFS();
+    if (folderLinked) syncFolder();
+    status(folderLinked ? `Saqlandi: brauzer + 📁 ${dirHandle.name}` : `Saqlandi (${storageKind})`);
+    toast('<i class="fa-solid fa-check"></i> Saqlandi', 'success');
+  },
   downloadFile: () => downloadFile(),
   downloadZip,
+  importZip,
+  openFolder,
+  saveToFolder,
+  saveToDevice,
+  refreshFolder,
+  unlinkFolder,
   resetProject: async () => {
     if (!await modal({ title: 'Loyihani tiklash', body: "Barcha fayllaringiz o'chib, namuna loyiha qaytariladi. Davom etilsinmi?", okText: 'Tiklash' })) return;
     for (const k in docs) delete docs[k];
@@ -1488,13 +1855,38 @@ async function loadExtras() {
 }
 
 /* ================= Boshlash ================= */
-load();
-makeEditor();
-setFont(state.fontSize || 14);
-state.open = state.open.filter(p => p in state.files);
-if (state.active && !(state.active in state.files)) state.active = state.open[0] || null;
-if (state.active) openFile(state.active); else renderAll();
-if (innerWidth <= 760) toggleProject(false);
-renderProblems();
-window.addEventListener('beforeunload', persist);
-initPython();
+// Darslardan "PyCharm'da ochish" orqali kelgan kod
+function takeHandoff() {
+  try {
+    const h = JSON.parse(localStorage.getItem('pycharm_handoff'));
+    localStorage.removeItem('pycharm_handoff');
+    if (!h || !h.code) return null;
+    let name = 'darslar/' + (h.name || 'mashq').replace(/[^\w-]+/g, '_') + '.py';
+    for (let i = 2; name in state.files && state.files[name] !== h.code; i++) name = name.replace(/(_\d+)?\.py$/, `_${i}.py`);
+    state.files[name] = h.code;
+    state.expanded.darslar = true;
+    return name;
+  } catch (e) { return null; }
+}
+(async function boot() {
+  await load();
+  makeEditor();
+  setFont(state.fontSize || 14);
+  state.open = state.open.filter(p => p in state.files);
+  if (state.active && !(state.active in state.files)) state.active = state.open[0] || null;
+  const handed = takeHandoff();
+  if (handed) state.active = handed;
+  if (state.active) openFile(state.active); else renderAll();
+  if (innerWidth <= 760) toggleProject(false);
+  renderProblems();
+  window.addEventListener('beforeunload', () => {
+    persist();
+    // Brauzer yopilayotganda IndexedDB yozuvi tugamasligi mumkin — zaxira nusxa
+    try { localStorage.setItem(STORE_KEY + '_backup', JSON.stringify({ files: state.files, at: Date.now() })); } catch (e) { /* katta loyiha */ }
+  });
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  $('#folderStatus').addEventListener('click', () => { if (dirHandle && !folderLinked) reconnectFolder(); else if (!dirHandle) actions.openFolder(); });
+  await restoreFolder();
+  if (handed) toast(`📘 Darsdagi kod <b>${esc(handed)}</b> fayliga ochildi`, 'success');
+  initPython();
+})();

@@ -308,3 +308,9 @@ li.CodeMirror-hint-active .hint-type { color: #dde; }
   .menu { padding: 4px 6px; }
   #runConfig { max-width: 110px; }
 }
+
+/* Saqlash holati */
+.folder-status { cursor: pointer; padding: 0 6px; border-radius: 4px; }
+.folder-status:hover { background: #4c5052; color: var(--text); }
+.folder-status.ok { color: #8fd49a; }
+.folder-status.warn { color: var(--yellow); }
