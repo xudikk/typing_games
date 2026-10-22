@@ -87,6 +87,13 @@
       :root{--cell:44px}
       .keypad{grid-template-columns:repeat(3,70px)}
     }
+
+    /* --- Yangilanishlar --- */
+    .cell.wrong .value{color:#f87171 !important}
+    .info-row{display:flex;justify-content:space-between;margin-top:12px;font-weight:700;color:#c7d2fe;gap:10px}
+    .key{position:relative}
+    .key[data-left]::after{content:attr(data-left);position:absolute;top:3px;right:7px;font-size:.7rem;opacity:.6}
+    .key.done{opacity:.3;pointer-events:none}
   </style>
 </head>
 <body>
@@ -110,13 +117,16 @@
       <h1 class="title">Sudoku</h1>
 
       <div class="toolbar">
-        <select id="difficulty" class="select" title="Qiyinlik" hidden>
-
+        <select id="difficulty" class="select" title="Qiyinlik">
+          <option value="easy">Oson</option>
+          <option value="medium" selected>O'rta</option>
+          <option value="hard">Qiyin</option>
         </select>
         <button class="btn" id="newBtn">Yangi o‘yin</button>
         <button class="btn alt" id="checkBtn">Tekshirish</button>
         <button class="btn" id="notesBtn">Eslatma rejimi: O‘CHIQLI</button>
         <button class="btn alt" id="hintBtn">Yordam (3)</button>
+        <button class="btn" id="undoBtn">↶ Ortga</button>
       </div>
 
       <div class="wrap">
@@ -139,6 +149,7 @@
             <div class="key alt" data-action="erase">Delete</div>
           </div>
 
+          <div class="info-row"><span>⏱ <b id="timer">00:00</b></span><span>❌ Xatolar: <b id="mistakes">0</b>/3</span></div>
           <div id="status" class="status"></div>
         </div>
       </div>
@@ -150,12 +161,13 @@
   <!-- G‘OLIB MODAL -->
   <div class="modal" id="winModal">
     <div class="content">
-      <h2>Tabriklayman! 🎉</h2>
-      <p>Siz Sudoku’ni to‘g‘ri yechdingiz.</p>
+      <h2 id="winTitle">Tabriklayman! 🎉</h2>
+      <p id="winText">Siz Sudoku’ni to‘g‘ri yechdingiz.</p>
       <button class="btn" id="playAgain">Yana o‘ynash</button>
     </div>
   </div>
 
+  <script src="../assets/neo.js"></script>
   <script>
     // ======== Holat ========
     let puzzle = Array.from({length:9},()=>Array(9).fill(0));     // 0=bo'sh
@@ -165,6 +177,34 @@
     let selected = {r:0, c:0};
     let notesMode = false;
     let hintLeft = 3;
+    let mistakes = 0;
+    let seconds = 0;
+    let finished = false;
+    let undoStack = [];
+    const SAVE_KEY = 'sudoku_save_v1';
+    const MAX_MISTAKES = 3;
+    setInterval(() => {
+      if (finished || document.hidden || !solution[0][0]) return;
+      seconds++;
+      document.getElementById('timer').textContent = fmtTime(seconds);
+      if (seconds % 5 === 0) saveGame();
+    }, 1000);
+    function fmtTime(t) { return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); }
+    function saveGame() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ puzzle, solution, given, notes: notes.map(r => r.map(s => [...s])), hintLeft, mistakes, seconds, difficulty: diffSel.value, finished }));
+      } catch (e) { /* e'tiborsiz */ }
+    }
+    function loadGame() {
+      try {
+        const d = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!d || d.finished) return false;
+        puzzle = d.puzzle; solution = d.solution; given = d.given;
+        notes = d.notes.map(r => r.map(a => new Set(a)));
+        hintLeft = d.hintLeft; mistakes = d.mistakes; seconds = d.seconds; diffSel.value = d.difficulty;
+        return true;
+      } catch (e) { return false; }
+    }
 
     // ======== Elementlar ========
     const boardEl = document.getElementById('board');
@@ -293,6 +333,7 @@
           if(puzzle[r][c]!==0){
             valDiv.textContent = puzzle[r][c];
             cell.classList.add(given[r][c] ? 'given' : 'user');
+            if(!given[r][c] && puzzle[r][c]!==solution[r][c]) cell.classList.add('wrong');
           }
 
           const notesDiv = document.createElement('div');
@@ -380,8 +421,18 @@
 
     function cellAt(r,c){ return boardEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`); }
 
+    function pushUndo(){
+      undoStack.push({ puzzle: cloneGrid(puzzle), notes: notes.map(row => row.map(s => new Set(s))) });
+      if (undoStack.length > 200) undoStack.shift();
+    }
     function setValue(r,c,val){
-      if(given[r][c]) return;
+      if(given[r][c] || finished) return;
+      if(puzzle[r][c]===val) return;
+      pushUndo();
+      if(val!==0 && val!==solution[r][c]){
+        mistakes++;
+        Neo.sound.play('error');
+      } else if(val!==0) Neo.sound.play('click');
       // Clear notes on set
       notes[r][c].clear();
       puzzle[r][c]=val;
@@ -392,11 +443,14 @@
         for(let i=0;i<3;i++) for(let j=0;j<3;j++){ notes[br+i][bc+j].delete(val); }
       }
       renderBoard();
+      saveGame();
+      if(mistakes>=MAX_MISTAKES) return loseGame();
       checkWin();
     }
 
     function toggleNote(r,c,val){
-      if(given[r][c] || puzzle[r][c]!==0) return;
+      if(given[r][c] || puzzle[r][c]!==0 || finished) return;
+      pushUndo();
       const s = notes[r][c];
       if(s.has(val)) s.delete(val); else s.add(val);
       renderBoard();
@@ -409,6 +463,15 @@
       notesBtn.textContent = `Eslatma rejimi: ${notesMode ? 'YOQILGAN' : 'O‘CHIQLI'}`;
       hintBtn.textContent = `Yordam (${hintLeft})`;
       hintBtn.disabled = hintLeft<=0;
+      document.getElementById('mistakes').textContent = mistakes;
+      // Har bir raqamdan nechtasi qolganini ko'rsatamiz
+      const cnt = Array(10).fill(0);
+      for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(puzzle[r][c] && puzzle[r][c]===solution[r][c]) cnt[puzzle[r][c]]++;
+      document.querySelectorAll('.keypad .key:not(.alt)').forEach(k=>{
+        const d=+k.dataset.d;
+        k.classList.toggle('done', cnt[d]>=9);
+        k.dataset.left = 9-cnt[d];
+      });
     }
 
     function onDigit(d){
@@ -427,6 +490,8 @@
     // Klaviatura
     document.addEventListener('keydown', (e)=>{
       const key = e.key;
+      if((e.ctrlKey||e.metaKey) && key.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
+      if(e.target.tagName==='SELECT') return;
       if(key>='1' && key<='9'){ onDigit(+key); }
       else if(key==='Backspace' || key==='Delete'){ onErase(); e.preventDefault(); }
       else if(key==='ArrowLeft'){ moveSel(0,-1); e.preventDefault(); }
@@ -444,6 +509,14 @@
     }
 
     // On-screen keypad
+    document.querySelectorAll('.keypad .key:not(.alt)').forEach(k=>{ k.dataset.d = k.textContent.trim(); });
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    function undo(){
+      if(finished || !undoStack.length) return;
+      const st = undoStack.pop();
+      puzzle = st.puzzle; notes = st.notes;
+      renderBoard(); saveGame();
+    }
     document.querySelectorAll('.keypad .key').forEach(k=>{
       k.addEventListener('click', ()=>{
         const act = k.dataset.action;
@@ -475,7 +548,12 @@
     }
 
     function giveHint(){
-      if(hintLeft<=0) return;
+      if(hintLeft<=0 || finished) return;
+      // Avval tanlangan katak bo'sh yoki xato bo'lsa, o'shani to'ldiramiz
+      const {r:sr,c:sc}=selected;
+      if(!given[sr][sc] && puzzle[sr][sc]!==solution[sr][sc]){
+        setValue(sr,sc,solution[sr][sc]); hintLeft--; updateStatus(); saveGame(); return;
+      }
       // avvalo xato raqamlar bo'lsa, shulardan bittasini to'g'irlaymiz
       const wrong=[];
       for(let r=0;r<9;r++) for(let c=0;c<9;c++){
@@ -500,7 +578,24 @@
       for(let r=0;r<9;r++) for(let c=0;c<9;c++){
         if(puzzle[r][c]!==solution[r][c]) return;
       }
+      finished = true;
+      saveGame();
+      const mult = { easy: 1, medium: 2, hard: 3 }[diffSel.value] || 2;
+      const score = Math.max(100, mult * 1000 - seconds - mistakes * 100 - (3 - hintLeft) * 150);
+      const res = Neo.stats.record('sudoku', { score, win: true, time: seconds, difficulty: diffSel.value, mistakes });
+      document.getElementById('winTitle').textContent = 'Tabriklayman! 🎉';
+      document.getElementById('winText').innerHTML = `Vaqt: <b>${fmtTime(seconds)}</b> · Xatolar: ${mistakes} · Ball: <b>${score}</b>${res.isBest ? '<br>🏆 Yangi rekord!' : `<br>Rekord: ${res.best}`}`;
       winModal.style.display='flex';
+      Neo.sound.play('win');
+    }
+    function loseGame(){
+      finished = true;
+      saveGame();
+      Neo.stats.record('sudoku', { score: 0, win: false, time: seconds, difficulty: diffSel.value });
+      document.getElementById('winTitle').textContent = "O'yin tugadi 😔";
+      document.getElementById('winText').textContent = `${MAX_MISTAKES} ta xato qilindi. Yana urinib ko'ring!`;
+      winModal.style.display='flex';
+      Neo.sound.play('lose');
     }
 
     // ======== Yangi o‘yin ========
@@ -509,6 +604,11 @@
       notes = Array.from({length:9},()=>Array.from({length:9},()=> new Set()));
       hintLeft = 3;
       notesMode = false;
+      mistakes = 0;
+      seconds = 0;
+      finished = false;
+      undoStack = [];
+      document.getElementById('timer').textContent = '00:00';
 
       // yechim yaratish va puzzle qilish
       solution = generateSolved();
@@ -524,8 +624,15 @@
       updateStatus();
     }
 
-    // Boshlash
-    newGame();
+    // Boshlash: saqlangan o'yin bo'lsa davom ettiramiz
+    diffSel.addEventListener('change', () => newGame());
+    Neo.addMuteButton();
+    if (loadGame()) {
+      document.getElementById('timer').textContent = fmtTime(seconds);
+      renderBoard();
+      updateStatus();
+      statusEl.textContent = "Saqlangan o'yin davom ettirildi";
+    } else newGame();
   </script>
 </body>
 </html>

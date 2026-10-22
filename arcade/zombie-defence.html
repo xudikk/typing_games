@@ -358,12 +358,12 @@
       font-size: 1.1rem;
       color: var(--accent);
       z-index: 5;
-      animation: shoot 0.5s linear forwards;
+      animation: shoot 0.3s linear forwards;
     }
 
     @keyframes shoot {
       0% { transform: translateX(0); }
-      100% { transform: translateX(1400px); }
+      100% { transform: translateX(var(--dist, 1400px)); }
     }
 
     .bomb {
@@ -544,6 +544,28 @@
       .brand-icon { width: 36px; height: 36px; font-size: 1.4rem; }
       .brand-text { font-size: 1.6rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    .skills-bar { flex-wrap: wrap; }
+    .skill-card kbd { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; background: rgba(0,0,0,.35); font-size: .8em; }
+    .zombie.target { filter: drop-shadow(0 0 10px #facc15); z-index: 8; }
+    .zombie.target .zombie-word { color: #fff; }
+    .zombie-word .typed { color: var(--accent); text-shadow: 0 0 10px rgba(22, 163, 74, 0.9); }
+    .zombie-word small { font-size: .7em; color: var(--error); }
+    .game-area.slowed { filter: hue-rotate(160deg) saturate(1.3); }
+    .game-area.hit { animation: areaHit .35s; }
+    @keyframes areaHit { 0%, 100% { box-shadow: inset 0 0 25px rgba(185, 28, 28, 0.6); } 50% { box-shadow: inset 0 0 80px rgba(239, 68, 68, 1); } }
+    #wordInput.bad { border-color: var(--error); box-shadow: 0 0 18px rgba(239, 68, 68, 0.8); }
+    .wave-banner { position: absolute; inset: 40% 0 auto; text-align: center; z-index: 9; font-family: 'Creepster', cursive; font-size: 3rem;
+      color: var(--secondary); text-shadow: 0 0 20px rgba(250, 204, 21, 0.9); pointer-events: none; animation: waveIn 2.2s forwards; }
+    @keyframes waveIn { 0% { opacity: 0; transform: scale(.5); } 20% { opacity: 1; transform: scale(1.1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+    .start-hint { position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      padding: 20px; text-align: center; background: rgba(17, 24, 39, 0.85); color: var(--text); font-family: 'Source Code Pro', monospace; }
+    .start-hint h3 { font-family: 'Creepster', cursive; font-size: 2.4rem; color: var(--accent); }
+    .start-hint p { max-width: 560px; line-height: 1.6; }
+    .start-hint button { padding: 12px 30px; border: 0; border-radius: 10px; cursor: pointer; font: 600 1.2rem 'Source Code Pro', monospace; color: #fff;
+      background: linear-gradient(45deg, var(--primary), var(--accent)); }
+    @media (max-width: 768px) { .game-container { height: auto !important; } #wordInput { width: 100%; max-width: 320px; } }
   </style>
 </head>
 <body>
@@ -565,10 +587,10 @@
       <h2 class="game-title">Zombi Himoya O'yini</h2>
       <h3 class="skills-title">Qobiliyatlar</h3>
       <div class="skills-bar">
-        <button class="skill-card" id="rainShotBtn">O'qlar Yomg'iri (60)<div class="progress"></div></button>
-        <button class="skill-card" id="bombardBtn">Bombardimon (75)<div class="progress"></div></button>
-        <button class="skill-card" id="healBtn">Heal (50)<div class="progress"></div></button>
-        <button class="skill-card" id="slowTimeBtn">Slow Time (40)<div class="progress"></div></button>
+        <button class="skill-card" id="rainShotBtn">O'qlar Yomg'iri (60)<kbd>1</kbd><div class="progress"></div></button>
+        <button class="skill-card" id="bombardBtn">Bombardimon (75)<kbd>2</kbd><div class="progress"></div></button>
+        <button class="skill-card" id="healBtn">Davolash (50)<kbd>3</kbd><div class="progress"></div></button>
+        <button class="skill-card" id="slowTimeBtn">Sekin vaqt (40)<kbd>4</kbd><div class="progress"></div></button>
       </div>
       <div class="game-area" id="gameArea">
         <div class="player" style="top: 10%;">🪖</div>
@@ -594,6 +616,7 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     const gameArea = document.getElementById('gameArea');
     const wordInput = document.getElementById('wordInput');
@@ -652,340 +675,305 @@
 
 
     let zombies = [];
-    let score = 0;
-    let health = 5;
-    let mana = 0;
-    let gameActive = true;
-    let difficulty = 1;
-    let wave = 1;
-    let zombiesSpawned = 0;
-    let zombiesPerWave = 10;
-    let slowTimeActive = false;
-    let rainShotCooldown = 0;
-    let bombardCooldown = 0;
-    let healCooldown = 0;
-    let slowTimeCooldown = 0;
-    let lastManaUpdate = Date.now();
+    let G = null;
+    let rafId = 0;
+    const SKILLS = {
+      rain: { btn: rainShotBtn, cost: 60, cd: 15 },
+      bomb: { btn: bombardBtn, cost: 75, cd: 18 },
+      heal: { btn: healBtn, cost: 50, cd: 12 },
+      slow: { btn: slowTimeBtn, cost: 40, cd: 15 },
+    };
+    const MAX_HEALTH = 5;
+    const SOLDIER_POS = ['10%', '30%', '50%', '70%', '90%'];
+    const normalWords = words.filter(w => !w.includes('_'));
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
     class Zombie {
-      constructor(word, isBoss = false, isFast = false) {
+      constructor(word, kind) {
         this.word = word;
-        this.isBoss = isBoss;
-        this.isFast = isFast;
-        this.x = 1300;
-        this.y = Math.random() * (gameArea.offsetHeight - 100) + 50;
-        this.speed = isFast ? (0.9 + Math.random() * 0.5) : isBoss ? (0.4 + Math.random() * 0.3) : (0.3 + Math.random() * 0.3);
-        this.active = true;
-        this.element = null;
-        this.wordElement = null;
+        this.kind = kind; // normal | fast | boss
+        this.hp = kind === 'boss' ? 2 : 1;
+        this.x = 1.04;
+        this.y = 0.12 + Math.random() * 0.78;
+        const base = { normal: 0.05 + Math.random() * 0.03, fast: 0.12 + Math.random() * 0.04, boss: 0.035 }[kind];
+        this.speed = base * (1 + (G.wave - 1) * 0.08);
+        this.el = document.createElement('div');
+        this.el.className = `zombie ${kind === 'normal' ? '' : kind}`;
+        this.el.innerHTML = kind === 'fast' ? '💀' : kind === 'boss' ? '👹' : '🧟';
+        this.wordEl = document.createElement('div');
+        this.wordEl.className = `zombie-word ${kind === 'normal' ? '' : kind}`;
+        this.el.appendChild(this.wordEl);
+        this.render('');
+        gameArea.appendChild(this.el);
+        this.place();
       }
-
-      createElement() {
-        this.element = document.createElement('div');
-        this.element.className = `zombie ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-        this.element.style.opacity = '1';
-        this.element.innerHTML = this.isFast ? '💀' : this.isBoss ? '👹' : '🧟';
-
-        this.wordElement = document.createElement('div');
-        this.wordElement.className = `zombie-word ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
-        this.wordElement.innerText = this.word;
-        this.element.appendChild(this.wordElement);
-
-        gameArea.appendChild(this.element);
-        if (this.isBoss) console.log(`Boss zombi paydo bo'ldi: ${this.word}`);
-        if (this.isFast) console.log(`Tezkor zombi paydo bo'ldi: ${this.word}`);
+      render(typed) {
+        const hit = typed && this.word.toLowerCase().startsWith(typed);
+        this.el.classList.toggle('target', !!hit);
+        this.wordEl.innerHTML = hit
+          ? `<span class="typed">${esc(this.word.slice(0, typed.length))}</span>${esc(this.word.slice(typed.length))}`
+          : esc(this.word) + (this.hp > 1 ? ' <small>×' + this.hp + '</small>' : '');
+        return hit;
       }
-
-      update() {
-        if (this.active) {
-          const speed = slowTimeActive ? this.speed * 0.5 : this.speed;
-          this.x -= speed;
-          this.element.style.left = `${this.x}px`;
-          if (this.x <= 50) {
-            health = Math.max(0, health - 1);
-            healthDisplay.innerText = '❤️'.repeat(health);
-            const playerToRemove = document.querySelectorAll('.player')[health];
-            if (playerToRemove) playerToRemove.remove();
-            this.destroy(false);
-            if (health <= 0) {
-              gameOver();
-            }
-          }
-        }
+      place() {
+        this.el.style.left = (this.x * 100) + '%';
+        this.el.style.top = (this.y * 100) + '%';
       }
-
-      destroy(addMana = true) {
-        this.element.classList.add('destroyed');
-        setTimeout(() => {
-          if (this.element) this.element.remove();
-          this.active = false;
-        }, 600);
-        if (addMana) {
-          const manaGain = this.isFast || this.isBoss ? 5 : 2;
-          const scoreGain = this.isFast ? 50 : this.isBoss ? 20 : 10;
-          mana = Math.min(100, mana + manaGain);
-          score += scoreGain;
-          updateMana();
-        }
-        zombiesSpawned++;
-        if (zombiesSpawned >= zombiesPerWave) {
-          wave++;
-          zombiesSpawned = 0;
-          zombiesPerWave = 10 + wave * 2;
-          difficulty += 0.2;
-        }
+      kill() {
+        this.el.classList.add('destroyed');
+        const el = this.el;
+        setTimeout(() => el.remove(), 600);
       }
     }
 
     function updateMana() {
-      manaFill.style.width = `${mana}%`;
-      manaText.innerText = `Mana: ${Math.floor(mana)}/100`;
+      manaFill.style.width = `${G.mana}%`;
+      manaText.innerText = `Mana: ${Math.floor(G.mana)}/100`;
+    }
+    function updateHealth() {
+      healthDisplay.innerText = '❤️'.repeat(Math.max(0, G.health)) + '🖤'.repeat(MAX_HEALTH - Math.max(0, G.health));
+      gameArea.querySelectorAll('.player').forEach(p => p.remove());
+      for (let i = 0; i < G.health; i++) {
+        const p = document.createElement('div');
+        p.className = 'player';
+        p.style.top = SOLDIER_POS[i];
+        p.textContent = '🪖';
+        gameArea.appendChild(p);
+      }
+    }
+    function updateScore() {
+      const left = G.toSpawn + zombies.length;
+      scoreDisplay.innerText = `Ball: ${G.score} | To'lqin: ${G.wave} | Qolgan zombilar: ${left}`;
+    }
+    function updateSkills() {
+      for (const k in SKILLS) {
+        const s = SKILLS[k];
+        const cd = G.cd[k];
+        const off = !G.active || G.mana < s.cost || cd > 0 || (k === 'heal' && G.health >= MAX_HEALTH);
+        s.btn.classList.toggle('disabled', off);
+        s.btn.querySelector('.progress').style.width = `${Math.max(0, cd / s.cd) * 100}%`;
+      }
     }
 
-    function shootBullet(targetX, targetY) {
-      const bullet = document.createElement('div');
-      bullet.className = 'bullet';
-      bullet.innerText = '🔸';
-      bullet.style.left = '50px';
-      bullet.style.top = `${targetY}px`;
-      gameArea.appendChild(bullet);
-      setTimeout(() => bullet.remove(), 500);
+    function banner(text) {
+      const b = document.createElement('div');
+      b.className = 'wave-banner';
+      b.textContent = text;
+      gameArea.appendChild(b);
+      setTimeout(() => b.remove(), 2200);
     }
 
-    function spawnBomb(targetX, targetY) {
-      const bomb = document.createElement('div');
-      bomb.className = 'bomb';
-      bomb.innerText = '💣';
-      bomb.style.left = `${targetX + (Math.random() * 100 - 50)}px`;
-      bomb.style.top = `-50px`;
-      bomb.style.zIndex = '5';
-      bomb.style.opacity = '1';
-      gameArea.appendChild(bomb);
-      setTimeout(() => bomb.remove(), 500);
+    function startWave() {
+      G.toSpawn = 6 + G.wave * 3;
+      G.nextSpawn = G.t + 1500;
+      G.waveBreak = false;
+      banner(`${G.wave}-to'lqin`);
+      Neo.sound.play('level');
+      updateScore();
     }
 
     function spawnZombie() {
-      if (!gameActive) return;
-      const isBoss = Math.random() < 0.2 && zombiesSpawned === 0;
-      const isFast = !isBoss && Math.random() < 0.005;
-      const wordList = isBoss ? bossWords : words;
-      const word = wordList[Math.floor(Math.random() * wordList.length)];
-      const zombie = new Zombie(word, isBoss, isFast);
-      zombie.createElement();
-      zombies.push(zombie);
+      let kind = 'normal';
+      if (G.toSpawn === 1 && G.wave >= 2) kind = 'boss';
+      else if (G.wave >= 2 && Math.random() < 0.12) kind = 'fast';
+      const list = kind === 'boss' ? bossWords : normalWords;
+      const used = new Set(zombies.map(z => z.word));
+      const pool = list.filter(w => !used.has(w));
+      const z = new Zombie(pool[Math.floor(Math.random() * pool.length)], kind);
+      zombies.push(z);
+      G.toSpawn--;
+      if (kind === 'boss') banner('👹 BOSS!');
     }
 
-    function updateGame() {
-      if (!gameActive) return;
+    function loop(now) {
+      if (!G || !G.active) return;
+      const dt = Math.min(0.1, (now - G.last) / 1000);
+      G.last = now;
+      G.t += dt * 1000;
 
-      zombies.forEach(zombie => zombie.update());
-      zombies = zombies.filter(zombie => zombie.active);
-      scoreDisplay.innerText = `Ball: ${score} | Wave: ${wave}`;
+      const slow = G.slowUntil > G.t ? 0.4 : 1;
+      gameArea.classList.toggle('slowed', slow < 1);
 
-      if (Math.random() < 0.005 * difficulty * wave) {
+      if (!G.waveBreak && G.toSpawn > 0 && G.t >= G.nextSpawn) {
         spawnZombie();
+        G.nextSpawn = G.t + Math.max(700, 2600 - G.wave * 170) * (0.7 + Math.random() * 0.6);
+      }
+      for (const z of [...zombies]) {
+        z.x -= z.speed * slow * dt;
+        z.place();
+        if (z.x <= 0.06) {
+          zombies = zombies.filter(o => o !== z);
+          z.kill();
+          G.health--;
+          G.streak = 0;
+          updateHealth();
+          Neo.sound.play('explode');
+          gameArea.classList.remove('hit'); void gameArea.offsetWidth; gameArea.classList.add('hit');
+          if (G.health <= 0) return gameOver();
+        }
+      }
+      if (!G.waveBreak && G.toSpawn === 0 && zombies.length === 0) {
+        G.waveBreak = true;
+        G.score += G.wave * 25;
+        G.wave++;
+        setTimeout(() => G && G.active && startWave(), 1800);
       }
 
-      const now = Date.now();
-      if (now - lastManaUpdate >= 2000) {
-        mana = Math.min(100, mana + 1);
-        updateMana();
-        lastManaUpdate = now;
-      }
+      G.manaTimer += dt;
+      if (G.manaTimer >= 1.5) { G.manaTimer = 0; G.mana = Math.min(100, G.mana + 1); updateMana(); }
+      for (const k in G.cd) G.cd[k] = Math.max(0, G.cd[k] - dt);
 
-      if (rainShotCooldown > 0) {
-        rainShotCooldown -= 1 / 60;
-        rainShotBtn.querySelector('.progress').style.width = `${(rainShotCooldown / 15) * 100}%`;
-        if (rainShotCooldown <= 0) {
-          rainShotBtn.classList.remove('disabled');
-          rainShotBtn.querySelector('.progress').style.width = '0%';
-        }
-      }
-      if (bombardCooldown > 0) {
-        bombardCooldown -= 1 / 60;
-        bombardBtn.querySelector('.progress').style.width = `${(bombardCooldown / 15) * 100}%`;
-        if (bombardCooldown <= 0) {
-          bombardBtn.classList.remove('disabled');
-          bombardBtn.querySelector('.progress').style.width = '0%';
-        }
-      }
-      if (healCooldown > 0) {
-        healCooldown -= 1 / 60;
-        healBtn.querySelector('.progress').style.width = `${(healCooldown / 15) * 100}%`;
-        if (healCooldown <= 0) {
-          healBtn.classList.remove('disabled');
-          healBtn.querySelector('.progress').style.width = '0%';
-        }
-      }
-      if (slowTimeCooldown > 0) {
-        slowTimeCooldown -= 1 / 60;
-        slowTimeBtn.querySelector('.progress').style.width = `${(slowTimeCooldown / 15) * 100}%`;
-        if (slowTimeCooldown <= 0) {
-          slowTimeBtn.classList.remove('disabled');
-          slowTimeBtn.querySelector('.progress').style.width = '0%';
-          slowTimeActive = false;
-        }
-      }
+      updateSkills();
+      updateScore();
+      rafId = requestAnimationFrame(loop);
+    }
 
-      requestAnimationFrame(updateGame);
+    function killZombie(z, viaSkill) {
+      zombies = zombies.filter(o => o !== z);
+      z.kill();
+      const pts = z.kind === 'fast' ? 40 : z.kind === 'boss' ? 60 : 10;
+      G.score += pts + (viaSkill ? 0 : Math.min(20, Math.max(0, G.streak - 1) * 2));
+      if (!viaSkill) {
+        G.mana = Math.min(100, G.mana + (z.kind === 'normal' ? 3 : 8));
+        G.kills++;
+      }
+      updateMana();
+    }
+
+    function shootBullet(z) {
+      const bullet = document.createElement('div');
+      bullet.className = 'bullet';
+      bullet.innerText = '🔸';
+      bullet.style.top = (z.y * 100) + '%';
+      bullet.style.left = '50px';
+      bullet.style.setProperty('--dist', Math.max(0, z.x * gameArea.clientWidth - 50) + 'px');
+      gameArea.appendChild(bullet);
+      setTimeout(() => bullet.remove(), 300);
+    }
+
+    function onType() {
+      if (!G || !G.active) return;
+      const typed = wordInput.value.trim().toLowerCase();
+      let any = false;
+      for (const z of zombies) any = z.render(typed) || any;
+      wordInput.classList.toggle('bad', !!typed && !any);
+      const z = zombies.find(o => o.word.toLowerCase() === typed);
+      if (!z) return;
+      shootBullet(z);
+      wordInput.value = '';
+      wordInput.classList.remove('bad');
+      z.hp--;
+      if (z.hp > 0) {
+        // Boss: ikkinchi so'z
+        const used = new Set(zombies.map(o => o.word));
+        const pool = bossWords.filter(w => !used.has(w));
+        z.word = pool[Math.floor(Math.random() * pool.length)];
+        z.x = Math.min(1, z.x + 0.08);
+        Neo.sound.play('hit');
+      } else {
+        G.streak++;
+        killZombie(z, false);
+        Neo.sound.play('ok');
+      }
+      zombies.forEach(o => o.render(''));
+      updateScore();
+    }
+
+    function useSkill(k) {
+      const s = SKILLS[k];
+      if (!G || !G.active || G.mana < s.cost || G.cd[k] > 0) return;
+      if (k === 'heal' && G.health >= MAX_HEALTH) return;
+      G.mana -= s.cost;
+      G.cd[k] = s.cd;
+      if (k === 'rain') {
+        // eng yaqin 4 ta zombini yo'q qiladi
+        [...zombies].sort((a, b) => a.x - b.x).slice(0, 4).forEach(z => { shootBullet(z); killZombie(z, true); });
+      } else if (k === 'bomb') {
+        [...zombies].forEach(z => {
+          const b = document.createElement('div');
+          b.className = 'bomb';
+          b.innerText = '💣';
+          b.style.left = (z.x * 100) + '%';
+          b.style.top = (z.y * 100) + '%';
+          gameArea.appendChild(b);
+          setTimeout(() => b.remove(), 500);
+          killZombie(z, true);
+        });
+      } else if (k === 'heal') {
+        G.health = Math.min(MAX_HEALTH, G.health + 1);
+        updateHealth();
+      } else {
+        G.slowUntil = G.t + 6000;
+      }
+      Neo.sound.play('skill');
+      updateMana();
+      updateSkills();
+      wordInput.focus();
     }
 
     function gameOver() {
-      gameActive = false;
-      gameOverText.innerText = `O'yin tugadi! Sizning balingiz: ${score}\nOxirgi wave: ${wave}\nQayta urinib ko'ring!`;
-      gameOverModal.classList.add('show');
-      playSound(300, 0.2);
+      G.active = false;
+      cancelAnimationFrame(rafId);
+      const res = Neo.stats.record('zombie', { score: G.score, wave: G.wave });
+      Neo.gameOver({
+        title: "Zombilar g'alaba qildi 🧟",
+        subtitle: `${G.wave}-to'lqingacha yetdingiz`,
+        isBest: res.isBest,
+        rows: [['Ball', G.score], ['Rekord', res.best], ["To'lqin", G.wave], ["O'ldirilgan zombilar", G.kills]],
+        onRestart: restartGame,
+      });
     }
 
     function restartGame() {
-      zombies.forEach(zombie => zombie.destroy(false));
+      cancelAnimationFrame(rafId);
+      zombies.forEach(z => z.el.remove());
       zombies = [];
-      score = 0;
-      health = 5;
-      mana = 0;
-      wave = 1;
-      zombiesSpawned = 0;
-      zombiesPerWave = 10;
-      difficulty = 1;
-      healthDisplay.innerText = '❤️❤️❤️❤️❤️';
-      manaFill.style.width = '0%';
-      manaText.innerText = 'Mana: 0/100';
-      rainShotBtn.classList.remove('disabled');
-      rainShotBtn.querySelector('.progress').style.width = '0%';
-      bombardBtn.classList.remove('disabled');
-      bombardBtn.querySelector('.progress').style.width = '0%';
-      healBtn.classList.remove('disabled');
-      healBtn.querySelector('.progress').style.width = '0%';
-      slowTimeBtn.classList.remove('disabled');
-      slowTimeBtn.querySelector('.progress').style.width = '0%';
-      gameActive = true;
-      lastManaUpdate = Date.now();
+      gameArea.querySelectorAll('.bullet, .bomb, .wave-banner, .zombie, .start-hint').forEach(e => e.remove());
+      gameOverModal.classList.remove('show');
+      G = {
+        score: 0, health: MAX_HEALTH, mana: 0, wave: 1, kills: 0, streak: 0, active: true,
+        t: 0, last: performance.now(), toSpawn: 0, nextSpawn: 0, waveBreak: true, manaTimer: 0,
+        slowUntil: 0, cd: { rain: 0, bomb: 0, heal: 0, slow: 0 },
+      };
+      updateHealth();
+      updateMana();
+      startWave();
       wordInput.value = '';
       wordInput.focus();
-      gameOverModal.classList.remove('show');
-      const gameArea = document.getElementById('gameArea');
-      gameArea.querySelectorAll('.player').forEach(p => p.remove());
-      const positions = ['10%', '30%', '50%', '70%', '90%'];
-      positions.forEach(pos => {
-        const player = document.createElement('div');
-        player.className = 'player';
-        player.style.top = pos;
-        player.innerText = '🪖';
-        gameArea.appendChild(player);
-      });
-      setInterval(spawnZombie, 3000);
+      rafId = requestAnimationFrame(loop);
     }
 
-    function playSound(frequency, duration) {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      oscillator.start();
-      setTimeout(() => oscillator.stop(), duration * 1000);
-    }
-
-    wordInput.addEventListener('input', () => {
-      const input = wordInput.value.trim().toLowerCase();
-      const index = zombies.findIndex(zombie => zombie.active && zombie.word.toLowerCase() === input);
-      if (index !== -1) {
-        shootBullet(zombies[index].x, zombies[index].y);
-        zombies[index].destroy(true);
-        wordInput.value = '';
-        playSound(500, 0.1);
-      }
-    });
-
-    wordInput.addEventListener('keydown', (e) => {
+    wordInput.addEventListener('input', onType);
+    wordInput.addEventListener('keydown', e => {
+      const map = { '1': 'rain', '2': 'bomb', '3': 'heal', '4': 'slow' };
+      if (map[e.key]) { e.preventDefault(); useSkill(map[e.key]); return; }
       if (e.key === 'Enter' && wordInput.value.trim() !== '') {
-        playSound(200, 0.1);
+        Neo.sound.play('error');
         wordInput.value = '';
+        onType();
       }
     });
-
-    rainShotBtn.addEventListener('click', () => {
-      if (mana >= 60 && rainShotCooldown <= 0) {
-        mana -= 60;
-        updateMana();
-        zombies.forEach(zombie => {
-          if (zombie.active) {
-            shootBullet(zombie.x, zombie.y);
-            zombie.destroy(false);
-            score += zombie.isFast ? 50 : zombie.isBoss ? 20 : 10;
-          }
-        });
-        rainShotCooldown = 15;
-        rainShotBtn.classList.add('disabled');
-        rainShotBtn.querySelector('.progress').style.width = '100%';
-        playSound(600, 0.2);
-      }
-    });
-
-    bombardBtn.addEventListener('click', () => {
-      if (mana >= 75 && bombardCooldown <= 0) {
-        mana -= 75;
-        updateMana();
-        zombies.forEach(zombie => {
-          if (zombie.active) {
-            spawnBomb(zombie.x, zombie.y);
-            zombie.destroy(false);
-            score += zombie.isFast ? 50 : zombie.isBoss ? 20 : 10;
-          }
-        });
-        bombardCooldown = 15;
-        bombardBtn.classList.add('disabled');
-        bombardBtn.querySelector('.progress').style.width = '100%';
-        playSound(1000, 0.3);
-      }
-    });
-
-    healBtn.addEventListener('click', () => {
-      if (mana >= 50 && healCooldown <= 0 && health < 5) {
-        mana -= 50;
-        health = Math.min(5, health + 1);
-        healthDisplay.innerText = '❤️'.repeat(health);
-        const gameArea = document.getElementById('gameArea');
-        const currentPlayers = document.querySelectorAll('.player').length;
-        if (currentPlayers < health) {
-          const positions = ['10%', '30%', '50%', '70%', '90%'];
-          const player = document.createElement('div');
-          player.className = 'player';
-          player.style.top = positions[currentPlayers];
-          player.innerText = '🪖';
-          gameArea.appendChild(player);
-        }
-        updateMana();
-        healCooldown = 15;
-        healBtn.classList.add('disabled');
-        healBtn.querySelector('.progress').style.width = '100%';
-        playSound(600, 0.2);
-      }
-    });
-
-    slowTimeBtn.addEventListener('click', () => {
-      if (mana >= 40 && slowTimeCooldown <= 0) {
-        mana -= 40;
-        slowTimeActive = true;
-        setTimeout(() => slowTimeActive = false, 5000);
-        updateMana();
-        slowTimeCooldown = 15;
-        slowTimeBtn.classList.add('disabled');
-        slowTimeBtn.querySelector('.progress').style.width = '100%';
-        playSound(600, 0.2);
-      }
-    });
-
+    rainShotBtn.addEventListener('click', () => useSkill('rain'));
+    bombardBtn.addEventListener('click', () => useSkill('bomb'));
+    healBtn.addEventListener('click', () => useSkill('heal'));
+    slowTimeBtn.addEventListener('click', () => useSkill('slow'));
     restartButton.addEventListener('click', restartGame);
 
-    setInterval(spawnZombie, 3000);
-    requestAnimationFrame(updateGame);
-    wordInput.focus();
+    // Boshlash ekrani
+    Neo.addMuteButton();
+    gameArea.querySelectorAll('.player').forEach(p => p.remove());
+    (function intro() {
+      const best = Neo.stats.best('zombie');
+      const d = document.createElement('div');
+      d.className = 'start-hint';
+      d.innerHTML = `<h3>Zombilardan himoya</h3>
+        <p>Zombi ustidagi so'zni yozing — askar o'q uzadi. Zombi chap tomonga yetsa, bitta askar halok bo'ladi.<br>
+        Qobiliyatlar: <b>1</b> o'qlar yomg'iri, <b>2</b> bombardimon, <b>3</b> davolash, <b>4</b> vaqtni sekinlashtirish.</p>
+        ${best != null ? `<p>🏆 Rekord: <b>${best}</b></p>` : ''}
+        <button id="zStart">Boshlash</button>`;
+      gameArea.appendChild(d);
+      document.getElementById('zStart').onclick = restartGame;
+    })();
   </script>
 </body>
 </html>

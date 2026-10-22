@@ -452,6 +452,17 @@
       0% { transform: scale(0.9); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
     }
+
+    /* --- Darslar progressi --- */
+    .lessons-progress { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; margin: 10px auto 30px; position: relative; z-index: 1; }
+    .lp-text { font-weight: 800; font-size: 1.2rem; color: var(--accent); }
+    .lp-bar { width: min(360px, 80vw); height: 12px; border-radius: 8px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+    #lpBar { height: 100%; width: 0; background: linear-gradient(90deg, #22c55e, #facc15); transition: width .6s; }
+    .lesson-link.continue { margin: 0; }
+    .lesson-meta .stars { color: #facc15; letter-spacing: 2px; }
+    .lesson-card.completed { border-color: rgba(34, 197, 94, .6) !important; }
+    .lesson-card.completed .progress-ring circle { stroke: #22c55e; stroke-dashoffset: 0 !important; }
+    .lesson-card.next-up { box-shadow: 0 0 0 3px #facc15, 0 15px 40px rgba(250, 204, 21, .35) !important; }
   </style>
 </head>
 <body>
@@ -478,201 +489,201 @@
       <div class="floating-icon"><i class="fas fa-bolt"></i></div>
     </div>
     <div class="lesson-container">
-      <h2 class="lesson-title">Dasturlash Darslari</h2>
-      <div class="coming-soon-message">Hozirda darslar jarayonda (Tez Orada)</div>
+      <h2 class="lesson-title">Yozish darslari</h2>
+      <div class="lessons-progress"><div class="lp-text" id="lpText">0/17 dars tugatildi</div><div class="lp-bar"><div id="lpBar"></div></div><a class="lesson-link continue" id="continueBtn" href="lesson.html?id=1">▶ Davom ettirish</a></div>
       <div class="lesson-category">
         <div class="category">
-          <h3 class="category-title">Touch Typing (14 darslar)</h3>
+          <h3 class="category-title">Ko'r-ko'rona yozish (5 dars)</h3>
           <div class="lesson-grid">
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-keyboard"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 1</h3>
-              <p>Focus: Home row</p>
-              <p>7 activities, 18 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>1-dars</h3>
+              <p>Asosiy qator</p>
+              <p class="lesson-meta" data-lesson="1">3 ta mashq</p>
+              <a href="lesson.html?id=1" class="lesson-link" data-lesson="1">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-hand-point-up"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 2</h3>
-              <p>Focus: Index finger keys</p>
-              <p>6 activities, 20 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>2-dars</h3>
+              <p>Ko'rsatkich barmoqlar</p>
+              <p class="lesson-meta" data-lesson="2">3 ta mashq</p>
+              <a href="lesson.html?id=2" class="lesson-link" data-lesson="2">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-hand-pointer"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 3</h3>
-              <p>Focus: Middle finger keys</p>
-              <p>6 activities, 20 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>3-dars</h3>
+              <p>O'rta barmoqlar</p>
+              <p class="lesson-meta" data-lesson="3">3 ta mashq</p>
+              <a href="lesson.html?id=3" class="lesson-link" data-lesson="3">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-hand-peace"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 4</h3>
-              <p>Focus: Ring finger keys</p>
-              <p>6 activities, 20 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>4-dars</h3>
+              <p>Nomsiz barmoqlar</p>
+              <p class="lesson-meta" data-lesson="4">3 ta mashq</p>
+              <a href="lesson.html?id=4" class="lesson-link" data-lesson="4">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-hand-point-right"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 5</h3>
-              <p>Focus: Little finger keys</p>
-              <p>6 activities, 20 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>5-dars</h3>
+              <p>Jimjiloq barmoqlar</p>
+              <p class="lesson-meta" data-lesson="5">3 ta mashq</p>
+              <a href="lesson.html?id=5" class="lesson-link" data-lesson="5">Boshlash</a>
             </div>
           </div>
         </div>
         <div class="category">
-          <h3 class="category-title">Speed Building (7 darslar)</h3>
+          <h3 class="category-title">Tezlikni oshirish (4 dars)</h3>
           <div class="lesson-grid">
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-tachometer-alt"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 6</h3>
-              <p>Focus: Common words</p>
-              <p>6 activities, 19 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>6-dars</h3>
+              <p>Ko'p ishlatiladigan so'zlar</p>
+              <p class="lesson-meta" data-lesson="6">3 ta mashq</p>
+              <a href="lesson.html?id=6" class="lesson-link" data-lesson="6">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-flag-checkered"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 7</h3>
-              <p>Focus: Final test</p>
-              <p>1 activity, 3 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>7-dars</h3>
+              <p>Yakuniy test</p>
+              <p class="lesson-meta" data-lesson="7">3 ta mashq</p>
+              <a href="lesson.html?id=7" class="lesson-link" data-lesson="7">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-book"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 8</h3>
-              <p>Focus: Advanced words</p>
-              <p>5 activities, 15 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>8-dars</h3>
+              <p>Murakkab so'zlar</p>
+              <p class="lesson-meta" data-lesson="8">3 ta mashq</p>
+              <a href="lesson.html?id=8" class="lesson-link" data-lesson="8">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-bolt"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 9</h3>
-              <p>Focus: Speed drills</p>
-              <p>4 activities, 12 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>9-dars</h3>
+              <p>Tezlik mashqi</p>
+              <p class="lesson-meta" data-lesson="9">3 ta mashq</p>
+              <a href="lesson.html?id=9" class="lesson-link" data-lesson="9">Boshlash</a>
             </div>
           </div>
         </div>
         <div class="category">
-          <h3 class="category-title">Number Row (2 darslar)</h3>
+          <h3 class="category-title">Raqamlar qatori (2 dars)</h3>
           <div class="lesson-grid">
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-1"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 10</h3>
-              <p>Focus: Number row basics</p>
-              <p>5 activities, 15 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>10-dars</h3>
+              <p>Raqamlar qatori</p>
+              <p class="lesson-meta" data-lesson="10">3 ta mashq</p>
+              <a href="lesson.html?id=10" class="lesson-link" data-lesson="10">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-2"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 11</h3>
-              <p>Focus: Number row practice</p>
-              <p>4 activities, 10 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>11-dars</h3>
+              <p>Raqamlar amaliyoti</p>
+              <p class="lesson-meta" data-lesson="11">3 ta mashq</p>
+              <a href="lesson.html?id=11" class="lesson-link" data-lesson="11">Boshlash</a>
             </div>
           </div>
         </div>
         <div class="category">
-          <h3 class="category-title">Symbols (4 darslar)</h3>
+          <h3 class="category-title">Belgilar (3 dars)</h3>
           <div class="lesson-grid">
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-at"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 12</h3>
-              <p>Focus: Basic symbols</p>
-              <p>5 activities, 15 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>12-dars</h3>
+              <p>Oddiy belgilar</p>
+              <p class="lesson-meta" data-lesson="12">3 ta mashq</p>
+              <a href="lesson.html?id=12" class="lesson-link" data-lesson="12">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-hashtag"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 13</h3>
-              <p>Focus: Advanced symbols</p>
-              <p>4 activities, 12 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>13-dars</h3>
+              <p>Murakkab belgilar</p>
+              <p class="lesson-meta" data-lesson="13">3 ta mashq</p>
+              <a href="lesson.html?id=13" class="lesson-link" data-lesson="13">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-code"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 14</h3>
-              <p>Focus: Symbol combinations</p>
-              <p>3 activities, 10 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>14-dars</h3>
+              <p>Belgilar kombinatsiyasi</p>
+              <p class="lesson-meta" data-lesson="14">3 ta mashq</p>
+              <a href="lesson.html?id=14" class="lesson-link" data-lesson="14">Boshlash</a>
             </div>
           </div>
         </div>
         <div class="category">
-          <h3 class="category-title">10-Key Number Pad (3 darslar)</h3>
+          <h3 class="category-title">Raqamli klaviatura (3 dars)</h3>
           <div class="lesson-grid">
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-calculator"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 15</h3>
-              <p>Focus: Number pad basics</p>
-              <p>5 activities, 15 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>15-dars</h3>
+              <p>Raqamli klaviatura asoslari</p>
+              <p class="lesson-meta" data-lesson="15">3 ta mashq</p>
+              <a href="lesson.html?id=15" class="lesson-link" data-lesson="15">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-keyboard"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 16</h3>
-              <p>Focus: Number pad practice</p>
-              <p>4 activities, 12 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>16-dars</h3>
+              <p>Raqamli klaviatura amaliyoti</p>
+              <p class="lesson-meta" data-lesson="16">3 ta mashq</p>
+              <a href="lesson.html?id=16" class="lesson-link" data-lesson="16">Boshlash</a>
             </div>
             <div class="lesson-card">
               <span class="card-icon"><i class="fas fa-tachometer-alt"></i></span>
               <svg class="progress-ring" viewBox="0 0 36 36">
                 <circle cx="18" cy="18" r="16" />
               </svg>
-              <h3>Lesson 17</h3>
-              <p>Focus: Number pad speed</p>
-              <p>3 activities, 10 min</p>
-              <a href="#" class="lesson-link">Boshlash</a>
+              <h3>17-dars</h3>
+              <p>Raqamli klaviatura tezligi</p>
+              <p class="lesson-meta" data-lesson="17">3 ta mashq</p>
+              <a href="lesson.html?id=17" class="lesson-link" data-lesson="17">Boshlash</a>
             </div>
           </div>
         </div>
@@ -683,5 +694,31 @@
   <footer class="footer">
     © 2025 NeoCoder | <a href="#">Foydalanish shartlari</a> | <a href="#">Maxfiylik siyosati</a>
   </footer>
+  <script src="assets/neo.js"></script>
+  <script>
+    (function () {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem('neo_lessons_v1')) || {}; } catch (e) { /* e'tiborsiz */ }
+      const done = Object.keys(saved).length;
+      document.getElementById('lpText').textContent = `${done}/17 dars tugatildi`;
+      document.getElementById('lpBar').style.width = (done / 17 * 100) + '%';
+      let next = 1;
+      while (saved[next] && next < 17) next++;
+      const cont = document.getElementById('continueBtn');
+      cont.href = `lesson.html?id=${next}`;
+      cont.textContent = done ? `▶ Davom ettirish (${next}-dars)` : '▶ Birinchi darsni boshlash';
+      document.querySelectorAll('.lesson-meta[data-lesson]').forEach(el => {
+        const r = saved[el.dataset.lesson];
+        const card = el.closest('.lesson-card');
+        if (!r) return;
+        el.innerHTML = `<span class="stars">${'★'.repeat(r.stars)}${'☆'.repeat(3 - r.stars)}</span> ${r.wpm} WPM · ${r.acc}%`;
+        card.classList.add('completed');
+        const link = card.querySelector('.lesson-link');
+        if (link) link.textContent = 'Takrorlash';
+      });
+      const nextCard = document.querySelector(`.lesson-link[data-lesson="${next}"]`);
+      if (nextCard) nextCard.closest('.lesson-card').classList.add('next-up');
+    })();
+  </script>
 </body>
 </html>

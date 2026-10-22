@@ -433,6 +433,8 @@
       .modal-content select, .modal-content button { font-size: 0.9rem; }
       .modal-content select:hover, .modal-content button:hover { transform: none; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4); }
     }
+    #gameCanvas { display: block; width: 100%; max-width: 800px; height: auto; margin: 16px auto; border-radius: 12px;
+      background: rgba(15, 23, 42, 0.55); border: 2px solid rgba(165, 180, 252, 0.35); }
   </style>
 </head>
 <body>
@@ -462,7 +464,7 @@
       <h2 class="game-title">So‘zlar Yomg‘iri</h2>
       <div class="stats">
         <span>Ball: <span id="score">0</span></span>
-        <span>Tezlik: <span id="speed">1</span></span>
+        <span>Daraja: <span id="speed">1</span></span>
       </div>
       <canvas id="gameCanvas"></canvas>
       <input type="text" id="wordInput" placeholder="So‘zni kiriting" autocomplete="off">
@@ -497,6 +499,7 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -545,166 +548,196 @@
     let currentWords = words.uz;
     let fallingWords = [];
     let score = 0;
-    let speed = 1;
-    let gameOver = false;
-    let gameStarted = false;
-    let wordInterval = 2000;
-    let wordIntervalId = null;
-    let lastScoreMilestone = 0;
+    let lives = 3;
+    let level = 1;
+    let caught = 0;
+    let gameState = 'menu';   // menu | play | over
     let startTime = 0;
-    let gameDuration = 0;
-    let isGameOverHandled = false;
+    let lastFrame = 0;
+    let nextSpawn = 0;
+    let elapsed = 0;
+    let typedPrefix = '';
+    let effects = [];
+
+    const MAX_LIVES = 3;
+    const PLACEHOLDER = { uz: "So'zni kiriting", en: 'Enter the word', ru: 'Введите слово' };
+    // O'zbekcha apostroflarning turli ko'rinishlarini bittaga keltiramiz
+    const normalize = s => s.toLowerCase().replace(/[‘’ʻʼ`´]/g, "'").trim();
 
     class Word {
       constructor(text) {
         this.text = text;
-        this.x = Math.random() * (canvas.width - 100) + 50;
-        this.y = -20;
-        this.speed = speed;
-        this.color = ["#a5b4fc", "#f59e0b", "#ffffff"][Math.floor(Math.random() * 3)];
-        this.fontSize = Math.random() * 8 + 20; // 20px to 28px
+        ctx.font = '24px Inter';
+        const w = ctx.measureText(text).width;
+        let x, tries = 0;
+        do {
+          x = Math.random() * (canvas.width - w - 40) + w / 2 + 20;
+          tries++;
+        } while (tries < 15 && fallingWords.some(o => o.y < 60 && Math.abs(o.x - x) < (w + o.w) / 2 + 20));
+        this.x = x;
+        this.w = w;
+        this.y = -10;
+        this.speed = (38 + level * 9) * (0.8 + Math.random() * 0.4); // px/soniya
+        this.color = ['#a5b4fc', '#f59e0b', '#ffffff', '#67e8f9'][Math.floor(Math.random() * 4)];
+        this.fontSize = Math.random() * 6 + 22;
       }
-
       draw() {
-        ctx.font = `${this.fontSize}px Inter`;
-        ctx.fillStyle = this.color;
-        ctx.textAlign = "center";
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
-        ctx.fillText(this.text, this.x, this.y);
-        ctx.shadowBlur = 0;
-      }
-
-      update() {
-        this.y += this.speed;
-        if (this.y > canvas.height + 20) {
-          gameOver = true;
+        ctx.font = `600 ${this.fontSize}px Inter, sans-serif`;
+        ctx.textAlign = 'left';
+        const full = ctx.measureText(this.text).width;
+        const left = this.x - full / 2;
+        const danger = this.y > canvas.height * 0.8;
+        const hit = typedPrefix && normalize(this.text).startsWith(typedPrefix);
+        ctx.shadowBlur = hit ? 16 : 8;
+        if (hit) {
+          const done = this.text.slice(0, typedPrefix.length);
+          ctx.shadowColor = '#22c55e';
+          ctx.fillStyle = '#22c55e';
+          ctx.fillText(done, left, this.y);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(this.text.slice(typedPrefix.length), left + ctx.measureText(done).width, this.y);
+        } else {
+          ctx.shadowColor = danger ? '#ef4444' : this.color;
+          ctx.fillStyle = danger ? '#fca5a5' : this.color;
+          ctx.fillText(this.text, left, this.y);
         }
+        ctx.shadowBlur = 0;
       }
     }
 
     function addWord() {
-      if (gameStarted && !gameOver) {
-        const randomWord = currentWords[Math.floor(Math.random() * currentWords.length)];
-        fallingWords.push(new Word(randomWord));
-      }
+      const onScreen = new Set(fallingWords.map(w => w.text));
+      const pool = currentWords.filter(w => !onScreen.has(w));
+      fallingWords.push(new Word(pool[Math.floor(Math.random() * pool.length)]));
     }
 
-    function updateGame() {
-      if (!gameStarted) {
-        startGameScreen.style.display = "flex";
-        return;
-      }
+    function drawHUD() {
+      ctx.font = '20px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('❤️'.repeat(lives) + '🖤'.repeat(MAX_LIVES - lives), canvas.width - 12, 28);
+      // Pastki xavf chizig'i
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+      ctx.fillRect(0, canvas.height - 4, canvas.width, 4);
+    }
 
-      if (gameOver && !isGameOverHandled) {
-        gameOverScreen.style.display = "flex";
-        finalScoreDisplay.textContent = score;
-        gameDuration = Math.floor((Date.now() - startTime) / 1000);
-        gameDurationDisplay.textContent = gameDuration;
-        isGameOverHandled = true;
-        clearInterval(wordIntervalId);
-        return;
-      }
-
+    function frame(now) {
+      requestAnimationFrame(frame);
+      const dt = Math.min(0.1, (now - (lastFrame || now)) / 1000);
+      lastFrame = now;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      fallingWords.forEach((word, index) => {
-        word.update();
-        word.draw();
-        if (word.y > canvas.height + 20) {
-          fallingWords.splice(index, 1);
-        }
-      });
+      if (gameState !== 'play') { fallingWords.forEach(w => w.draw()); return; }
 
-      scoreDisplay.textContent = score;
-      speedDisplay.textContent = speed.toFixed(1);
-
-      if (score >= lastScoreMilestone + 50) {
-        speed = Math.min(speed + 0.2, 3);
-        wordInterval = Math.max(wordInterval - 100, 800);
-        lastScoreMilestone = score;
-        clearInterval(wordIntervalId);
-        wordIntervalId = setInterval(addWord, wordInterval);
+      elapsed += dt;
+      if (elapsed >= nextSpawn) {
+        addWord();
+        nextSpawn = elapsed + Math.max(0.75, 2.2 - level * 0.15);
       }
-    }
-
-    languageSelect.addEventListener("change", () => {
-      currentWords = words[languageSelect.value];
-      languageSelectGameOver.value = languageSelect.value;
-      wordInput.placeholder = languageSelect.value === "uz" ? "So‘zni kiriting" :
-                             languageSelect.value === "en" ? "Enter the word" : "Введите слово";
-    });
-
-    languageSelectGameOver.addEventListener("change", () => {
-      languageSelect.value = languageSelectGameOver.value;
-      currentWords = words[languageSelectGameOver.value];
-      wordInput.placeholder = languageSelectGameOver.value === "uz" ? "So‘zni kiriting" :
-                             languageSelectGameOver.value === "en" ? "Enter the word" : "Введите слово";
-    });
-
-    wordInput.addEventListener("input", () => {
-      if (!gameStarted || gameOver) return;
-      const inputText = wordInput.value.trim().toLowerCase();
-      fallingWords.forEach((word, index) => {
-        if (inputText === word.text) {
-          fallingWords.splice(index, 1);
-          score += 10;
-          wordInput.value = "";
-          wordInput.classList.add("correct");
-          setTimeout(() => wordInput.classList.remove("correct"), 300);
-        } else if (inputText && !fallingWords.some(w => w.text.startsWith(inputText))) {
-          wordInput.classList.add("incorrect");
-          setTimeout(() => wordInput.classList.remove("incorrect"), 300);
+      for (const w of [...fallingWords]) {
+        w.y += w.speed * dt;
+        if (w.y > canvas.height + 10) {
+          fallingWords = fallingWords.filter(o => o !== w);
+          lives--;
+          effects.push({ text: '−1 ❤️', x: w.x, y: canvas.height - 30, t: 1, color: '#ef4444' });
+          Neo.sound.play('error');
+          if (lives <= 0) return endGame();
         }
-      });
-    });
-
-    startGameBtn.addEventListener("click", () => {
-      gameStarted = true;
-      startGameScreen.style.display = "none";
-      fallingWords = [];
-      score = 0;
-      speed = 1;
-      wordInterval = 2000;
-      lastScoreMilestone = 0;
-      gameOver = false;
-      isGameOverHandled = false;
-      startTime = Date.now();
-      clearInterval(wordIntervalId);
-      wordIntervalId = setInterval(addWord, wordInterval);
-      addWord();
-      wordInput.focus();
-    });
-
-    restartGameBtn.addEventListener("click", () => {
-      gameStarted = true;
-      gameOver = false;
-      isGameOverHandled = false;
-      fallingWords = [];
-      score = 0;
-      speed = 1;
-      wordInterval = 2000;
-      lastScoreMilestone = 0;
-      startTime = Date.now();
-      gameOverScreen.style.display = "none";
-      wordInput.value = "";
-      wordInput.classList.remove("correct", "incorrect");
-      currentWords = words[languageSelectGameOver.value];
-      wordInput.placeholder = languageSelectGameOver.value === "uz" ? "So‘zni kiriting" :
-                             languageSelectGameOver.value === "en" ? "Enter the word" : "Введите слово";
-      clearInterval(wordIntervalId);
-      wordIntervalId = setInterval(addWord, wordInterval);
-      addWord();
-      wordInput.focus();
-    });
-
-    function gameLoop() {
-      updateGame();
-      requestAnimationFrame(gameLoop);
+      }
+      fallingWords.forEach(w => w.draw());
+      effects = effects.filter(e => (e.t -= dt) > 0);
+      for (const e of effects) {
+        ctx.globalAlpha = e.t;
+        ctx.font = '600 20px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = e.color;
+        ctx.fillText(e.text, e.x, e.y - (1 - e.t) * 30);
+        ctx.globalAlpha = 1;
+      }
+      drawHUD();
+      scoreDisplay.textContent = score;
+      speedDisplay.textContent = level;
     }
 
-    gameLoop();
-    startGameScreen.style.display = "flex";
-    wordInput.focus();
+    function setLanguage(lang) {
+      currentWords = words[lang];
+      languageSelect.value = languageSelectGameOver.value = lang;
+      wordInput.placeholder = PLACEHOLDER[lang];
+    }
+
+    function startGame() {
+      fallingWords = [];
+      effects = [];
+      score = 0;
+      lives = MAX_LIVES;
+      level = 1;
+      caught = 0;
+      elapsed = 0;
+      nextSpawn = 0;
+      typedPrefix = '';
+      startTime = Date.now();
+      gameState = 'play';
+      startGameScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      wordInput.value = '';
+      wordInput.disabled = false;
+      wordInput.classList.remove('correct', 'incorrect');
+      wordInput.focus();
+    }
+
+    function endGame() {
+      gameState = 'over';
+      wordInput.disabled = true;
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      const res = Neo.stats.record('wordrain', { score, level, words: caught, lang: languageSelect.value });
+      finalScoreDisplay.textContent = score + (res.isBest ? '  🏆 Yangi rekord!' : `  (rekord: ${res.best})`);
+      gameDurationDisplay.textContent = duration;
+      gameOverScreen.style.display = 'flex';
+      Neo.sound.play('lose');
+      setTimeout(() => restartGameBtn.focus(), 50);
+    }
+
+    languageSelect.addEventListener('change', () => setLanguage(languageSelect.value));
+    languageSelectGameOver.addEventListener('change', () => setLanguage(languageSelectGameOver.value));
+
+    wordInput.addEventListener('input', () => {
+      if (gameState !== 'play') return;
+      typedPrefix = normalize(wordInput.value);
+      const idx = fallingWords.findIndex(w => normalize(w.text) === typedPrefix);
+      if (idx !== -1) {
+        const w = fallingWords[idx];
+        fallingWords.splice(idx, 1);
+        const pts = 10 + Math.round(w.text.length * level / 2);
+        score += pts;
+        caught++;
+        if (caught % 10 === 0) { level++; Neo.sound.play('level'); effects.push({ text: `${level}-daraja!`, x: canvas.width / 2, y: canvas.height / 2, t: 1.5, color: '#facc15' }); }
+        else Neo.sound.play('ok');
+        effects.push({ text: '+' + pts, x: w.x, y: w.y, t: 0.8, color: '#22c55e' });
+        wordInput.value = '';
+        typedPrefix = '';
+        wordInput.classList.add('correct');
+        setTimeout(() => wordInput.classList.remove('correct'), 250);
+      } else {
+        const ok = !typedPrefix || fallingWords.some(w => normalize(w.text).startsWith(typedPrefix));
+        wordInput.classList.toggle('incorrect', !ok);
+      }
+    });
+    wordInput.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === 'Escape') && wordInput.value) {
+        wordInput.value = '';
+        typedPrefix = '';
+        wordInput.classList.remove('incorrect');
+      }
+    });
+
+    startGameBtn.addEventListener('click', startGame);
+    restartGameBtn.addEventListener('click', startGame);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && gameState !== 'play' && document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'BUTTON') startGame();
+    });
+
+    Neo.addMuteButton();
+    setLanguage('uz');
+    startGameScreen.style.display = 'flex';
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>

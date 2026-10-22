@@ -543,6 +543,26 @@
       .brand-icon { width: 32px; height: 32px; font-size: 1.4rem; }
       .brand-text { font-size: 1.6rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    .units-bar { flex-wrap: wrap; }
+    .unit-card kbd { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; background: rgba(0,0,0,.4); font-size: .8em; }
+    .game-area { height: min(700px, 70vh); min-height: 420px; }
+    .enemy, .ally { margin: -18px 0 0 -18px; }
+    .enemy.target { filter: drop-shadow(0 0 10px #facc15); z-index: 8; }
+    .enemy-word .typed { color: var(--accent); }
+    .attack { pointer-events: none; }
+    .can-upgrade { animation: canUp 1.2s ease-in-out infinite; }
+    @keyframes canUp { 50% { filter: drop-shadow(0 0 12px #34d399); } }
+    .game-area.hit { animation: areaHit .35s; }
+    @keyframes areaHit { 50% { box-shadow: inset 0 0 80px rgba(239, 68, 68, .9); } }
+    #wordInput.bad { border-color: var(--error) !important; }
+    .start-hint { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      padding: 20px; text-align: center; background: rgba(10, 15, 28, 0.88); color: var(--text); font-family: 'Fira Code', monospace; }
+    .start-hint h3 { font-size: 2.2rem; color: var(--accent); }
+    .start-hint p { max-width: 580px; line-height: 1.6; }
+    .start-hint button { padding: 12px 30px; border: 0; border-radius: 10px; cursor: pointer; font: 600 1.15rem 'Fira Code', monospace; color: #fff;
+      background: linear-gradient(45deg, var(--primary), var(--accent)); }
   </style>
 </head>
 <body>
@@ -565,10 +585,10 @@
       <h2 class="game-title">Qal'a Himoyachisi</h2>
       <h3 class="units-title">Askarlar</h3>
       <div class="units-bar">
-        <button class="unit-card" id="piyodaBtn">🗡️ Piyoda (10) | HP: 75 | Zarar: 5<div class="progress"></div></button>
-        <button class="unit-card" id="kamonchiBtn">🏹 Kamonchi (15) | HP: 50 | Zarar: 3<div class="progress"></div></button>
-        <button class="unit-card" id="ritsarBtn">🛡️ Ritsar (25) | HP: 120 | Zarar: 8<div class="progress"></div></button>
-        <button class="unit-card" id="mageBtn">🔮 Mage (20) | HP: 60 | Zarar: 10<div class="progress"></div></button>
+        <button class="unit-card" id="piyodaBtn">🗡️ Piyoda (10) | HP: 80<kbd>1</kbd><div class="progress"></div></button>
+        <button class="unit-card" id="kamonchiBtn">🏹 Kamonchi (15) | HP: 55 | uzoqdan<kbd>2</kbd><div class="progress"></div></button>
+        <button class="unit-card" id="ritsarBtn">🛡️ Ritsar (25) | HP: 140<kbd>3</kbd><div class="progress"></div></button>
+        <button class="unit-card" id="mageBtn">🔮 Sehrgar (20) | HP: 65 | uzoqdan<kbd>4</kbd><div class="progress"></div></button>
       </div>
       <div class="game-area" id="gameArea">
         <!-- Chap taraf (o'yinchi) -->
@@ -613,6 +633,7 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
   </footer>
 
+  <script src="../assets/neo.js"></script>
   <script>
     const gameArea = document.getElementById('gameArea');
     const wordInput = document.getElementById('wordInput');
@@ -668,619 +689,376 @@
 
     let enemies = [];
     let allies = [];
-    let score = 0;
-    let resources = 0;
-    let playerHP = 1200;
-    let gameActive = true;
-    let piyodaCooldown = 0;
-    let kamonchiCooldown = 0;
-    let ritsarCooldown = 0;
-    let mageCooldown = 0;
-    let lastResourceUpdate = Date.now();
-    let lastTowerAttack = Date.now();
-    let lastEnemyBoost = Date.now();
-    let enemyBoostCount = 0;
+    let G = null;
+    let rafId = 0;
+    const BASE_HP = 1200;
+    const BASE_X = 0.07;
+    const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const normalWords = words.filter(w => !w.includes('_'));
 
-    const towers = {
-      left: [
-        { id: 'leftTower1', hp: 100, level: 1, damage: 5, element: document.getElementById('leftTower1') }
-      ]
+    const UNIT_STATS = {
+      piyoda: { icon: '🗡️', hp: 80, dps: 10, speed: 0.05, range: 45, cost: 10, cd: 4 },
+      kamonchi: { icon: '🏹', hp: 55, dps: 7, speed: 0.06, range: 140, cost: 15, cd: 5 },
+      ritsar: { icon: '🛡️', hp: 140, dps: 14, speed: 0.04, range: 45, cost: 25, cd: 7 },
+      mage: { icon: '🔮', hp: 65, dps: 18, speed: 0.045, range: 120, cost: 20, cd: 6 },
+      boss: { icon: '👾', hp: 260, dps: 22, speed: 0.03, range: 50 },
     };
+    const BTN = { piyoda: piyodaBtn, kamonchi: kamonchiBtn, ritsar: ritsarBtn, mage: mageBtn };
 
-    const resourceBuildings = {
-      left: { level: 1, production: 4, element: document.getElementById('leftResource') }
-    };
+    const tower = { level: 1, damage: 12, el: document.getElementById('leftTower1') };
+    const simpleTower = { level: 1, wordDamage: 25, el: document.getElementById('simpleTower') };
+    const resourceB = { level: 1, production: 4, el: document.getElementById('leftResource') };
+    const barracks = { level: 1, el: document.getElementById('leftBarracks') };
 
-    const barracks = {
-      left: { level: 1, element: document.getElementById('leftBarracks') }
-    };
+    function getUpgradeCost(baseCost, level) { return Math.round(baseCost * (1 + 0.5 * level)); }
 
-    const simpleTower = {
-      id: 'simpleTower',
-      hp: 100,
-      level: 1,
-      wordDamage: 20,
-      element: document.getElementById('simpleTower')
-    };
+    function refreshBuildings() {
+      const tc = tower.level < 10 ? getUpgradeCost(75, tower.level) + 'R' : 'Maks';
+      tower.el.querySelector('.level-text').innerText = `Lvl ${tower.level}`;
+      tower.el.querySelector('.name-text').innerText = `Minora, ${tc}`;
+      tower.el.querySelector('.hp-text').innerText = `${tower.damage} zarar`;
+      tower.el.querySelector('.hp-fill').style.width = (tower.level * 10) + '%';
+      tower.el.dataset.tooltip = `Keyingi: zarar +6, baza HP +100, ${tc}`;
 
-    // Yangilash xarajatlarini hisoblash
-    function getUpgradeCost(baseCost, level) {
-      return Math.round(baseCost * (1 + 0.5 * level));
+      const sc = simpleTower.level < 10 ? getUpgradeCost(75, simpleTower.level) + 'R' : 'Maks';
+      simpleTower.el.querySelector('.level-text').innerText = `Lvl ${simpleTower.level}`;
+      simpleTower.el.querySelector('.name-text').innerText = `So'z minorasi, ${sc}`;
+      simpleTower.el.querySelector('.hp-text').innerText = `${simpleTower.wordDamage} zarar`;
+      simpleTower.el.querySelector('.hp-fill').style.width = (simpleTower.level * 10) + '%';
+      simpleTower.el.dataset.tooltip = `Keyingi: so'z zarari +10, ${sc}`;
+
+      const rc = resourceB.level < 3 ? getUpgradeCost(100, resourceB.level) + 'R' : 'Maks';
+      resourceB.el.querySelector('.name-text').innerText = `Resurs uyi, ${resourceB.production}/2s, ${rc}`;
+      resourceB.el.dataset.tooltip = resourceB.level < 3 ? `Keyingi: +2 resurs, ${rc}` : 'Maksimal daraja';
+
+      const bc = barracks.level < 10 ? getUpgradeCost(80, barracks.level) + 'R' : 'Maks';
+      barracks.el.querySelector('.level-text').innerText = `Lvl ${barracks.level}`;
+      barracks.el.querySelector('.name-text').innerText = `Kazarma, ${bc}`;
+      barracks.el.dataset.tooltip = `Keyingi: askarlar +10%, ${bc}`;
     }
-
-    // Minora, HP va darajani yangilash
-    function updateTowerLevelDisplay(tower) {
-      tower.element.querySelector('.level-text').innerText = `Lvl ${tower.level}`;
-      const nextCost = tower.level < 10 ? getUpgradeCost(75, tower.level) : 'Maks';
-      tower.element.querySelector('.name-text').innerText = `Minora, ${nextCost}R`;
-      tower.element.setAttribute('data-tooltip', `Keyingi: HP +50, Zarar +5, ${nextCost}R`);
-    }
-
-    function updateSimpleTowerLevelDisplay() {
-      simpleTower.element.querySelector('.level-text').innerText = `Lvl ${simpleTower.level}`;
-      const nextCost = simpleTower.level < 10 ? getUpgradeCost(75, simpleTower.level) : 'Maks';
-      simpleTower.element.querySelector('.name-text').innerText = `Oddiy Minora, ${nextCost}R`;
-      simpleTower.element.setAttribute('data-tooltip', `Keyingi: So'z zarari +5, ${nextCost}R`);
-    }
-
-    function updateTowerHpDisplay(tower) {
-      tower.element.querySelector('.hp-text').innerText = Math.round(tower.hp);
-    }
-
-    function updateSimpleTowerHpDisplay() {
-      simpleTower.element.querySelector('.hp-text').innerText = Math.round(simpleTower.hp);
-    }
-
-    function updateEnemyHpDisplay(enemy) {
-      if (enemy.hpTextElement) {
-        enemy.hpTextElement.innerText = Math.round(enemy.hp);
+    function updateHUD() {
+      resourceDisplay.innerText = `Resurs: ${Math.floor(G.resources)}`;
+      hpDisplay.innerText = `HP: ${Math.max(0, Math.round(G.hp))}/${G.maxHp}`;
+      scoreDisplay.innerText = `Ball: ${G.score} | Daraja: ${G.boost + 1} | Vaqt: ${Math.floor(G.t / 1000)}s`;
+      for (const k in BTN) {
+        const s = UNIT_STATS[k];
+        BTN[k].classList.toggle('disabled', !G.active || G.resources < s.cost || G.cd[k] > 0);
+        BTN[k].querySelector('.progress').style.width = `${(G.cd[k] / s.cd) * 100}%`;
       }
+      const can = (lvl, max, base) => lvl < max && G.resources >= getUpgradeCost(base, lvl);
+      tower.el.classList.toggle('can-upgrade', can(tower.level, 10, 75));
+      simpleTower.el.classList.toggle('can-upgrade', can(simpleTower.level, 10, 75));
+      resourceB.el.classList.toggle('can-upgrade', can(resourceB.level, 3, 100));
+      barracks.el.classList.toggle('can-upgrade', can(barracks.level, 10, 80));
     }
 
-    function updateAllyHpDisplay(ally) {
-      if (ally.hpTextElement) {
-        ally.hpTextElement.innerText = Math.round(ally.hp);
-      }
-    }
-
-    function updateBarracksLevelDisplay() {
-      barracks.left.element.querySelector('.level-text').innerText = `Lvl ${barracks.left.level}`;
-      const nextCost = barracks.left.level < 10 ? getUpgradeCost(80, barracks.left.level) : 'Maks';
-      barracks.left.element.querySelector('.name-text').innerText = `Kazarma, ${nextCost}R`;
-      barracks.left.element.setAttribute('data-tooltip', `Keyingi: Askarlar +10%, ${nextCost}R`);
-    }
-
-    function updateResourceNameDisplay() {
-      const nextCost = resourceBuildings.left.level < 3 ? getUpgradeCost(100, resourceBuildings.left.level) : 'Maks';
-      const nextProd = resourceBuildings.left.level === 1 ? 6 : resourceBuildings.left.level === 2 ? 8 : resourceBuildings.left.production;
-      resourceBuildings.left.element.querySelector('.name-text').innerText = `Resurs Uyi, ${resourceBuildings.left.production}/sec, ${nextCost}R`;
-      resourceBuildings.left.element.setAttribute('data-tooltip', `Keyingi: +${nextProd - resourceBuildings.left.production}/sec, ${nextCost}R`);
-    }
-
-    // Olovli yulduz changi effekti
+    // Olovli yulduz changi effekti (fon)
     const canvas = document.getElementById('stardustCanvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const particles = [];
-    class Particle {
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.5 - 0.25;
-        this.speedY = Math.random() * 0.5 - 0.25;
-        this.color = `hsl(${Math.random() * 60}, 80%, ${Math.random() * 20 + 50}%)`;
-      }
-
-      update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        if (this.size > 0.2) this.size -= 0.01;
-        if (this.x < 0) this.x = canvas.width;
-        if (this.x > canvas.width) this.x = 0;
-        if (this.y < 0) this.y = canvas.height;
-        if (this.y > canvas.height) this.y = 0;
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-      }
+    function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight; }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    const dust = Array.from({ length: 120 }, () => newDust());
+    function newDust() {
+      return { x: Math.random() * canvas.width, y: Math.random() * canvas.height, s: Math.random() * 2 + 1,
+        vx: Math.random() * 0.5 - 0.25, vy: Math.random() * 0.5 - 0.25, c: `hsl(${Math.random() * 60}, 80%, ${Math.random() * 20 + 50}%)` };
     }
-
-    function initParticles() {
-      for (let i = 0; i < 150; i++) {
-        particles.push(new Particle());
-      }
-    }
-
-    function animateParticles() {
+    (function animateDust() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.update();
-        p.draw();
-        if (p.size <= 0.2) {
-          particles.splice(particles.indexOf(p), 1);
-          particles.push(new Particle());
-        }
-      });
-      requestAnimationFrame(animateParticles);
-    }
-
-    initParticles();
-    animateParticles();
-
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
+      for (let i = 0; i < dust.length; i++) {
+        const p = dust[i];
+        p.x = (p.x + p.vx + canvas.width) % canvas.width;
+        p.y = (p.y + p.vy + canvas.height) % canvas.height;
+        p.s -= 0.01;
+        if (p.s <= 0.2) { dust[i] = newDust(); continue; }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+        ctx.fillStyle = p.c;
+        ctx.fill();
+      }
+      requestAnimationFrame(animateDust);
+    })();
 
     class Unit {
-      constructor(type, side, isBoss = false, isFast = false) {
+      constructor(type, side, opts = {}) {
+        const st = UNIT_STATS[type];
         this.type = type;
         this.side = side;
-        this.isBoss = isBoss;
-        this.isFast = isFast;
-        this.word = isBoss ? bossWords[Math.floor(Math.random() * bossWords.length)] : words[Math.floor(Math.random() * words.length)];
-        const barracksLevel = barracks.left.level;
-        const baseStats = {
-          piyoda: { hp: 80, damage: 5 },
-          kamonchi: { hp: 55, damage: 3 },
-          ritsar: { hp: 130, damage: 8 },
-          mage: { hp: 65, damage: 10 },
-          boss: { hp: 120, damage: 15 }
-        };
-        const boost = side === 'left' ? (1 + 0.1 * (barracksLevel - 1)) : (1 + 0.15 * enemyBoostCount);
-        this.hp = (isBoss ? baseStats.boss.hp : baseStats[type].hp) * boost;
-        this.maxHp = this.hp;
-        this.damage = (isBoss ? baseStats.boss.damage : baseStats[type].damage) * boost;
-        this.speed = isFast ? 0.8 : isBoss ? 0.3 : type === 'kamonchi' ? 0.6 : 0.4;
-        this.x = side === 'left' ? 200 : 1600;
-        this.y = Math.random() * (gameArea.offsetHeight - 100) + 50;
-        this.active = true;
-        this.element = null;
-        this.wordElement = null;
-        this.hpTextElement = null;
-        this.targetEnemy = null;
+        this.fast = !!opts.fast;
+        const boost = side === 'left' ? 1 + 0.1 * (barracks.level - 1) : 1 + 0.15 * G.boost;
+        this.maxHp = this.hp = st.hp * boost;
+        this.dps = st.dps * boost;
+        this.speed = st.speed * (this.fast ? 2 : 1);
+        this.range = st.range;
+        this.x = side === 'left' ? 0.16 : 1.02;
+        this.y = 0.12 + Math.random() * 0.76;
+        this.word = '';
+        this.el = document.createElement('div');
+        this.el.className = `${side === 'left' ? 'ally' : 'enemy'} ${type === 'boss' ? 'boss' : ''} ${this.fast ? 'fast' : ''}`;
+        this.el.innerHTML = `${st.icon}<div class="hp-bar"><div class="hp-fill" style="width:100%"></div></div><div class="hp-text">${Math.round(this.hp)}</div>`;
+        if (side === 'right') {
+          this.wordEl = document.createElement('div');
+          this.wordEl.className = `enemy-word ${type === 'boss' ? 'boss' : ''} ${this.fast ? 'fast' : ''}`;
+          this.el.appendChild(this.wordEl);
+          this.newWord();
+        }
+        gameArea.appendChild(this.el);
+        this.place();
       }
-
-      createElement() {
-        this.element = document.createElement('div');
-        this.element.className = `enemy ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
-        if (this.side === 'left') this.element.className = `ally ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-        this.element.style.opacity = '1';
-        this.element.innerHTML = this.type === 'piyoda' ? '🗡️' : this.type === 'kamonchi' ? '🏹' : this.type === 'ritsar' ? '🛡️' : '🔮';
-        if (this.isBoss) this.element.innerHTML = '👾';
-
-        const hpBar = document.createElement('div');
-        hpBar.className = 'hp-bar';
-        const hpFill = document.createElement('div');
-        hpFill.className = 'hp-fill';
-        hpFill.style.width = '100%';
-        hpBar.appendChild(hpFill);
-        this.element.appendChild(hpBar);
-
-        this.hpTextElement = document.createElement('div');
-        this.hpTextElement.className = 'hp-text';
-        this.hpTextElement.innerText = Math.round(this.hp);
-        this.element.appendChild(this.hpTextElement);
-
-        if (this.side === 'right') {
-          this.wordElement = document.createElement('div');
-          this.wordElement.className = `enemy-word ${this.isBoss ? 'boss' : ''} ${this.isFast ? 'fast' : ''}`;
-          this.wordElement.innerText = this.word;
-          this.element.appendChild(this.wordElement);
-        }
-
-        gameArea.appendChild(this.element);
-        if (this.isBoss) console.log(`Boss askar paydo bo'ldi: ${this.word}`);
-        if (this.isFast) console.log(`Tezkor askar paydo bo'ldi: ${this.word}`);
+      newWord() {
+        const list = this.type === 'boss' ? bossWords : normalWords;
+        const used = new Set(enemies.map(e => e.word));
+        const pool = list.filter(w => !used.has(w));
+        this.word = pool[Math.floor(Math.random() * pool.length)];
+        this.render('');
       }
-
-      findClosestEnemy() {
-        if (this.side !== 'left') return null;
-        let closest = null;
-        let minDistance = Infinity;
-        enemies.forEach(enemy => {
-          if (enemy.active) {
-            const distance = Math.abs(this.x - enemy.x);
-            if (distance < minDistance) {
-              minDistance = distance;
-              closest = enemy;
-            }
-          }
-        });
-        return closest;
+      render(typed) {
+        if (!this.wordEl) return false;
+        const hit = typed && this.word.toLowerCase().startsWith(typed);
+        this.el.classList.toggle('target', !!hit);
+        this.wordEl.innerHTML = hit ? `<span class="typed">${esc(this.word.slice(0, typed.length))}</span>${esc(this.word.slice(typed.length))}` : esc(this.word);
+        return hit;
       }
-
-      update() {
-        if (!this.active) return;
-
-        let targetX = this.side === 'right' ? 50 : 1600;
-        let targetY = this.y;
-
-        if (this.side === 'left') {
-          this.targetEnemy = this.findClosestEnemy();
-          if (this.targetEnemy) {
-            targetX = this.targetEnemy.x - 50;
-            targetY = this.targetEnemy.y;
-            this.y += (targetY - this.y) * 0.05;
-          }
-        }
-
-        if (this.side === 'left' && this.x < targetX) {
-          this.x += this.speed;
-        } else if (this.side === 'right' && this.x > targetX) {
-          this.x -= this.speed;
-        }
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-
-        if (this.side === 'right' && Math.abs(this.x - 50) < 10) {
-          const damage = this.type === 'piyoda' ? 5 : this.type === 'kamonchi' ? 3 : this.type === 'ritsar' ? 8 : this.type === 'mage' ? 10 : 15;
-          playerHP -= damage;
-          hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
-          this.destroy(false);
-        }
-
-        const opponents = this.side === 'right' ? allies : enemies;
-        const closestOpponent = opponents.find(opp => opp.active && Math.abs(opp.x - this.x) < 50 && Math.abs(opp.y - this.y) < 50);
-        if (closestOpponent) {
-          closestOpponent.hp -= this.damage / 60;
-          closestOpponent.element.querySelector('.hp-fill').style.width = `${(closestOpponent.hp / closestOpponent.maxHp) * 100}%`;
-          if (closestOpponent.side === 'right') updateEnemyHpDisplay(closestOpponent);
-          else updateAllyHpDisplay(closestOpponent);
-          if (closestOpponent.hp <= 0) {
-            closestOpponent.destroy(closestOpponent.side === 'right');
-            if (this.side === 'left') this.targetEnemy = null;
-          }
-        }
-
-        const now = Date.now();
-        if (now - lastTowerAttack >= 1000) {
-          const targetTowers = this.side === 'right' ? towers.left : [];
-          targetTowers.forEach(tower => {
-            if (this.active && Math.abs(this.x - 50) < 150 && Math.abs(this.y - tower.element.offsetTop) < 100) {
-              this.hp -= tower.damage / 60;
-              this.element.querySelector('.hp-fill').style.width = `${(this.hp / this.maxHp) * 100}%`;
-              if (this.side === 'right') updateEnemyHpDisplay(this);
-              else updateAllyHpDisplay(this);
-              shootAttack(50, this.y);
-              if (this.hp <= 0) {
-                this.destroy(this.side === 'right');
-              }
-            }
-          });
-          lastTowerAttack = now;
-        }
-
-        if (this.hp <= 0) {
-          this.destroy(this.side === 'right');
-        }
+      place() {
+        this.el.style.left = (this.x * 100) + '%';
+        this.el.style.top = (this.y * 100) + '%';
       }
-
-      destroy(addResources = true) {
-        this.element.classList.add('destroyed');
-        setTimeout(() => {
-          if (this.element) this.element.remove();
-          this.active = false;
-        }, 500);
-        if (addResources && this.side === 'right') {
-          resources += this.isBoss || this.isFast ? 5 : 3;
-          score += this.isBoss || this.isFast ? 10 : 5;
-          resourceDisplay.innerText = `Resurs: ${resources}`;
-          scoreDisplay.innerText = `Ball: ${score}`;
-        }
+      hurt(n) {
+        this.hp -= n;
+        this.el.querySelector('.hp-fill').style.width = `${Math.max(0, this.hp / this.maxHp) * 100}%`;
+        this.el.querySelector('.hp-text').innerText = Math.max(0, Math.round(this.hp));
       }
+      remove() {
+        this.dead = true;
+        this.el.classList.add('destroyed');
+        const el = this.el;
+        setTimeout(() => el.remove(), 500);
+      }
+    }
+
+    function px(u) { return { x: u.x * gameArea.clientWidth, y: u.y * gameArea.clientHeight }; }
+    function dist(a, b) { const p = px(a), q = px(b); return Math.hypot(p.x - q.x, p.y - q.y); }
+
+    function fx(x, y, icon) {
+      const a = document.createElement('div');
+      a.className = 'attack';
+      a.innerText = icon || '🔥';
+      a.style.left = (x * 100) + '%';
+      a.style.top = (y * 100) + '%';
+      gameArea.appendChild(a);
+      setTimeout(() => a.remove(), 400);
+    }
+
+    function killEnemy(e, byWord) {
+      e.remove();
+      enemies = enemies.filter(o => o !== e);
+      const big = e.type === 'boss' || e.fast;
+      G.resources += big ? 12 : 5;
+      G.score += (big ? 30 : 10) + (byWord ? 5 : 0);
+      G.kills++;
     }
 
     function spawnEnemy() {
-      if (!gameActive) return;
-      const isBoss = Math.random() < 0.3;
-      const isFast = !isBoss && Math.random() < 0.02;
+      const boss = G.t > 45000 && Math.random() < 0.12;
       const types = ['piyoda', 'kamonchi', 'ritsar', 'mage'];
-      const type = isBoss ? 'boss' : types[Math.floor(Math.random() * types.length)];
-      const enemy = new Unit(type, 'right', isBoss, isFast);
-      enemy.createElement();
-      enemies.push(enemy);
+      const type = boss ? 'boss' : types[Math.floor(Math.random() * types.length)];
+      const fast = !boss && G.t > 30000 && Math.random() < 0.1;
+      enemies.push(new Unit(type, 'right', { fast }));
     }
 
-    function spawnAlly(type) {
-      const ally = new Unit(type, 'left');
-      ally.createElement();
-      allies.push(ally);
+    function step(u, opponents, dt) {
+      // Eng yaqin raqibni topish
+      let target = null, best = Infinity;
+      for (const o of opponents) {
+        if (o.dead) continue;
+        const d = dist(u, o);
+        if (d < best) { best = d; target = o; }
+      }
+      if (target && best <= u.range) {
+        target.hurt(u.dps * dt);
+        if (Math.random() < dt * 2) fx(target.x, target.y, u.range > 60 ? (u.type === 'mage' ? '✨' : '➶') : '💥');
+        return target;
+      }
+      const dir = u.side === 'left' ? 1 : -1;
+      if (u.side === 'left' && target) {
+        // Ittifoqchi dushman tomon yuradi
+        u.y += (target.y - u.y) * Math.min(1, dt * 1.5);
+        if (target.x > u.x) u.x += u.speed * dt;
+      } else {
+        u.x += dir * u.speed * dt;
+        if (u.side === 'right' && target && best < 160) u.y += (target.y - u.y) * Math.min(1, dt);
+      }
+      u.x = Math.min(1.02, u.x);
+      return null;
     }
 
-    function shootAttack(targetX, targetY) {
-      const attack = document.createElement('div');
-      attack.className = 'attack';
-      attack.innerText = '🔥';
-      attack.style.left = `${targetX}px`;
-      attack.style.top = `${targetY}px`;
-      gameArea.appendChild(attack);
-      setTimeout(() => attack.remove(), 400);
-    }
+    function loop(now) {
+      if (!G || !G.active) return;
+      const dt = Math.min(0.1, (now - G.last) / 1000);
+      G.last = now;
+      G.t += dt * 1000;
 
-    function updateGame() {
-      if (!gameActive) return;
-
-      enemies.forEach(enemy => enemy.update());
-      allies.forEach(ally => ally.update());
-      enemies = enemies.filter(enemy => enemy.active);
-      allies = allies.filter(ally => ally.active);
-      scoreDisplay.innerText = `Ball: ${score}`;
-      hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
-
-      const now = Date.now();
-      if (now - lastResourceUpdate >= 2000) {
-        resources += resourceBuildings.left.production;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        lastResourceUpdate = now;
+      if (G.t >= G.nextSpawn) {
+        spawnEnemy();
+        G.nextSpawn = G.t + Math.max(2200, 7000 - G.t / 12) * (0.7 + Math.random() * 0.6);
       }
-
-      if (now - lastEnemyBoost >= 30000 && enemyBoostCount < 10) {
-        enemyBoostCount++;
-        lastEnemyBoost = now;
+      if (G.t >= G.nextBoost && G.boost < 12) {
+        G.boost++;
+        G.nextBoost = G.t + 30000;
+        Neo.sound.play('level');
       }
+      G.resTimer += dt;
+      if (G.resTimer >= 2) { G.resTimer -= 2; G.resources += resourceB.production; }
+      for (const k in G.cd) G.cd[k] = Math.max(0, G.cd[k] - dt);
 
-      if (piyodaCooldown > 0) {
-        piyodaCooldown -= 1 / 60;
-        piyodaBtn.querySelector('.progress').style.width = `${(piyodaCooldown / 4) * 100}%`;
-        if (piyodaCooldown <= 0) {
-          piyodaBtn.classList.remove('disabled');
-          piyodaBtn.querySelector('.progress').style.width = '0%';
+      for (const a of allies) step(a, enemies, dt);
+      for (const e of enemies) {
+        step(e, allies, dt);
+        if (e.x <= BASE_X && !e.dead) {
+          G.hp -= e.dps * 4;
+          e.remove();
+          Neo.sound.play('explode');
+          gameArea.classList.remove('hit'); void gameArea.offsetWidth; gameArea.classList.add('hit');
         }
       }
-      if (kamonchiCooldown > 0) {
-        kamonchiCooldown -= 1 / 60;
-        kamonchiBtn.querySelector('.progress').style.width = `${(kamonchiCooldown / 5) * 100}%`;
-        if (kamonchiCooldown <= 0) {
-          kamonchiBtn.classList.remove('disabled');
-          kamonchiBtn.querySelector('.progress').style.width = '0%';
-        }
+      // Minora o'q uzadi
+      G.towerTimer += dt;
+      if (G.towerTimer >= 1) {
+        G.towerTimer = 0;
+        const inRange = enemies.filter(e => !e.dead && e.x < 0.45).sort((a, b) => a.x - b.x)[0];
+        if (inRange) { inRange.hurt(tower.damage); fx(inRange.x, inRange.y, '🔥'); }
       }
-      if (ritsarCooldown > 0) {
-        ritsarCooldown -= 1 / 60;
-        ritsarBtn.querySelector('.progress').style.width = `${(ritsarCooldown / 7) * 100}%`;
-        if (ritsarCooldown <= 0) {
-          ritsarBtn.classList.remove('disabled');
-          ritsarBtn.querySelector('.progress').style.width = '0%';
-        }
-      }
-      if (mageCooldown > 0) {
-        mageCooldown -= 1 / 60;
-        mageBtn.querySelector('.progress').style.width = `${(mageCooldown / 6) * 100}%`;
-        if (mageCooldown <= 0) {
-          mageBtn.classList.remove('disabled');
-          mageBtn.querySelector('.progress').style.width = '0%';
-        }
-      }
+      for (const e of enemies) if (!e.dead && e.hp <= 0) killEnemy(e, false);
+      for (const a of allies) if (!a.dead && (a.hp <= 0 || a.x > 1)) a.remove();
+      enemies = enemies.filter(e => !e.dead);
+      allies = allies.filter(a => !a.dead);
+      for (const u of enemies) u.place();
+      for (const u of allies) u.place();
 
-      if (playerHP <= 0) {
-        gameOver();
-      }
-
-      requestAnimationFrame(updateGame);
+      updateHUD();
+      if (G.hp <= 0) return gameOver();
+      rafId = requestAnimationFrame(loop);
     }
 
     function gameOver() {
-      gameActive = false;
-      gameOverText.innerText = `O'yin tugadi! Sizning balingiz: ${score}\nQayta urinib ko'ring!`;
-      gameOverModal.classList.add('show');
-      playSound(300, 0.2);
+      G.active = false;
+      cancelAnimationFrame(rafId);
+      updateHUD();
+      const res = Neo.stats.record('towerwar', { score: G.score, time: Math.floor(G.t / 1000) });
+      Neo.gameOver({
+        title: "Qal'a qulab tushdi 🏰",
+        subtitle: `${Math.floor(G.t / 1000)} soniya himoya qildingiz`,
+        isBest: res.isBest,
+        rows: [['Ball', G.score], ['Rekord', res.best], ["Yo'q qilingan dushman", G.kills], ['Daraja', G.boost + 1]],
+        onRestart: restartGame,
+      });
     }
 
     function restartGame() {
-      enemies.forEach(enemy => enemy.destroy(false));
-      allies.forEach(ally => ally.destroy(false));
+      cancelAnimationFrame(rafId);
+      [...enemies, ...allies].forEach(u => u.el.remove());
       enemies = [];
       allies = [];
-      score = 0;
-      resources = 0;
-      playerHP = 1200;
-      enemyBoostCount = 0;
-      piyodaCooldown = 0;
-      kamonchiCooldown = 0;
-      ritsarCooldown = 0;
-      mageCooldown = 0;
-      towers.left.forEach(t => {
-        t.hp = 100;
-        t.level = 1;
-        t.damage = 5;
-        t.element.querySelector('.hp-fill').style.width = '100%';
-        updateTowerLevelDisplay(t);
-        updateTowerHpDisplay(t);
-        if (!t.element.parentNode) gameArea.appendChild(t.element);
-      });
-      simpleTower.hp = 100;
-      simpleTower.level = 1;
-      simpleTower.wordDamage = 20;
-      simpleTower.element.querySelector('.hp-fill').style.width = '100%';
-      updateSimpleTowerLevelDisplay();
-      updateSimpleTowerHpDisplay();
-      resourceBuildings.left.level = 1;
-      resourceBuildings.left.production = 4;
-      barracks.left.level = 1;
-      updateBarracksLevelDisplay();
-      updateResourceNameDisplay();
-      resourceDisplay.innerText = 'Resurs: 0';
-      scoreDisplay.innerText = 'Ball: 0';
-      hpDisplay.innerText = 'HP: 1200';
-      piyodaBtn.classList.remove('disabled');
-      piyodaBtn.querySelector('.progress').style.width = '0%';
-      kamonchiBtn.classList.remove('disabled');
-      kamonchiBtn.querySelector('.progress').style.width = '0%';
-      ritsarBtn.classList.remove('disabled');
-      ritsarBtn.querySelector('.progress').style.width = '0%';
-      mageBtn.classList.remove('disabled');
-      mageBtn.querySelector('.progress').style.width = '0%';
-      gameActive = true;
-      lastResourceUpdate = Date.now();
-      lastTowerAttack = Date.now();
-      lastEnemyBoost = Date.now();
+      gameArea.querySelectorAll('.ally, .enemy, .attack, .start-hint').forEach(e => e.remove());
+      gameOverModal.classList.remove('show');
+      tower.level = 1; tower.damage = 12;
+      simpleTower.level = 1; simpleTower.wordDamage = 25;
+      resourceB.level = 1; resourceB.production = 4;
+      barracks.level = 1;
+      G = {
+        active: true, t: 0, last: performance.now(), score: 0, kills: 0, resources: 20,
+        hp: BASE_HP, maxHp: BASE_HP, boost: 0, nextBoost: 30000, nextSpawn: 2500, resTimer: 0, towerTimer: 0,
+        cd: { piyoda: 0, kamonchi: 0, ritsar: 0, mage: 0 },
+      };
+      refreshBuildings();
+      updateHUD();
       wordInput.value = '';
       wordInput.focus();
-      gameOverModal.classList.remove('show');
-      clearInterval(spawnEnemyInterval);
-      spawnEnemyInterval = setInterval(spawnEnemy, 8000);
+      rafId = requestAnimationFrame(loop);
     }
 
-    function playSound(frequency, duration) {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      oscillator.start();
-      setTimeout(() => oscillator.stop(), duration * 1000);
+    function buy(type) {
+      const s = UNIT_STATS[type];
+      if (!G || !G.active || G.resources < s.cost || G.cd[type] > 0) return;
+      G.resources -= s.cost;
+      G.cd[type] = s.cd;
+      allies.push(new Unit(type, 'left'));
+      Neo.sound.play('move');
+      updateHUD();
+      wordInput.focus();
+    }
+
+    function upgrade(kind) {
+      if (!G || !G.active) return;
+      const spec = {
+        tower: [tower, 10, 75, () => { tower.damage += 6; G.maxHp += 100; G.hp += 100; }],
+        simple: [simpleTower, 10, 75, () => { simpleTower.wordDamage += 10; }],
+        resource: [resourceB, 3, 100, () => { resourceB.production += 2; }],
+        barracks: [barracks, 10, 80, () => {}],
+      }[kind];
+      const [obj, max, base, apply] = spec;
+      const cost = getUpgradeCost(base, obj.level);
+      if (obj.level >= max || G.resources < cost) { Neo.sound.play('error'); return; }
+      G.resources -= cost;
+      obj.level++;
+      apply();
+      Neo.sound.play('level');
+      refreshBuildings();
+      updateHUD();
+      wordInput.focus();
     }
 
     wordInput.addEventListener('input', () => {
-      const input = wordInput.value.trim().toLowerCase();
-      const index = enemies.findIndex(enemy => enemy.active && enemy.word.toLowerCase() === input);
-      if (index !== -1) {
-        shootAttack(enemies[index].x, enemies[index].y);
-        enemies[index].hp -= simpleTower.wordDamage;
-        enemies[index].element.querySelector('.hp-fill').style.width = `${(enemies[index].hp / enemies[index].maxHp) * 100}%`;
-        updateEnemyHpDisplay(enemies[index]);
-        if (enemies[index].hp <= 0) {
-          enemies[index].destroy(true);
-        }
-        wordInput.value = '';
-        playSound(500, 0.1);
-      }
+      if (!G || !G.active) return;
+      const typed = wordInput.value.trim().toLowerCase();
+      let any = false;
+      for (const e of enemies) any = e.render(typed) || any;
+      wordInput.classList.toggle('bad', !!typed && !any);
+      const e = enemies.find(o => o.word.toLowerCase() === typed);
+      if (!e) return;
+      fx(e.x, e.y, '⚡');
+      e.hurt(simpleTower.wordDamage);
+      wordInput.value = '';
+      wordInput.classList.remove('bad');
+      if (e.hp <= 0) { killEnemy(e, true); Neo.sound.play('ok'); }
+      else { e.newWord(); Neo.sound.play('hit'); }
+      enemies.forEach(o => o.render(''));
+      updateHUD();
     });
-
-    wordInput.addEventListener('keydown', (e) => {
+    wordInput.addEventListener('keydown', e => {
+      const map = { '1': 'piyoda', '2': 'kamonchi', '3': 'ritsar', '4': 'mage' };
+      if (map[e.key]) { e.preventDefault(); buy(map[e.key]); return; }
       if (e.key === 'Enter' && wordInput.value.trim() !== '') {
-        playSound(200, 0.1);
+        Neo.sound.play('error');
         wordInput.value = '';
+        enemies.forEach(o => o.render(''));
       }
     });
 
-    piyodaBtn.addEventListener('click', () => {
-      if (resources >= 10 && piyodaCooldown <= 0 && gameActive) {
-        resources -= 10;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        spawnAlly('piyoda');
-        piyodaCooldown = 4;
-        piyodaBtn.classList.add('disabled');
-        piyodaBtn.querySelector('.progress').style.width = '100%';
-        playSound(400, 0.2);
-      }
-    });
-
-    kamonchiBtn.addEventListener('click', () => {
-      if (resources >= 15 && kamonchiCooldown <= 0 && gameActive) {
-        resources -= 15;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        spawnAlly('kamonchi');
-        kamonchiCooldown = 5;
-        kamonchiBtn.classList.add('disabled');
-        kamonchiBtn.querySelector('.progress').style.width = '100%';
-        playSound(400, 0.2);
-      }
-    });
-
-    ritsarBtn.addEventListener('click', () => {
-      if (resources >= 25 && ritsarCooldown <= 0 && gameActive) {
-        resources -= 25;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        spawnAlly('ritsar');
-        ritsarCooldown = 7;
-        ritsarBtn.classList.add('disabled');
-        ritsarBtn.querySelector('.progress').style.width = '100%';
-        playSound(400, 0.2);
-      }
-    });
-
-    mageBtn.addEventListener('click', () => {
-      if (resources >= 20 && mageCooldown <= 0 && gameActive) {
-        resources -= 20;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        spawnAlly('mage');
-        mageCooldown = 6;
-        mageBtn.classList.add('disabled');
-        mageBtn.querySelector('.progress').style.width = '100%';
-        playSound(400, 0.2);
-      }
-    });
-
-    // Minora kuchaytirish
-    document.getElementById('leftTower1').addEventListener('click', () => {
-      const cost = getUpgradeCost(75, towers.left[0].level);
-      if (resources >= cost && towers.left[0].level < 10 && gameActive) {
-        resources -= cost;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        towers.left[0].level++;
-        towers.left[0].hp = 100 + (towers.left[0].level - 1) * 50;
-        towers.left[0].damage = 5 + (towers.left[0].level - 1) * 5;
-        playerHP += 100;
-        towers.left[0].element.querySelector('.hp-fill').style.width = '100%';
-        updateTowerLevelDisplay(towers.left[0]);
-        updateTowerHpDisplay(towers.left[0]);
-        hpDisplay.innerText = `HP: ${Math.round(playerHP)}`;
-        playSound(600, 0.2);
-      }
-    });
-
-    // Oddiy minora kuchaytirish
-    document.getElementById('simpleTower').addEventListener('click', () => {
-      const cost = getUpgradeCost(75, simpleTower.level);
-      if (resources >= cost && simpleTower.level < 10 && gameActive) {
-        resources -= cost;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        simpleTower.level++;
-        simpleTower.hp = 100 + (simpleTower.level - 1) * 50;
-        simpleTower.wordDamage = 20 + (simpleTower.level - 1) * 5;
-        simpleTower.element.querySelector('.hp-fill').style.width = '100%';
-        updateSimpleTowerLevelDisplay();
-        updateSimpleTowerHpDisplay();
-        playSound(600, 0.2);
-      }
-    });
-
-    // Resurs uyi kuchaytirish
-    document.getElementById('leftResource').addEventListener('click', () => {
-      const cost = getUpgradeCost(100, resourceBuildings.left.level);
-      if (resources >= cost && resourceBuildings.left.level < 3 && gameActive) {
-        resources -= cost;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        resourceBuildings.left.level++;
-        resourceBuildings.left.production = resourceBuildings.left.level === 2 ? 6 : 8;
-        updateResourceNameDisplay();
-        playSound(600, 0.2);
-      }
-    });
-
-    // Kazarma kuchaytirish
-    document.getElementById('leftBarracks').addEventListener('click', () => {
-      const cost = getUpgradeCost(80, barracks.left.level);
-      if (resources >= cost && barracks.left.level < 10 && gameActive) {
-        resources -= cost;
-        resourceDisplay.innerText = `Resurs: ${resources}`;
-        barracks.left.level++;
-        updateBarracksLevelDisplay();
-        playSound(600, 0.2);
-      }
-    });
-
+    piyodaBtn.addEventListener('click', () => buy('piyoda'));
+    kamonchiBtn.addEventListener('click', () => buy('kamonchi'));
+    ritsarBtn.addEventListener('click', () => buy('ritsar'));
+    mageBtn.addEventListener('click', () => buy('mage'));
+    tower.el.addEventListener('click', () => upgrade('tower'));
+    simpleTower.el.addEventListener('click', () => upgrade('simple'));
+    resourceB.el.addEventListener('click', () => upgrade('resource'));
+    barracks.el.addEventListener('click', () => upgrade('barracks'));
     restartButton.addEventListener('click', restartGame);
 
-    let spawnEnemyInterval = setInterval(spawnEnemy, 8000);
-    requestAnimationFrame(updateGame);
-    wordInput.focus();
-    updateResourceNameDisplay();
+    Neo.addMuteButton();
+    refreshBuildings();
+    (function intro() {
+      const best = Neo.stats.best('towerwar');
+      const d = document.createElement('div');
+      d.className = 'start-hint';
+      d.innerHTML = `<h3>Qal'a Himoyachisi</h3>
+        <p>Dushman ustidagi so'zni yozing — so'z minorasi unga zarba beradi. Resurs yig'ib askar yollang
+        (<b>1</b>-<b>4</b> tugmalari) va binolarni bosib kuchaytiring. Dushman qal'aga yetsa, baza HP kamayadi.</p>
+        ${best != null ? `<p>🏆 Rekord: <b>${best}</b></p>` : ''}
+        <button id="twStart">Boshlash</button>`;
+      gameArea.appendChild(d);
+      document.getElementById('twStart').onclick = restartGame;
+    })();
   </script>
 </body>
 </html>

@@ -497,6 +497,20 @@
       .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
       .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    #gameOverModal { max-height: 92vh; overflow: auto; }
+    .quiz-review { margin-top: 14px; text-align: left; font-size: 1rem; }
+    .quiz-review h3 { margin: 12px 0 8px; font-size: 1.1rem; }
+    .quiz-review ol { padding-left: 22px; columns: 2; }
+    .quiz-review li { margin-bottom: 6px; break-inside: avoid; }
+    .quiz-review .ok { color: #34d399; }
+    .quiz-review .bad { color: #f87171; }
+    @media (max-width: 600px) { .quiz-review ol { columns: 1; } }
+    /* Markazlashtirilgan oynalar animatsiyasi translate(-50%)ni buzmasin */
+    .difficulty-modal, #gameOverModal.show { animation-name: modalIn; max-width: min(550px, calc(100vw - 24px)); }
+    @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    @media (max-width: 480px) { .difficulty-modal { padding: 22px 16px; } .difficulty-modal h2 { font-size: 1.4rem; } .difficulty-btn { padding: 12px 16px; } }
   </style>
 </head>
 <body>
@@ -548,6 +562,7 @@
     <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
 </footer>
 
+<script src="../assets/neo.js"></script>
 <script>
     // So'zlar bazasi (300 ta namuna so'z, har darajada 100 ta, sinonimlar kengaytirildi)
     const words = [
@@ -848,6 +863,9 @@
     let availableWords = [];
     let assessmentWords = [];
     let assessmentCorrect = 0;
+    let answering = false;
+    let mistakes = [];
+    const normalize = t => t.toLowerCase().replace(/[‘’ʻʼ`´]/g, "'").replace(/\s+/g, " ").trim();
 
     const difficultyModal = document.getElementById("difficultyModal");
     const progressBar = document.getElementById("progressBar");
@@ -887,6 +905,9 @@
 
     function startGame() {
       score = 0;
+      mistakes = [];
+      answerInput.disabled = false;
+      submitButton.disabled = false;
       currentWordIndex = 0;
       usedWords = [];
       assessmentWords = [];
@@ -936,9 +957,12 @@
         timerText.textContent = timeLeft;
         timerBar.style.width = `${(timeLeft / (currentLevel === "beginner" ? 30 : currentLevel === "intermediate" ? 20 : currentLevel === "advanced" ? 15 : 30  )) * 100}%`;
         if (timeLeft <= 0) {
+          answering = true;
           markAnswer(false);
           showCorrectAnswer();
-          nextWord();
+          mistakes.push({ word: currentWord.word, answer: currentWord.translations[0], you: "" });
+          if (currentLevel === "assessment") assessmentWords.push({ word: currentWord.word, correct: false });
+          setTimeout(nextWord, 2000);
         }
       }, 1000);
     }
@@ -960,7 +984,9 @@
       availableWords.splice(randomIndex, 1);
 
       wordContainer.textContent = currentWord.word;
+      answering = false;
       answerInput.value = "";
+      answerInput.focus();
       answerInput.classList.remove("correct", "incorrect");
       wordContainer.classList.remove("incorrect");
       currentWordIndex++;
@@ -969,9 +995,13 @@
     }
 
     function checkAnswer() {
-      const userAnswer = answerInput.value.trim().toLowerCase();
-      const correctAnswer = currentWord.translations[0].toLowerCase();
-      const isCorrect = userAnswer === correctAnswer || currentWord.synonyms.some(syn => syn.toLowerCase() === userAnswer);
+      if (answering || !currentWord) return;
+      const userAnswer = normalize(answerInput.value);
+      if (!userAnswer) return;
+      answering = true;
+      const isCorrect = currentWord.translations.some(t => normalize(t) === userAnswer) || currentWord.synonyms.some(syn => normalize(syn) === userAnswer);
+      Neo.sound.play(isCorrect ? "ok" : "error");
+      if (!isCorrect) mistakes.push({ word: currentWord.word, answer: currentWord.translations[0], you: answerInput.value.trim() });
 
       markAnswer(isCorrect);
       if (!isCorrect) {
@@ -982,7 +1012,7 @@
         if (isCorrect) assessmentCorrect++;
       }
 
-      setTimeout(nextWord, 1500); // To'g'ri javob ko'rsatilishi uchun biroz ko'proq vaqt
+      setTimeout(nextWord, isCorrect ? 700 : 1800); // To'g'ri javob ko'rsatilishi uchun biroz ko'proq vaqt
     }
 
     function markAnswer(isCorrect) {
@@ -1018,7 +1048,16 @@
       }
 
       gameOverText.textContent = resultText;
+      const pct = Math.round(score / (totalWords * 10) * 100);
+      const res = Neo.stats.record("translation", { score: pct, level: currentLevel });
+      const box = document.createElement("div");
+      box.className = "quiz-review";
+      const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      box.innerHTML = `<p>${res.isBest ? "🏆 Yangi rekord! " : ""}Natija: <b>${pct}%</b> · Rekord: ${res.best}%</p>` +
+        (mistakes.length ? `<h3>Xatolar (${mistakes.length})</h3><ol>` + mistakes.map(m => `<li><b>${esc(m.word)}</b> → <span class="ok">${esc(m.answer)}</span>${m.you ? ` <s class="bad">${esc(m.you)}</s>` : ' <i class="bad">(vaqt tugadi)</i>'}</li>`).join("") + "</ol>" : "");
+      gameOverText.appendChild(box);
       gameOverModal.classList.add("show");
+      Neo.sound.play(pct >= 60 ? "win" : "lose");
     }
 
     function resetGame() {

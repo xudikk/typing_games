@@ -487,6 +487,21 @@
       .brand-icon { width: 36px; height: 36px; font-size: 1.6rem; }
       .nav-btn { padding: 6px 15px; font-size: 0.9rem; }
     }
+
+    /* --- Yangilanishlar --- */
+    .option-btn { position: relative; font-family: 'Fira Code', Consolas, monospace; }
+    .option-btn::before { content: attr(data-key); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: .75em; opacity: .5; }
+    #gameOverModal { max-height: 92vh; overflow: auto; }
+    .quiz-review { margin-top: 14px; text-align: left; font-size: 1rem; }
+    .quiz-review h3 { margin: 12px 0 8px; font-size: 1.1rem; }
+    .quiz-review ol { padding-left: 22px; }
+    .quiz-review li { margin-bottom: 10px; line-height: 1.45; }
+    .quiz-review .ok { color: #34d399; }
+    .quiz-review .bad { color: #f87171; }
+    /* Markazlashtirilgan oynalar animatsiyasi translate(-50%)ni buzmasin */
+    .difficulty-modal, #gameOverModal.show { animation-name: modalIn; max-width: min(550px, calc(100vw - 24px)); }
+    @keyframes modalIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    @media (max-width: 480px) { .difficulty-modal { padding: 22px 16px; } .difficulty-modal h2 { font-size: 1.4rem; } .difficulty-btn { padding: 12px 16px; } }
   </style>
 </head>
 <body>
@@ -540,6 +555,7 @@
     <span>© 2025 NeoCoder | <a href="#">Privacy</a> | <a href="#">Terms</a></span>
   </footer>
 
+  <script src="../../assets/neo.js"></script>
   <script src="questions.js"></script>
   <script>
     const canvas = document.getElementById("particlesCanvas");
@@ -599,6 +615,9 @@
     let timeLeft = 0;
     let usedQuestions = [];
     let availableQuestions = [];
+    let answered = false;
+    let mistakes = [];
+    const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
     const languageModal = document.getElementById("languageModal");
     const questionLangModal = document.getElementById("questionLangModal");
@@ -643,7 +662,8 @@
       score = 0;
       currentQuestionIndex = 0;
       usedQuestions = [];
-      availableQuestions = questions.filter(q => q.language === currentLanguage).slice(0, totalQuestions);
+      availableQuestions = shuffleArray(questions.filter(q => q.language === currentLanguage)).slice(0, totalQuestions);
+      mistakes = [];
 
       totalWordsDisplay.textContent = totalQuestions;
       scoreBoard.style.display = "flex";
@@ -671,9 +691,14 @@
         timerText.textContent = timeLeft;
         timerBar.style.width = `${(timeLeft / 30) * 100}%`;
         if (timeLeft <= 0) {
+          if (answered) return;
+          answered = true;
           markAnswer(false);
+          lockOptions(-1);
           showCorrectAnswer();
-          setTimeout(nextQuestion, 1500);
+          mistakes.push({ q: currentQuestionText(), a: currentQuestion.correctAnswer, you: null });
+          Neo.sound.play("error");
+          setTimeout(nextQuestion, 2000);
         }
       }, 1000);
     }
@@ -689,9 +714,10 @@
       usedQuestions.push(currentQuestion);
       availableQuestions.splice(randomIndex, 1);
 
-      wordContainer.innerHTML = `<div>${questionLanguage === 'uz' ? currentQuestion.question_uz : currentQuestion.question_en}</div>`;
+      answered = false;
+      wordContainer.innerHTML = `<div>${esc(currentQuestionText())}</div>`;
       optionsContainer.innerHTML = currentQuestion.options.map((option, index) => `
-        <button class="option-btn" data-index="${index}">${option}</button>
+        <button class="option-btn" data-index="${index}" data-key="${index + 1}">${esc(option)}</button>
       `).join("");
 
       document.querySelectorAll(".option-btn").forEach(button => {
@@ -704,27 +730,39 @@
       startTimer();
     }
 
-    function handleOptionClick(e) {
-      const selectedIndex = parseInt(e.target.dataset.index);
-      const correctAnswer = currentQuestion.correctAnswer;
-      const isCorrect = selectedIndex === currentQuestion.options.indexOf(correctAnswer);
+    function currentQuestionText() {
+      return questionLanguage === 'uz' ? currentQuestion.question_uz : currentQuestion.question_en;
+    }
 
-      markAnswer(isCorrect);
+    function lockOptions(selectedIndex) {
+      const correctIndex = currentQuestion.options.indexOf(currentQuestion.correctAnswer);
       document.querySelectorAll(".option-btn").forEach((btn, index) => {
         btn.disabled = true;
-        if (index === currentQuestion.options.indexOf(correctAnswer)) {
-          btn.classList.add("correct");
-        } else if (index === selectedIndex) {
-          btn.classList.add("incorrect");
-        }
+        if (index === correctIndex) btn.classList.add("correct");
+        else if (index === selectedIndex) btn.classList.add("incorrect");
       });
+    }
 
+    function handleOptionClick(e) {
+      if (answered) return;
+      answered = true;
+      const selectedIndex = parseInt(e.currentTarget.dataset.index);
+      const isCorrect = selectedIndex === currentQuestion.options.indexOf(currentQuestion.correctAnswer);
+      markAnswer(isCorrect);
+      lockOptions(selectedIndex);
+      Neo.sound.play(isCorrect ? "ok" : "error");
       if (!isCorrect) {
         showCorrectAnswer();
+        mistakes.push({ q: currentQuestionText(), a: currentQuestion.correctAnswer, you: currentQuestion.options[selectedIndex] });
       }
-
-      setTimeout(nextQuestion, 1500);
+      setTimeout(nextQuestion, isCorrect ? 900 : 2000);
     }
+
+    document.addEventListener("keydown", e => {
+      if (answered) return;
+      const btn = optionsContainer.querySelector(`[data-key="${e.key}"]`);
+      if (btn) btn.click();
+    });
 
     function markAnswer(isCorrect) {
       clearInterval(timer);
@@ -739,9 +777,9 @@
 
     function showCorrectAnswer() {
       wordContainer.innerHTML = `
-        <div>${questionLanguage === 'uz' ? currentQuestion.question_uz : currentQuestion.question_en}</div>
+        <div>${esc(currentQuestionText())}</div>
         <div style="margin-top: 10px; font-size: 1.2rem; color: var(--accent);">
-          ${questionLanguage === 'uz' ? "To'g'ri javob" : "Correct Answer"}: ${currentQuestion.correctAnswer}
+          ${questionLanguage === 'uz' ? "To'g'ri javob" : "Correct Answer"}: <code>${esc(currentQuestion.correctAnswer)}</code>
         </div>
       `;
     }
@@ -755,7 +793,16 @@
         `O'yin tugadi! Sizning balingiz: ${score}/${totalQuestions * 10}. Siz ${currentLanguage} quizini yakunladingiz!` :
         `Game Over! Your score: ${score} out of ${totalQuestions * 10}. You completed the ${currentLanguage} quiz!`}`;
       gameOverText.textContent = resultText;
+      const pct = Math.round(score / (totalQuestions * 10) * 100);
+      const res = Neo.stats.record("codingquiz", { score: pct, language: currentLanguage });
+      const box = document.createElement("div");
+      box.className = "quiz-review";
+      box.innerHTML = `<p>${res.isBest ? "🏆 Yangi rekord! " : ""}${pct}% · Rekord: ${res.best}%</p>` +
+        (mistakes.length ? `<h3>${questionLanguage === 'uz' ? 'Xatolar' : 'Mistakes'} (${mistakes.length})</h3><ol>` + mistakes.map(m =>
+          `<li>${esc(m.q)}<br><code class="ok">✔ ${esc(m.a)}</code>${m.you != null ? ` <s class="bad">${esc(m.you)}</s>` : ''}</li>`).join("") + "</ol>" : "");
+      gameOverText.appendChild(box);
       gameOverModal.classList.add("show");
+      Neo.sound.play(pct >= 60 ? "win" : "lose");
     }
 
     function resetGame() {
