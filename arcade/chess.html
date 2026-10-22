@@ -73,43 +73,50 @@
     .footer{text-align:center;padding:12px;background:linear-gradient(45deg,rgba(15,23,42,.95),rgba(30,41,59,.95));color:#e0f2fe;font-size:.9rem}
     .footer a{color:var(--accent);text-decoration:none;margin:0 5px;transition:text-shadow .2s ease}
     .footer a:hover{text-shadow:0 0 8px rgba(165,180,252,.6);text-decoration:underline}
-    @media (max-width:1200px){
-    .chessboard{
-        grid-template-columns:repeat(8,70px);
-        grid-template-rows:repeat(8,70px);
-        max-width: 560px;
-      }
-    }
-    @media (max-width:900px){
-      .chessboard{
-        grid-template-columns:repeat(8,60px);
-        grid-template-rows:repeat(8,60px);
-        max-width: 480px;
-
-      }
-    }
-    @media (max-width:768px){
-        .chessboard{
-            grid-template-columns:repeat(8,50px);
-            grid-template-rows:repeat(8,50px);
-            max-width: 400px;
-
-        }
-    }
-    @media (max-width:480px){
-      .chessboard{
-        grid-template-columns:repeat(8,40px);
-        grid-template-rows:repeat(8,40px);
-        max-width: 320px;
-
-      }
-      .game-title{
-        font-size:2rem
-      }
-      .square{
-        font-size:3rem
-        }
-    }
+    /* --- Yangilangan doska --- */
+    :root{--sq:min(72px, calc((100vw - 56px) / 8))}
+    .game-container{min-height:0;max-width:1100px}
+    .chessboard{grid-template-columns:repeat(8,var(--sq));grid-template-rows:repeat(8,var(--sq));width:auto;border-width:4px;border-radius:6px;overflow:hidden}
+    .square{position:relative;font-size:calc(var(--sq) * .78);line-height:1;text-shadow:none}
+    .square:hover{transform:none;filter:brightness(1.08)}
+    .square .pc{position:relative;z-index:1;transition:transform .15s}
+    .square:hover .pc{transform:scale(1.08)}
+    .white-piece{color:#fff;text-shadow:0 0 2px #000,0 0 2px #000,0 2px 3px rgba(0,0,0,.6)}
+    .black-piece{color:#1a1a1a;text-shadow:0 0 2px rgba(255,255,255,.7)}
+    .selected{outline:none;box-shadow:inset 0 0 0 4px #facc15}
+    .last{background-image:linear-gradient(rgba(250,204,21,.38),rgba(250,204,21,.38))}
+    .possible::after{content:'';position:absolute;width:28%;height:28%;border-radius:50%;background:rgba(20,83,45,.55)}
+    .capture{box-shadow:inset 0 0 0 5px rgba(220,38,38,.75)}
+    .check{background:radial-gradient(circle,rgba(239,68,68,.95) 20%,rgba(239,68,68,.35) 70%) !important}
+    .crd{position:absolute;font-style:normal;font-size:calc(var(--sq) * .17);font-weight:700;opacity:.7;color:#4a3320;z-index:0}
+    .dark .crd{color:#f6ead6}
+    .crd.rk{top:2px;left:3px}
+    .crd.fl{bottom:1px;right:4px}
+    .turn-status{position:static;transform:none;display:inline-block;margin:0 auto 14px;font-size:1.3rem}
+    .chess-layout{display:flex;gap:20px;justify-content:center;align-items:flex-start}
+    .board-col{display:flex;flex-direction:column;align-items:center;gap:6px}
+    .captured{min-height:28px;font-size:1.4rem;letter-spacing:-2px;width:100%;text-align:left}
+    .captured b{letter-spacing:0;font-size:.9rem;color:var(--accent);margin-left:6px}
+    .status{min-height:1.6em;margin-top:6px;font-size:1.2rem}
+    .status:empty{background:none;box-shadow:none;padding:0}
+    .side{width:220px;background:rgba(15,23,42,.55);border-radius:12px;padding:12px;text-align:left}
+    .side h4{margin:10px 0 6px;color:var(--accent)}
+    .side-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+    .side-btns button{padding:8px;border:0;border-radius:8px;cursor:pointer;color:#fff;background:rgba(99,102,241,.7);font:600 .9rem Inter,sans-serif}
+    .side-btns button:hover{background:#6366f1}
+    .side-btns button:first-child{grid-column:1/-1;background:linear-gradient(45deg,#f59e0b,#facc15);color:#1e1b4b}
+    .mode-label{margin-top:8px;font-size:.85rem;opacity:.8}
+    .moves{list-style:decimal;padding-left:28px;max-height:380px;overflow:auto;font-family:'Fira Code',Consolas,monospace;font-size:.95rem}
+    .moves li{padding:2px 0}
+    .moves li span{display:inline-block;width:70px}
+    .opt-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .modal-content .opt{width:auto;margin:4px;background:transparent;border-color:var(--accent)}
+    .modal-content .opt.active{background:linear-gradient(45deg,var(--secondary),#facc15);border-color:#facc15}
+    .modal-content .start{margin-top:16px;background:linear-gradient(45deg,#22c55e,#16a34a);border-color:#22c55e}
+    .modal-content .ghost{background:transparent}
+    .promo-row{display:flex;gap:10px;justify-content:center}
+    .modal-content .promo-row button{width:72px;height:72px;font-size:3rem;padding:0;background:#f0d9b5}
+    @media (max-width:860px){.chess-layout{flex-direction:column;align-items:center}.side{width:100%;max-width:calc(var(--sq) * 8 + 8px)}.moves{max-height:160px;columns:2}}
   </style>
 </head>
 <body>
@@ -135,16 +142,65 @@
     </div>
 
     <div class="game-container">
-        <br><br><br>
-        <div class="turn-status" id="turnStatus">Oq yurishi</div>
-        <div id="chessboard" class="chessboard" aria-label="Shaxmat doskasi"></div>
-        <div class="status" id="status" aria-live="polite"></div>
+        <h2 class="game-title">Shaxmat</h2>
+        <div class="turn-status white" id="turnStatus">Oq yurishi</div>
+        <div class="chess-layout">
+            <div class="board-col">
+                <div class="captured" id="capTop"></div>
+                <div id="chessboard" class="chessboard" aria-label="Shaxmat doskasi"></div>
+                <div class="captured" id="capBottom"></div>
+                <div class="status" id="status" aria-live="polite"></div>
+            </div>
+            <aside class="side">
+                <div class="side-btns">
+                    <button id="btnNew" title="Yangi o'yin">♻ Yangi</button>
+                    <button id="btnUndo" title="Yurishni bekor qilish">↶ Ortga</button>
+                    <button id="btnFlip" title="Doskani aylantirish">⇅ Aylantirish</button>
+                </div>
+                <div class="mode-label" id="modeLabel"></div>
+                <h4>Yurishlar</h4>
+                <ol class="moves" id="moveList"></ol>
+            </aside>
+        </div>
+
+        <div class="modal" id="setupModal" style="display:flex">
+            <div class="modal-content">
+                <h2>Yangi o'yin</h2>
+                <p>Rejim:</p>
+                <div class="opt-row" data-group="mode">
+                    <button class="opt active" data-v="bot">🤖 Botga qarshi</button>
+                    <button class="opt" data-v="human">👥 Ikki o'yinchi</button>
+                </div>
+                <div id="botOpts">
+                    <p>Rangingiz:</p>
+                    <div class="opt-row" data-group="color">
+                        <button class="opt active" data-v="w">♔ Oq</button>
+                        <button class="opt" data-v="b">♚ Qora</button>
+                    </div>
+                    <p>Bot darajasi:</p>
+                    <div class="opt-row" data-group="level">
+                        <button class="opt" data-v="1">Oson</button>
+                        <button class="opt active" data-v="2">O'rta</button>
+                        <button class="opt" data-v="3">Qiyin</button>
+                    </div>
+                </div>
+                <button id="btnStart" class="start">Boshlash</button>
+            </div>
+        </div>
+
+        <div class="modal" id="promoModal">
+            <div class="modal-content">
+                <h2>Piyoda qaysi figuraga aylansin?</h2>
+                <div class="promo-row" id="promoRow"></div>
+            </div>
+        </div>
 
         <div class="modal" id="gameOver">
             <div class="modal-content">
                 <h2>O'yin tugadi!</h2>
                 <p id="winnerText"></p>
-                <button id="restartGame">Qayta boshlash</button>
+                <button id="restartGame">Yangi o'yin</button>
+                <button id="closeOver" class="ghost">Doskani ko'rish</button>
             </div>
         </div>
     </div>
@@ -154,378 +210,449 @@
     © 2025 NeoCoder | <a href="#">Terms</a> | <a href="#">Privacy</a>
 </footer>
 
+<script src="../assets/neo.js"></script>
 <script>
-    // ======= Dastlabki holat =======
-    const board = [
-      ['r','n','b','q','k','b','n','r'],
-      ['p','p','p','p','p','p','p','p'],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['','','','','','','',''],
-      ['P','P','P','P','P','P','P','P'],
-      ['R','N','B','Q','K','B','N','R'],
-    ];
-    const pieces = {
-      'P':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔',
-      'p':'♟︎','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚'
-    };
+    // ================= Shaxmat qoidalari =================
+    const START = [
+      'rnbqkbnr', 'pppppppp', '........', '........', '........', '........', 'PPPPPPPP', 'RNBQKBNR',
+    ].map(r => r.split('').map(ch => ch === '.' ? '' : ch));
+    const GLYPH = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' };
+    const VALUE = { P: 100, N: 320, B: 330, R: 500, Q: 900, K: 0 };
+    const FILES = 'abcdefgh';
+    const isW = p => !!p && p === p.toUpperCase();
+    const side = p => p ? (isW(p) ? 'w' : 'b') : null;
+    const inB = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+    const sq = (r, c) => FILES[c] + (8 - r);
+    const KN = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+    const KG = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+    const DIAG = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+    const ORTH = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-    const chessboard = document.getElementById('chessboard');
-    const statusEl = document.getElementById('status');
-    const turnStatus = document.getElementById('turnStatus');
-    const gameOverScreen = document.getElementById('gameOver');
-    const winnerText = document.getElementById('winnerText');
-    const restartGameBtn = document.getElementById('restartGame');
-
-    let turn = 'white';                  // 'white' | 'black'
-    let isCheck = false;                 // navbatdagi tomon shohi checkdami?
-    let selected = null;                 // {row, col} | null
-    let possibleMoves = [];              // [{r,c,capture}]
-
-    // ======= Yordamchi funksiyalar =======
-    const inBounds = (r,c)=> r>=0 && r<8 && c>=0 && c<8;
-    const isWhite = p => !!p && p === p.toUpperCase();
-    const isBlack = p => !!p && p === p.toLowerCase();
-    const colorOf = p => isWhite(p)?'white':isBlack(p)?'black':null;
-
-    function cloneBoard(b){
-      return b.map(row=>row.slice());
+    function newState() {
+      return { b: START.map(r => r.slice()), turn: 'w', castle: { K: true, Q: true, k: true, q: true }, ep: null, half: 0, full: 1 };
     }
 
-    function squaresEqual(a,b){ return a && b && a.row===b.row && a.col===b.col; }
-
-    function findKing(b, color){
-      const k = color==='white'?'K':'k';
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          if(b[r][c]===k) return {r,c};
+    // (r,c) katak `by` tomon tomonidan hujum ostidami?
+    function attacked(b, r, c, by) {
+      const pawn = by === 'w' ? 'P' : 'p', dir = by === 'w' ? 1 : -1;
+      for (const dc of [-1, 1]) { const rr = r + dir, cc = c + dc; if (inB(rr, cc) && b[rr][cc] === pawn) return true; }
+      const kn = by === 'w' ? 'N' : 'n', kg = by === 'w' ? 'K' : 'k';
+      for (const [dr, dc] of KN) { const rr = r + dr, cc = c + dc; if (inB(rr, cc) && b[rr][cc] === kn) return true; }
+      for (const [dr, dc] of KG) { const rr = r + dr, cc = c + dc; if (inB(rr, cc) && b[rr][cc] === kg) return true; }
+      const slide = (dirs, types) => {
+        for (const [dr, dc] of dirs) {
+          let rr = r + dr, cc = c + dc;
+          while (inB(rr, cc)) {
+            const p = b[rr][cc];
+            if (p) { if (side(p) === by && types.includes(p.toUpperCase())) return true; break; }
+            rr += dr; cc += dc;
+          }
         }
-      }
+        return false;
+      };
+      return slide(DIAG, 'BQ') || slide(ORTH, 'RQ');
+    }
+    function kingPos(b, s) {
+      const k = s === 'w' ? 'K' : 'k';
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) if (b[r][c] === k) return [r, c];
       return null;
     }
-
-    function isPathClear(b, sr, sc, er, ec){
-      const dr = Math.sign(er - sr);
-      const dc = Math.sign(ec - sc);
-      let r = sr + dr, c = sc + dc;
-      while(r !== er || c !== ec){
-        if(b[r][c]) return false;
-        r += dr; c += dc;
-      }
-      return true;
+    function inCheck(S, s = S.turn) {
+      const k = kingPos(S.b, s);
+      return !!k && attacked(S.b, k[0], k[1], s === 'w' ? 'b' : 'w');
     }
 
-    // Geometrik yurish qoidalari (path va o'z shohini tekshirmasdan).
-    // Pawn uchun forAttack=true bo'lsa faqat diagonal olish tekshiriladi.
-    function pieceCanMove(b, sr, sc, er, ec, forAttack=false){
-      const p = b[sr][sc];
-      if(!p) return false;
-
-      const target = b[er][ec];
-      const sameColor = !!target && (isWhite(p) === isWhite(target));
-      if(!forAttack && sameColor) return false;
-
-      const type = p.toUpperCase();
-      const rowDiff = Math.abs(er - sr);
-      const colDiff = Math.abs(ec - sc);
-
-      switch(type){
-        case 'P':{
-          const dir = isWhite(p) ? -1 : 1;
-          const startRank = isWhite(p) ? 6 : 1;
-
-          if(forAttack){
-            // faqat diagonal olish
-            return rowDiff===1 && colDiff===1 && (er === sr + dir);
+    function pseudoMoves(S) {
+      const { b, turn } = S, moves = [], opp = turn === 'w' ? 'b' : 'w';
+      const add = (fr, fc, tr, tc, extra = {}) => moves.push(Object.assign({ fr, fc, tr, tc, piece: b[fr][fc], captured: b[tr][tc] }, extra));
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const p = b[r][c];
+        if (!p || side(p) !== turn) continue;
+        const t = p.toUpperCase();
+        if (t === 'P') {
+          const dir = turn === 'w' ? -1 : 1, start = turn === 'w' ? 6 : 1, last = turn === 'w' ? 0 : 7;
+          const push = (tr, tc, extra) => {
+            if (tr === last) for (const pr of 'QRBN') add(r, c, tr, tc, Object.assign({ promo: turn === 'w' ? pr : pr.toLowerCase() }, extra));
+            else add(r, c, tr, tc, extra);
+          };
+          if (inB(r + dir, c) && !b[r + dir][c]) {
+            push(r + dir, c);
+            if (r === start && !b[r + 2 * dir][c]) add(r, c, r + 2 * dir, c, { double: true });
           }
-
-          // oddiy yurish (oldinga bo'sh katak)
-          if(colDiff===0 && er === sr + dir && !target) return true;
-
-          // 2 qadam startdan (yo'lda to'siq bo'lmasin)
-          if(colDiff===0 && sr===startRank && er===sr + 2*dir && !target && !b[sr+dir][sc]) return true;
-
-          // diagonal olish
-          if(rowDiff===1 && colDiff===1 && er===sr + dir && target) return true;
-
-          return false;
-        }
-        case 'N':
-          return (rowDiff===2 && colDiff===1) || (rowDiff===1 && colDiff===2);
-
-        case 'B':
-          return rowDiff===colDiff && isPathClear(b, sr, sc, er, ec);
-
-        case 'R':
-          return (rowDiff===0 || colDiff===0) && isPathClear(b, sr, sc, er, ec);
-
-        case 'Q':
-          return (rowDiff===colDiff || rowDiff===0 || colDiff===0) && isPathClear(b, sr, sc, er, ec);
-
-        case 'K':
-          return rowDiff<=1 && colDiff<=1; // (castling yo'q)
-      }
-      return false;
-    }
-
-    function isSquareAttacked(b, r, c, byColor){
-      for(let i=0;i<8;i++){
-        for(let j=0;j<8;j++){
-          const p = b[i][j];
-          if(!p) continue;
-          if((byColor==='white' && isWhite(p)) || (byColor==='black' && isBlack(p))){
-            const type = p.toUpperCase();
-
-            if(type==='P'){
-              // piyoda hujumi: faqat diagonal
-              if(pieceCanMove(b, i, j, r, c, true)) return true;
-            } else if(type==='N'){
-              if(pieceCanMove(b, i, j, r, c, true)) { // knight forAttack muhim emas
-                // lekin knight path clear talab qilmaydi
-                const rd=Math.abs(r-i), cd=Math.abs(c-j);
-                if((rd===2 && cd===1)||(rd===1 && cd===2)) return true;
-              }
-            } else if(type==='B'){
-              if(Math.abs(r-i)===Math.abs(c-j) && isPathClear(b, i, j, r, c)) return true;
-            } else if(type==='R'){
-              if((r===i || c===j) && isPathClear(b, i, j, r, c)) return true;
-            } else if(type==='Q'){
-              const diag = Math.abs(r-i)===Math.abs(c-j);
-              const line = (r===i || c===j);
-              if((diag || line) && isPathClear(b, i, j, r, c)) return true;
-            } else if(type==='K'){
-              if(Math.abs(r-i)<=1 && Math.abs(c-j)<=1) return true;
+          for (const dc of [-1, 1]) {
+            const tr = r + dir, tc = c + dc;
+            if (!inB(tr, tc)) continue;
+            if (b[tr][tc] && side(b[tr][tc]) === opp) push(tr, tc);
+            else if (S.ep && S.ep[0] === tr && S.ep[1] === tc) add(r, c, tr, tc, { epCapture: true, captured: turn === 'w' ? 'p' : 'P' });
+          }
+        } else if (t === 'N' || t === 'K') {
+          for (const [dr, dc] of (t === 'N' ? KN : KG)) {
+            const tr = r + dr, tc = c + dc;
+            if (inB(tr, tc) && side(b[tr][tc]) !== turn) add(r, c, tr, tc);
+          }
+          if (t === 'K') {
+            const row = turn === 'w' ? 7 : 0, K = turn === 'w' ? 'K' : 'k', Q = turn === 'w' ? 'Q' : 'q';
+            if (r === row && c === 4 && !attacked(b, row, 4, opp)) {
+              if (S.castle[K] && !b[row][5] && !b[row][6] && b[row][7] === (turn === 'w' ? 'R' : 'r') && !attacked(b, row, 5, opp) && !attacked(b, row, 6, opp))
+                add(r, c, row, 6, { castle: 'K' });
+              if (S.castle[Q] && !b[row][3] && !b[row][2] && !b[row][1] && b[row][0] === (turn === 'w' ? 'R' : 'r') && !attacked(b, row, 3, opp) && !attacked(b, row, 2, opp))
+                add(r, c, row, 2, { castle: 'Q' });
+            }
+          }
+        } else {
+          const dirs = t === 'B' ? DIAG : t === 'R' ? ORTH : DIAG.concat(ORTH);
+          for (const [dr, dc] of dirs) {
+            let tr = r + dr, tc = c + dc;
+            while (inB(tr, tc)) {
+              if (!b[tr][tc]) add(r, c, tr, tc);
+              else { if (side(b[tr][tc]) === opp) add(r, c, tr, tc); break; }
+              tr += dr; tc += dc;
             }
           }
         }
       }
+      return moves;
+    }
+
+    function makeMove(S, m) {
+      const b = S.b.map(r => r.slice());
+      const castle = Object.assign({}, S.castle);
+      b[m.tr][m.tc] = m.promo || m.piece;
+      b[m.fr][m.fc] = '';
+      if (m.epCapture) b[m.fr][m.tc] = '';
+      if (m.castle) {
+        const row = m.fr;
+        if (m.castle === 'K') { b[row][5] = b[row][7]; b[row][7] = ''; }
+        else { b[row][3] = b[row][0]; b[row][0] = ''; }
+      }
+      const t = m.piece.toUpperCase();
+      if (t === 'K') { if (S.turn === 'w') castle.K = castle.Q = false; else castle.k = castle.q = false; }
+      const corner = (r, c) => {
+        if (r === 7 && c === 7) castle.K = false; if (r === 7 && c === 0) castle.Q = false;
+        if (r === 0 && c === 7) castle.k = false; if (r === 0 && c === 0) castle.q = false;
+      };
+      corner(m.fr, m.fc); corner(m.tr, m.tc);
+      return {
+        b, castle, turn: S.turn === 'w' ? 'b' : 'w',
+        ep: m.double ? [(m.fr + m.tr) / 2, m.fc] : null,
+        half: (t === 'P' || m.captured) ? 0 : S.half + 1,
+        full: S.full + (S.turn === 'b' ? 1 : 0),
+      };
+    }
+
+    function legalMoves(S) {
+      return pseudoMoves(S).filter(m => !inCheck(makeMove(S, m), S.turn));
+    }
+
+    function posKey(S) {
+      return S.b.map(r => r.map(p => p || '.').join('')).join('/') + S.turn + Object.entries(S.castle).filter(([, v]) => v).map(([k]) => k).join('') + (S.ep ? sq(S.ep[0], S.ep[1]) : '-');
+    }
+
+    function insufficient(b) {
+      const pcs = [];
+      for (const row of b) for (const p of row) if (p && p.toUpperCase() !== 'K') pcs.push(p.toUpperCase());
+      if (!pcs.length) return true;
+      if (pcs.length === 1 && (pcs[0] === 'N' || pcs[0] === 'B')) return true;
       return false;
     }
 
-    // To'liq qonuniy yurish: geometrik qoida + o'z shohini ochiq qoldirmaslik
-    function isLegalMove(b, sr, sc, er, ec){
-      if(!inBounds(sr,sc) || !inBounds(er,ec)) return false;
-      const p = b[sr][sc];
-      if(!p) return false;
-
-      // Faqat navbatdagi tomon figuralari yursin
-      if(turn==='white' && !isWhite(p)) return false;
-      if(turn==='black' && !isBlack(p)) return false;
-
-      // Geometrik tekshiruv
-      if(!pieceCanMove(b, sr, sc, er, ec, false)) return false;
-
-      // Simulyatsiya: yurishdan keyin o'z shohimiz tahdid ostida qolmasin
-      const next = cloneBoard(b);
-      const captured = next[er][ec];
-      next[er][ec] = p;
-      next[sr][sc] = '';
-
-      // Qirolni topamiz (agar qirol yurgan bo'lsa, yangi joyi)
-      const myColor = isWhite(p) ? 'white' : 'black';
-      let k = findKing(next, myColor);
-      if(!k){ // nazariy holda bo'lmasligi kerak
-        return false;
+    function san(S, m, all) {
+      let s;
+      if (m.castle) s = m.castle === 'K' ? 'O-O' : 'O-O-O';
+      else {
+        const t = m.piece.toUpperCase();
+        s = '';
+        if (t !== 'P') {
+          s = t;
+          const others = all.filter(o => (o.fr !== m.fr || o.fc !== m.fc) && o.piece === m.piece && o.tr === m.tr && o.tc === m.tc);
+          if (others.length) {
+            if (others.every(o => o.fc !== m.fc)) s += FILES[m.fc];
+            else if (others.every(o => o.fr !== m.fr)) s += 8 - m.fr;
+            else s += sq(m.fr, m.fc);
+          }
+        } else if (m.captured) s = FILES[m.fc];
+        if (m.captured) s += 'x';
+        s += sq(m.tr, m.tc);
+        if (m.promo) s += '=' + m.promo.toUpperCase();
       }
-      // Qirol hujum ostida qolsa, noqonuniy
-      const oppColor = myColor==='white' ? 'black' : 'white';
-      if(isSquareAttacked(next, k.r, k.c, oppColor)) return false;
+      const next = makeMove(S, m);
+      if (inCheck(next)) s += legalMoves(next).length ? '+' : '#';
+      return s;
+    }
 
+    // ================= Bot (alpha-beta minimax) =================
+    const PST = {
+      P: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
+      N: [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50],
+      B: [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
+      R: [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
+      Q: [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20],
+      K: [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20],
+    };
+    function evaluate(b) {
+      let s = 0;
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const p = b[r][c];
+        if (!p) continue;
+        const t = p.toUpperCase();
+        const v = VALUE[t] + PST[t][isW(p) ? r * 8 + c : (7 - r) * 8 + c];
+        s += isW(p) ? v : -v;
+      }
+      return s;
+    }
+    function ordered(moves) {
+      return moves.sort((a, b) => ((b.captured ? VALUE[b.captured.toUpperCase()] * 10 - VALUE[b.piece.toUpperCase()] : 0) + (b.promo ? 800 : 0))
+        - ((a.captured ? VALUE[a.captured.toUpperCase()] * 10 - VALUE[a.piece.toUpperCase()] : 0) + (a.promo ? 800 : 0)));
+    }
+    let nodes = 0;
+    function negamax(S, depth, alpha, beta, ply) {
+      nodes++;
+      const moves = legalMoves(S);
+      if (!moves.length) return inCheck(S) ? -100000 + ply : 0;
+      if (S.half >= 100 || insufficient(S.b)) return 0;
+      if (depth === 0) return quiesce(S, alpha, beta, 0);
+      let best = -Infinity;
+      for (const m of ordered(moves)) {
+        const v = -negamax(makeMove(S, m), depth - 1, -beta, -alpha, ply + 1);
+        if (v > best) best = v;
+        if (v > alpha) alpha = v;
+        if (alpha >= beta) break;
+      }
+      return best;
+    }
+    function quiesce(S, alpha, beta, qd) {
+      const stand = (S.turn === 'w' ? 1 : -1) * evaluate(S.b);
+      if (stand >= beta || qd > 3) return stand;
+      if (stand > alpha) alpha = stand;
+      const caps = ordered(legalMoves(S).filter(m => m.captured || m.promo));
+      for (const m of caps) {
+        const v = -quiesce(makeMove(S, m), -beta, -alpha, qd + 1);
+        if (v >= beta) return v;
+        if (v > alpha) alpha = v;
+      }
+      return alpha;
+    }
+    function botMove(S, level) {
+      const moves = ordered(legalMoves(S));
+      if (!moves.length) return null;
+      const depth = level === 1 ? 1 : level === 2 ? 2 : 3;
+      let best = -Infinity, bestMoves = [];
+      for (const m of moves) {
+        const v = -negamax(makeMove(S, m), depth - 1, -Infinity, Infinity, 1) + (level === 1 ? Math.random() * 120 : Math.random() * 8);
+        if (v > best + 0.001) { best = v; bestMoves = [m]; } else if (Math.abs(v - best) < 0.001) bestMoves.push(m);
+      }
+      return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
+
+    // ================= UI =================
+    const $ = id => document.getElementById(id);
+    const boardEl = $('chessboard');
+    let S = newState();
+    let history = [];      // [{S, move, san}]
+    let positions = {};
+    let selected = null;
+    let targets = [];
+    let lastMove = null;
+    let over = false;
+    let flipped = false;
+    let thinking = false;
+    let cfg = { mode: 'bot', color: 'w', level: 2 };
+
+    function render() {
+      boardEl.innerHTML = '';
+      const check = inCheck(S) ? kingPos(S.b, S.turn) : null;
+      for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) {
+        const r = flipped ? 7 - i : i, c = flipped ? 7 - j : j;
+        const el = document.createElement('div');
+        el.className = 'square ' + ((r + c) % 2 === 0 ? 'light' : 'dark');
+        el.dataset.r = r; el.dataset.c = c;
+        const p = S.b[r][c];
+        if (p) {
+          const span = document.createElement('span');
+          span.className = 'pc ' + (isW(p) ? 'white-piece' : 'black-piece');
+          span.textContent = GLYPH[p.toUpperCase()];
+          el.appendChild(span);
+        }
+        if (j === 0) el.insertAdjacentHTML('beforeend', `<i class="crd rk">${8 - r}</i>`);
+        if (i === 7) el.insertAdjacentHTML('beforeend', `<i class="crd fl">${FILES[c]}</i>`);
+        if (selected && selected[0] === r && selected[1] === c) el.classList.add('selected');
+        if (lastMove && ((lastMove.fr === r && lastMove.fc === c) || (lastMove.tr === r && lastMove.tc === c))) el.classList.add('last');
+        if (check && check[0] === r && check[1] === c) el.classList.add('check');
+        if (targets.some(m => m.tr === r && m.tc === c)) el.classList.add(p || targets.find(m => m.tr === r && m.tc === c).epCapture ? 'capture' : 'possible');
+        el.addEventListener('click', onSquare);
+        boardEl.appendChild(el);
+      }
+      renderSide();
+    }
+
+    function renderSide() {
+      const nice = S.turn === 'w' ? 'Oq' : 'Qora';
+      const ts = $('turnStatus');
+      ts.textContent = over ? "O'yin tugadi" : thinking ? `${nice} (bot) o'ylamoqda...` : `${nice} yurishi`;
+      ts.className = 'turn-status ' + (S.turn === 'w' ? 'white' : 'black');
+      $('status').textContent = !over && inCheck(S) ? 'Shoh! ♚' : '';
+      // Yurishlar ro'yxati
+      const ml = $('moveList');
+      let html = '';
+      for (let i = 0; i < history.length; i += 2) {
+        html += `<li><span>${history[i].san}</span><span>${history[i + 1] ? history[i + 1].san : ''}</span></li>`;
+      }
+      ml.innerHTML = html;
+      ml.scrollTop = ml.scrollHeight;
+      // Olingan figuralar
+      const caps = { w: [], b: [] };
+      history.forEach(h => { if (h.move.captured) caps[side(h.move.piece)].push(h.move.captured); });
+      const show = list => list.sort((a, b) => VALUE[b.toUpperCase()] - VALUE[a.toUpperCase()]).map(p => `<span class="${isW(p) ? 'white-piece' : 'black-piece'}">${GLYPH[p.toUpperCase()]}</span>`).join('');
+      const mat = evaluateMaterial();
+      const bottomSide = flipped ? 'b' : 'w', topSide = flipped ? 'w' : 'b';
+      const diff = s => { const d = s === 'w' ? mat : -mat; return d > 0 ? ` <b>+${Math.round(d / 100)}</b>` : ''; };
+      $('capBottom').innerHTML = show(caps[bottomSide]) + diff(bottomSide);
+      $('capTop').innerHTML = show(caps[topSide]) + diff(topSide);
+      $('modeLabel').textContent = cfg.mode === 'bot'
+        ? `Botga qarshi · ${['', 'Oson', "O'rta", 'Qiyin'][cfg.level]} · siz ${cfg.color === 'w' ? 'oq' : 'qora'}`
+        : "Ikki o'yinchi";
+    }
+    function evaluateMaterial() {
+      let s = 0;
+      for (const row of S.b) for (const p of row) if (p) s += (isW(p) ? 1 : -1) * VALUE[p.toUpperCase()];
+      return s;
+    }
+
+    function humanTurn() { return cfg.mode === 'human' || S.turn === cfg.color; }
+
+    function onSquare(e) {
+      if (over || thinking || !humanTurn()) return;
+      const r = +e.currentTarget.dataset.r, c = +e.currentTarget.dataset.c;
+      const p = S.b[r][c];
+      if (selected) {
+        const ms = targets.filter(m => m.tr === r && m.tc === c);
+        if (ms.length) {
+          if (ms.length > 1) return askPromotion(ms);
+          return commit(ms[0]);
+        }
+      }
+      if (p && side(p) === S.turn && !(selected && selected[0] === r && selected[1] === c)) {
+        selected = [r, c];
+        targets = legalMoves(S).filter(m => m.fr === r && m.fc === c);
+      } else {
+        selected = null;
+        targets = [];
+      }
+      render();
+    }
+
+    function askPromotion(ms) {
+      const row = $('promoRow');
+      row.innerHTML = '';
+      for (const m of ms) {
+        const b = document.createElement('button');
+        b.className = isW(m.promo) ? 'white-piece' : 'black-piece';
+        b.textContent = GLYPH[m.promo.toUpperCase()];
+        b.onclick = () => { $('promoModal').style.display = 'none'; commit(m); };
+        row.appendChild(b);
+      }
+      $('promoModal').style.display = 'flex';
+    }
+
+    function commit(m) {
+      const all = legalMoves(S);
+      const s = san(S, m, all);
+      history.push({ S, move: m, san: s });
+      S = makeMove(S, m);
+      lastMove = m;
+      selected = null;
+      targets = [];
+      const key = posKey(S);
+      positions[key] = (positions[key] || 0) + 1;
+      Neo.sound.play(m.captured ? 'hit' : 'move');
+      render();
+      if (checkEnd(key)) return;
+      if (inCheck(S)) Neo.sound.play('error');
+      maybeBot();
+    }
+
+    function maybeBot() {
+      if (over || cfg.mode !== 'bot' || S.turn === cfg.color) return;
+      thinking = true;
+      renderSide();
+      setTimeout(() => {
+        const m = botMove(S, cfg.level);
+        thinking = false;
+        if (m) commit(m);
+      }, 250);
+    }
+
+    function checkEnd(key) {
+      const moves = legalMoves(S);
+      let text = null, winner = null;
+      if (!moves.length) {
+        if (inCheck(S)) { winner = S.turn === 'w' ? 'b' : 'w'; text = `${winner === 'w' ? 'Oq' : 'Qora'} yutdi! Mat ♚`; }
+        else text = 'Durrang — pat (yurish yo\'q)';
+      } else if (insufficient(S.b)) text = 'Durrang — mat qilish uchun figura yetarli emas';
+      else if (S.half >= 100) text = 'Durrang — 50 yurish qoidasi';
+      else if (positions[key] >= 3) text = 'Durrang — pozitsiya uch marta takrorlandi';
+      if (!text) return false;
+      over = true;
+      $('winnerText').textContent = text;
+      $('gameOver').style.display = 'flex';
+      render();
+      if (cfg.mode === 'bot') {
+        const won = winner === cfg.color;
+        Neo.stats.record('chess', { score: won ? cfg.level * 100 : winner ? 0 : cfg.level * 30, win: won, level: cfg.level, moves: history.length });
+        Neo.sound.play(won ? 'win' : winner ? 'lose' : 'move');
+      } else Neo.sound.play('win');
       return true;
     }
 
-    function listLegalMoves(b, sr, sc){
-      const res = [];
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          if(isLegalMove(b, sr, sc, r, c)){
-            res.push({r, c, capture: !!b[r][c]});
-          }
-        }
+    function undo() {
+      if (thinking || !history.length) return;
+      $('gameOver').style.display = 'none';
+      over = false;
+      // Botga qarshi o'yinda ikkala yurishni bekor qilamiz
+      let n = cfg.mode === 'bot' ? (S.turn === cfg.color ? 2 : 1) : 1;
+      while (n-- > 0 && history.length) {
+        const key = posKey(S);
+        positions[key] = Math.max(0, (positions[key] || 1) - 1);
+        S = history.pop().S;
       }
-      return res;
+      lastMove = history.length ? history[history.length - 1].move : null;
+      selected = null; targets = [];
+      render();
+      maybeBot();
     }
 
-    function sideHasAnyLegalMove(b, side){
-      const prevTurn = turn;
-      turn = side; // isLegalMove turnga qaraydi
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          const p = b[r][c];
-          if(!p) continue;
-          if((side==='white' && isWhite(p)) || (side==='black' && isBlack(p))){
-            const moves = listLegalMoves(b, r, c);
-            if(moves.length>0){ turn = prevTurn; return true; }
-          }
-        }
-      }
-      turn = prevTurn;
-      return false;
+    function startGame() {
+      S = newState();
+      history = [];
+      positions = { [posKey(S)]: 1 };
+      selected = null; targets = []; lastMove = null; over = false; thinking = false;
+      flipped = cfg.mode === 'bot' && cfg.color === 'b';
+      $('setupModal').style.display = 'none';
+      $('gameOver').style.display = 'none';
+      render();
+      maybeBot();
     }
 
-    function maybePromote(r,c){
-      const p = board[r][c];
-      if(p==='P' && r===0) board[r][c] = 'Q';
-      if(p==='p' && r===7) board[r][c] = 'q';
-    }
-
-    // ======= UI chizish =======
-    function renderBoard(){
-      chessboard.innerHTML = '';
-      for(let row=0; row<8; row++){
-        for(let col=0; col<8; col++){
-          const el = document.createElement('div');
-          el.className = 'square ' + (((row+col)%2===0)?'light':'dark');
-          el.dataset.row = row;
-          el.dataset.col = col;
-
-          const p = board[row][col];
-          if(p){
-            el.textContent = pieces[p] || '';
-            el.classList.add(isWhite(p)?'white-piece':'black-piece');
-          } else {
-            el.textContent = '';
-          }
-
-          // highlight: selected & possible moves
-          if(selected && selected.row===row && selected.col===col){
-            el.classList.add('selected');
-          }
-          const pm = possibleMoves.find(m => m.r===row && m.c===col);
-          if(pm){
-            el.classList.add(pm.capture ? 'capture' : 'possible');
-          }
-
-          el.addEventListener('click', handleSquareClick);
-          chessboard.appendChild(el);
-        }
-      }
-      applyCheckHighlight();
-      updateStatus();
-    }
-
-    function applyCheckHighlight(){
-      document.querySelectorAll('.square.check').forEach(sq => sq.classList.remove('check'));
-      if(isCheck){
-        const k = findKing(board, turn); // navbatdagi tomon shohi
-        if(k){
-          const sel = `[data-row="${k.r}"][data-col="${k.c}"]`;
-          const sq = chessboard.querySelector(sel);
-          if(sq) sq.classList.add('check');
-        }
-      }
-    }
-
-    function updateStatus(){
-      const nice = turn==='white'?'Oq':'Qora';
-      turnStatus.textContent = `${nice} yurishi`;
-      turnStatus.classList.remove('white','black');
-      turnStatus.classList.add(turn);
-      statusEl.textContent = isCheck ? "Shoh!" : "";
-    }
-
-    // ======= O'yin oqimi =======
-    function handleSquareClick(e){
-      const row = parseInt(e.currentTarget.dataset.row,10);
-      const col = parseInt(e.currentTarget.dataset.col,10);
-      const p = board[row][col];
-
-      if(selected){
-        // Agar tanlangan katakka yana bosilsa – bekor
-        if(selected.row===row && selected.col===col){
-          selected = null;
-          possibleMoves = [];
-          renderBoard();
-          return;
-        }
-
-        // Yurishga urinamiz
-        if(isLegalMove(board, selected.row, selected.col, row, col)){
-          // amalga oshiramiz
-          board[row][col] = board[selected.row][selected.col];
-          board[selected.row][selected.col] = '';
-          maybePromote(row, col);
-
-          // navbatni almashtiramiz
-          selected = null;
-          possibleMoves = [];
-          turn = (turn==='white') ? 'black' : 'white';
-
-          // yangi navbatdagi tomon shohi checkdami?
-          const k = findKing(board, turn);
-          isCheck = k ? isSquareAttacked(board, k.r, k.c, (turn==='white'?'black':'white')) : false;
-
-          renderBoard();
-          checkGameEnd(); // mate/pat
-        } else {
-          // Agar shu katakda o'z figuralari bo'lsa – yangi tanlash
-          if(p && ((turn==='white' && isWhite(p)) || (turn==='black' && isBlack(p)))){
-            selected = {row, col};
-            possibleMoves = listLegalMoves(board, row, col);
-            renderBoard();
-          } else {
-            // Aks holda tanlovni bekor
-            selected = null;
-            possibleMoves = [];
-            renderBoard();
-          }
-        }
-      } else {
-        // Hali hech narsa tanlanmagan – faqat navbatdagi tomon figuralari tanlansin
-        if(p && ((turn==='white' && isWhite(p)) || (turn==='black' && isBlack(p)))){
-          selected = {row, col};
-          possibleMoves = listLegalMoves(board, row, col);
-          renderBoard();
-        }
-      }
-    }
-
-    function checkGameEnd(){
-      const side = turn; // navbatdagi tomon
-      const k = findKing(board, side);
-      const anyMove = sideHasAnyLegalMove(board, side);
-      if(!anyMove){
-        if(k && isSquareAttacked(board, k.r, k.c, side==='white'?'black':'white')){
-          // Checkmate
-          gameOverScreen.style.display = 'flex';
-          winnerText.textContent = (side==='white') ? 'Qora yutdi! (Checkmate)' : 'Oq yutdi! (Checkmate)';
-        } else {
-          // Stalemate
-          gameOverScreen.style.display = 'flex';
-          winnerText.textContent = 'Durrang (Stalemate)';
-        }
-      }
-    }
-
-    restartGameBtn.addEventListener('click', ()=>{
-      gameOverScreen.style.display = 'none';
-      // reset
-      for(let r=0;r<8;r++){
-        for(let c=0;c<8;c++){
-          board[r][c] = ['', '', '', '', '', '', '', ''][c]; // tez tozalash
-        }
-      }
-      const start = [
-        ['r','n','b','q','k','b','n','r'],
-        ['p','p','p','p','p','p','p','p'],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['P','P','P','P','P','P','P','P'],
-        ['R','N','B','Q','K','B','N','R'],
-      ];
-      for(let r=0;r<8;r++) for(let c=0;c<8;c++) board[r][c]=start[r][c];
-      turn = 'white';
-      isCheck = false;
-      selected = null;
-      possibleMoves = [];
-      renderBoard();
+    document.querySelectorAll('.opt-row').forEach(row => row.addEventListener('click', e => {
+      const b = e.target.closest('.opt');
+      if (!b) return;
+      row.querySelectorAll('.opt').forEach(x => x.classList.toggle('active', x === b));
+      const g = row.dataset.group;
+      cfg[g] = g === 'level' ? +b.dataset.v : b.dataset.v;
+      $('botOpts').style.display = cfg.mode === 'bot' ? '' : 'none';
+    }));
+    $('btnStart').onclick = startGame;
+    $('btnNew').onclick = () => { $('setupModal').style.display = 'flex'; };
+    $('restartGame').onclick = () => { $('gameOver').style.display = 'none'; $('setupModal').style.display = 'flex'; };
+    $('closeOver').onclick = () => { $('gameOver').style.display = 'none'; };
+    $('btnUndo').onclick = undo;
+    $('btnFlip').onclick = () => { flipped = !flipped; render(); };
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
     });
 
-    // Boshlash
-    renderBoard();
+    Neo.addMuteButton();
+    render();
   </script>
 </body>
 </html>
