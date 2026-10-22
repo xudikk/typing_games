@@ -26,6 +26,11 @@
           <div class="menu-pop">
             <button data-act="newFile"><span>Yangi fayl</span><kbd>Alt+Ins</kbd></button>
             <button data-act="newFolder"><span>Yangi papka</span></button>
+            <button data-act="newHtml"><span><i class="fa-brands fa-html5" style="color:#e44d26"></i> Yangi HTML sahifa</span></button>
+            <button data-act="newCss"><span><i class="fa-brands fa-css3-alt" style="color:#2965f1"></i> Yangi CSS fayl</span></button>
+            <button data-act="newJs"><span><i class="fa-brands fa-js" style="color:#f7df1e"></i> Yangi JavaScript fayl</span></button>
+            <button data-act="newSql"><span><i class="fa-solid fa-database" style="color:#e38c00"></i> Yangi SQL fayl</span></button>
+            <button data-act="webSample"><span>🌐 Namuna veb-loyiha (HTML + Tailwind + JS + SQL)</span></button>
             <button data-act="upload"><span>Fayl yuklash...</span></button>
             <hr>
             <button data-act="save"><span>Saqlash</span><kbd>Ctrl+S</kbd></button>
@@ -55,7 +60,25 @@
             <button data-act="comment"><span>Izohga olish</span><kbd>Ctrl+/</kbd></button>
             <button data-act="duplicate"><span>Qatorni nusxalash</span><kbd>Ctrl+D</kbd></button>
             <button data-act="deleteLine"><span>Qatorni o'chirish</span><kbd>Ctrl+Y</kbd></button>
-            <button data-act="format"><span>Kodni formatlash (black)</span><kbd>Ctrl+Alt+L</kbd></button>
+            <button data-act="format"><span>Kodni formatlash</span><kbd>Ctrl+Alt+L</kbd></button>
+            <hr>
+            <button data-act="selNext"><span>Keyingi moslikni tanlash</span><kbd>Alt+J</kbd></button>
+            <button data-act="selAll"><span>Barcha mosliklarni tanlash</span><kbd>Ctrl+Alt+Shift+J</kbd></button>
+            <button data-act="caseToggle"><span>Katta/kichik harf</span><kbd>Ctrl+Shift+U</kbd></button>
+          </div>
+        </div>
+        <div class="menu" data-menu="nav">Navigatsiya
+          <div class="menu-pop">
+            <button data-act="gotoDef"><span>Ta'rifga o'tish</span><kbd>Ctrl+B / Ctrl+bosish</kbd></button>
+            <button data-act="navBack"><span>Ortga</span><kbd>Ctrl+Alt+←</kbd></button>
+            <button data-act="navFwd"><span>Oldinga</span><kbd>Ctrl+Alt+→</kbd></button>
+            <hr>
+            <button data-act="gotoFile"><span>Faylga o'tish...</span><kbd>Ctrl+P / Shift Shift</kbd></button>
+            <button data-act="recent"><span>So'nggi fayllar...</span><kbd>Ctrl+E</kbd></button>
+            <button data-act="prevTab"><span>Oldingi tab</span><kbd>Alt+←</kbd></button>
+            <button data-act="nextTab"><span>Keyingi tab</span><kbd>Alt+→</kbd></button>
+            <button data-act="symbols"><span>Fayl tuzilishi...</span><kbd>Ctrl+F12</kbd></button>
+            <button data-act="searchAll"><span>Barcha fayllarda qidirish...</span><kbd>Ctrl+Shift+F</kbd></button>
           </div>
         </div>
         <div class="menu" data-menu="view">Ko'rinish
@@ -120,13 +143,48 @@
       <section class="work">
         <div class="tabs" id="tabs"></div>
         <div class="editor-wrap">
-          <div id="editor"></div>
-          <div class="empty-editor" id="emptyEditor">
-            <div>
-              <p><b>Fayl ochilmagan</b></p>
-              <p>Loyiha panelidan fayl tanlang yoki <kbd>Alt+Ins</kbd> bilan yangisini yarating</p>
-              <p><kbd>Shift+F10</kbd> — ishga tushirish</p>
+          <div class="ed-main">
+            <div class="find-bar" id="findBar">
+              <div class="find-row">
+                <button class="fb-ico" id="findToggleReplace" title="Almashtirish (Ctrl+R)"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="fb-input"><i class="fa-solid fa-magnifying-glass"></i><input id="findInput" placeholder="Qidirish" spellcheck="false" autocomplete="off">
+                  <button class="fb-opt" data-fopt="case" title="Katta-kichik harf (Alt+C)">Cc</button>
+                  <button class="fb-opt" data-fopt="word" title="Butun so'z (Alt+W)">W</button>
+                  <button class="fb-opt" data-fopt="regex" title="Regex (Alt+X)">.*</button></div>
+                <span class="fb-count" id="findCount"></span>
+                <button class="fb-ico" id="findPrev" title="Oldingi (Shift+Enter)"><i class="fa-solid fa-arrow-up"></i></button>
+                <button class="fb-ico" id="findNext" title="Keyingi (Enter)"><i class="fa-solid fa-arrow-down"></i></button>
+                <button class="fb-btn" id="findAll" title="Barcha mosliklarni tanlash — ko'p kursor (Alt+Enter)">Hammasini tanlash</button>
+                <button class="fb-ico" id="findClose" title="Yopish (Esc)"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              <div class="replace-row">
+                <div class="fb-input"><i class="fa-solid fa-right-left"></i><input id="replaceInput" placeholder="Almashtirish" spellcheck="false" autocomplete="off"></div>
+                <button class="fb-btn" id="replaceOne" title="Almashtirish (Enter)">Almashtirish</button>
+                <button class="fb-btn" id="replaceAll" title="Hammasini almashtirish (Ctrl+Enter / Alt+A)">Hammasini</button>
+              </div>
             </div>
+            <div id="editor"></div>
+            <div class="empty-editor" id="emptyEditor">
+              <div>
+                <p><b>Fayl ochilmagan</b></p>
+                <p>Loyiha panelidan fayl tanlang yoki <kbd>Alt+Ins</kbd> bilan yangisini yarating</p>
+                <p><kbd>Shift+F10</kbd> — ishga tushirish · <kbd>Ctrl+P</kbd> — faylga o'tish</p>
+              </div>
+            </div>
+          </div>
+          <div class="resizer v" id="resizePreview" style="display:none"></div>
+          <div class="preview" id="preview">
+            <div class="pv-bar">
+              <i class="fa-solid fa-globe"></i><span class="pv-addr" id="previewAddr"></span>
+              <button class="pv-btn on" data-width="100%" title="Kompyuter"><i class="fa-solid fa-desktop"></i></button>
+              <button class="pv-btn" data-width="768px" title="Planshet"><i class="fa-solid fa-tablet-screen-button"></i></button>
+              <button class="pv-btn" data-width="375px" title="Telefon"><i class="fa-solid fa-mobile-screen"></i></button>
+              <label class="pv-live" title="O'zgarishda avtomatik yangilash"><input type="checkbox" id="liveReload" checked> Live</label>
+              <button class="pv-btn" id="previewReload" title="Yangilash"><i class="fa-solid fa-rotate-right"></i></button>
+              <button class="pv-btn" id="previewNewTab" title="Yangi tabda ochish"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+              <button class="pv-btn" id="previewClose" title="Yopish"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="pv-stage"><iframe id="previewFrame" title="Preview" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox"></iframe></div>
           </div>
         </div>
         <div class="resizer h" id="resizeBottom"></div>
@@ -137,6 +195,7 @@
             <button class="btab" data-tab="console"><i class="fa-brands fa-python"></i> Python konsol</button>
             <button class="btab" data-tab="terminal"><i class="fa-solid fa-terminal"></i> Terminal</button>
             <button class="btab" data-tab="problems"><i class="fa-solid fa-triangle-exclamation"></i> Muammolar <span class="count" id="problemCount"></span></button>
+            <button class="btab" data-tab="search"><i class="fa-solid fa-magnifying-glass"></i> Qidiruv</button>
             <div class="spacer"></div>
             <button class="bicon" id="btnClearOut" title="Tozalash"><i class="fa-solid fa-ban"></i></button>
             <button class="bicon" id="btnHideBottom" title="Yashirish (Alt+4)"><i class="fa-solid fa-minus"></i></button>
@@ -172,6 +231,20 @@
           <div class="bpane" data-pane="problems">
             <ul class="problem-list" id="problemList"></ul>
           </div>
+          <div class="bpane" data-pane="search">
+            <div class="search-all">
+              <div class="sa-row">
+                <div class="fb-input"><i class="fa-solid fa-magnifying-glass"></i><input id="searchAllInput" placeholder="Barcha fayllarda qidirish (Ctrl+Shift+F)" spellcheck="false">
+                  <button class="fb-opt" data-sopt="case" title="Katta-kichik harf">Cc</button>
+                  <button class="fb-opt" data-sopt="word" title="Butun so'z">W</button>
+                  <button class="fb-opt" data-sopt="regex" title="Regex">.*</button></div>
+                <div class="fb-input"><i class="fa-solid fa-right-left"></i><input id="searchAllReplace" placeholder="Almashtirish (Ctrl+Shift+R)" spellcheck="false"></div>
+                <button class="fb-btn" id="searchReplaceBtn">Hammasini almashtirish</button>
+                <span class="fb-count" id="searchSummary"></span>
+              </div>
+              <ul class="search-results" id="searchResults"></ul>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -202,12 +275,40 @@
     </div>
   </div>
   <div class="toast" id="toast"></div>
+  <div class="picker" id="picker">
+    <div class="pk-box">
+      <div class="pk-title" id="pickerTitle"></div>
+      <input id="pickerInput" spellcheck="false" autocomplete="off">
+      <ul id="pickerList"></ul>
+    </div>
+  </div>
+  <div class="doc-pop" id="docPop"></div>
   <input type="file" id="fileUpload" multiple hidden>
   <input type="file" id="zipUpload" accept=".zip,application/zip" hidden>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchtags.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/sql-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/match-highlighter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sql-formatter@15.4.0/dist/sql-formatter.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
@@ -223,5 +324,8 @@
   <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
   <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
   <script src="app.js"></script>
+  <script src="web.js"></script>
+  <script src="keys.js"></script>
+  <script src="emmet.js"></script>
 </body>
 </html>

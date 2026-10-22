@@ -314,3 +314,185 @@ li.CodeMirror-hint-active .hint-type { color: #dde; }
 .folder-status:hover { background: #4c5052; color: var(--text); }
 .folder-status.ok { color: #8fd49a; }
 .folder-status.warn { color: var(--yellow); }
+
+/* ================= Veb tillar: preview oynasi ================= */
+.editor-wrap { display: flex; }
+.ed-main { flex: 1; position: relative; min-width: 0; }
+.preview { display: none; width: 46%; min-width: 220px; flex-direction: column; background: #1e1f22; border-left: 1px solid var(--border); }
+.preview.show { display: flex; }
+.pv-bar { display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 6px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.pv-bar > i { color: var(--text-dim); margin: 0 4px; }
+.pv-addr { flex: 1; min-width: 0; font: 12px var(--mono); color: var(--code); background: var(--panel-2); padding: 3px 8px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-btn { width: 26px; height: 24px; border-radius: 4px; color: var(--text-dim); font-size: 12px; }
+.pv-btn:hover, .pv-btn.on { background: #4c5052; color: var(--text); }
+.pv-live { font-size: 11px; color: var(--text-dim); display: flex; align-items: center; gap: 3px; padding: 0 4px; cursor: pointer; }
+.pv-stage { flex: 1; display: flex; justify-content: center; background: repeating-conic-gradient(#2a2b2e 0 25%, #26272a 0 50%) 0 0 / 20px 20px; overflow: auto; }
+#previewFrame { width: 100%; height: 100%; border: 0; background: #fff; transition: width .2s; }
+.btab.blink { color: var(--red); }
+
+/* Fayl ikonlari */
+.ico.html { color: #e44d26; }
+.ico.css { color: #2965f1; }
+.ico.js { color: #f7df1e; }
+.ico.json { color: #cbcb41; }
+.ico.sql { color: #e38c00; }
+
+/* SQL natijalari */
+.sql-table-wrap { overflow-x: auto; margin: 4px 0 2px; max-width: 100%; }
+.sql-table { border-collapse: collapse; font: 12.5px var(--mono); }
+.sql-table th { background: #3a3d41; color: #e8bf6a; text-align: left; padding: 3px 10px; border: 1px solid #4b4d4f; }
+.sql-table td { padding: 2px 10px; border: 1px solid #3a3d41; color: var(--code); white-space: nowrap; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+.sql-table td.num { color: #6897bb; text-align: right; }
+.sql-table td.null { color: #808080; font-style: italic; }
+.sql-table tr:nth-child(even) td { background: rgba(255, 255, 255, .025); }
+
+/* ================= PyCharm uslubidagi qidiruv paneli ================= */
+.find-bar { display: none; position: absolute; top: 0; left: 0; right: 0; z-index: 8; background: var(--panel); border-bottom: 1px solid var(--border); padding: 4px 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, .35); }
+.find-bar.show { display: block; }
+.find-bar.show ~ #editor { top: 34px; }
+.find-bar.show.with-replace ~ #editor { top: 66px; }
+.find-row, .replace-row { display: flex; align-items: center; gap: 4px; }
+.replace-row { display: none; margin-top: 4px; padding-left: 28px; }
+.find-bar.with-replace .replace-row { display: flex; }
+.find-bar.with-replace #findToggleReplace i { transform: rotate(90deg); }
+.fb-input { display: flex; align-items: center; gap: 6px; background: var(--panel-2); border: 1px solid var(--border-2); border-radius: 4px; padding: 0 4px 0 8px; height: 26px; width: min(380px, 45vw); }
+.fb-input:focus-within { border-color: var(--accent); }
+.fb-input > i { color: var(--text-dim); font-size: 11px; }
+.fb-input input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--code); font: 13px var(--mono); }
+.fb-input input.bad { color: var(--red); }
+.fb-opt { height: 20px; min-width: 22px; padding: 0 4px; border-radius: 3px; font: 600 11px var(--mono); color: var(--text-dim); }
+.fb-opt:hover { background: #4c5052; }
+.fb-opt.on { background: #365880; color: #fff; }
+.fb-ico { width: 24px; height: 24px; border-radius: 4px; color: var(--text-dim); font-size: 12px; }
+.fb-ico:hover { background: #4c5052; color: var(--text); }
+.fb-ico i { transition: transform .15s; }
+.fb-btn { height: 24px; padding: 0 10px; border-radius: 4px; border: 1px solid var(--border-2); font-size: 12px; color: var(--text); white-space: nowrap; }
+.fb-btn:hover { background: #4c5052; }
+.fb-count { color: var(--text-dim); font-size: 12px; min-width: 64px; text-align: center; white-space: nowrap; }
+.fb-count.none { color: var(--red); }
+.cm-pc-match { background: rgba(50, 89, 61, .85); border-radius: 2px; outline: 1px solid rgba(98, 151, 85, .7); }
+.CodeMirror-selected, .CodeMirror-focused .CodeMirror-selected { background: #214283 !important; }
+.cm-matchhighlight { background: rgba(68, 71, 90, .9); border-bottom: 1px solid #8c8c8c; }
+.CodeMirror-cursors .CodeMirror-secondarycursor { border-left: 2px solid #9ab; }
+
+/* Ctrl+bosish — havola ko'rinishi */
+.ctrl-hover .CodeMirror-lines { cursor: pointer; }
+.cm-goto, .cm-goto span { color: #589df6 !important; text-decoration: underline; cursor: pointer; }
+.CodeMirror.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+/* Barcha fayllarda qidirish */
+.bpane[data-pane="search"] { flex-direction: column; }
+.search-all { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.sa-row { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-bottom: 1px solid #353535; flex-wrap: wrap; }
+.search-results { list-style: none; margin: 0; padding: 4px 0; overflow: auto; flex: 1; font: 12.5px var(--mono); }
+.search-results li { display: flex; gap: 10px; padding: 2px 12px 2px 28px; cursor: pointer; white-space: nowrap; }
+.search-results li:hover { background: #45494a; }
+.search-results li.sf { padding-left: 10px; color: var(--text); font-family: var(--ui); font-weight: 600; cursor: default; margin-top: 4px; }
+.search-results li.sf:hover { background: none; }
+.search-results li.empty { color: var(--text-dim); cursor: default; font-family: var(--ui); }
+.search-results .ln { color: var(--text-dim); min-width: 32px; text-align: right; }
+.search-results code { overflow: hidden; text-overflow: ellipsis; }
+.search-results mark { background: rgba(50, 89, 61, .9); color: #fff; border-radius: 2px; }
+
+/* Tanlash oynasi (faylga o'tish, so'nggi fayllar) */
+.picker { position: fixed; inset: 0; z-index: 85; display: none; justify-content: center; align-items: flex-start; padding-top: 12vh; background: rgba(0, 0, 0, .25); }
+.picker.show { display: flex; }
+.pk-box { width: min(560px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--border-2); border-radius: 8px; box-shadow: 0 16px 40px rgba(0, 0, 0, .6); overflow: hidden; }
+.pk-title { padding: 8px 12px 4px; font-size: 12px; color: var(--text-dim); }
+#pickerInput { width: calc(100% - 20px); margin: 4px 10px 8px; padding: 7px 10px; background: var(--panel-2); border: 1px solid var(--accent); border-radius: 4px; outline: none; color: var(--code); font: 13px var(--mono); }
+#pickerList { list-style: none; margin: 0; padding: 0 0 6px; max-height: 50vh; overflow: auto; }
+#pickerList li { display: flex; align-items: center; gap: 8px; padding: 5px 12px; cursor: pointer; white-space: nowrap; }
+#pickerList li span { overflow: hidden; text-overflow: ellipsis; }
+#pickerList li small { margin-left: auto; color: var(--text-dim); font-size: 11px; padding-left: 16px; overflow: hidden; text-overflow: ellipsis; }
+#pickerList li.sel { background: #2f65ca; color: #fff; }
+#pickerList li.sel small { color: #dde; }
+#pickerList li.empty { color: var(--text-dim); cursor: default; }
+
+/* Tezkor hujjat */
+.doc-pop { position: fixed; z-index: 70; display: none; max-width: 460px; max-height: 320px; overflow: auto; background: #3c3f41; border: 1px solid var(--border-2); border-radius: 6px; padding: 8px 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .5); }
+.doc-pop.show { display: block; }
+.doc-pop b { color: #ffc66d; font-family: var(--mono); }
+.doc-pop pre { margin: 6px 0 0; white-space: pre-wrap; font: 12px/1.5 var(--mono); color: var(--code); }
+
+/* Qisqartmalar oynasi */
+.modal:has(.sc-grid) { width: min(980px, 100%); }
+.sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px 22px; }
+.sc-grid h5 { margin: 4px 0 6px; color: var(--accent); font-size: 13px; }
+.sc-grid td { font-size: 12.5px; padding: 2px 0; }
+.sc-grid td:last-child { text-align: right; padding-left: 10px; }
+
+@media (max-width: 760px) {
+  .preview { position: absolute; inset: 0; width: 100% !important; z-index: 9; }
+  #findAll { display: none; }
+}
+
+/* ================= Veb tillar uchun rang sxemasi =================
+   Darcula'da HTML teglari, satrlar, CSS klasslari va izohlar hammasi yashil edi.
+   Har bir element turi o'z rangiga ega bo'lishi uchun qayta belgilaymiz. */
+.cm-s-darcula[data-lang="html"], .cm-s-darcula[data-lang="css"], .cm-s-darcula[data-lang="js"], .cm-s-darcula[data-lang="json"] { color: #d4d4d4; }
+.cm-s-darcula[data-lang="html"] span.cm-tag,
+.cm-s-darcula[data-lang="css"] span.cm-tag { color: #e8bf6a; font-weight: 500; font-style: normal; text-decoration: none; }
+.cm-s-darcula[data-lang="html"] span.cm-tag.cm-bracket { color: #808080; font-weight: 400; }
+.cm-s-darcula[data-lang="html"] span.cm-attribute { color: #9cdcfe; }
+.cm-s-darcula[data-lang="html"] span.cm-string,
+.cm-s-darcula[data-lang="css"] span.cm-string,
+.cm-s-darcula[data-lang="js"] span.cm-string,
+.cm-s-darcula[data-lang="json"] span.cm-string { color: #ce9178; }
+.cm-s-darcula[data-lang="html"] span.cm-string-2,
+.cm-s-darcula[data-lang="js"] span.cm-string-2 { color: #d16969; }
+.cm-s-darcula[data-lang="html"] span.cm-comment,
+.cm-s-darcula[data-lang="css"] span.cm-comment,
+.cm-s-darcula[data-lang="js"] span.cm-comment,
+.cm-s-darcula[data-lang="sql"] span.cm-comment { color: #7f848e; font-style: italic; }
+.cm-s-darcula[data-lang="html"] span.cm-meta,
+.cm-s-darcula[data-lang="css"] span.cm-meta { color: #c586c0; }
+.cm-s-darcula[data-lang="html"] span.cm-atom { color: #6897bb; }
+
+/* CSS (alohida fayl yoki <style> ichida) */
+.cm-s-darcula[data-lang="html"] span.cm-qualifier,
+.cm-s-darcula[data-lang="css"] span.cm-qualifier { color: #d7ba7d; }
+.cm-s-darcula[data-lang="html"] span.cm-builtin,
+.cm-s-darcula[data-lang="css"] span.cm-builtin { color: #ffc66d; }
+.cm-s-darcula[data-lang="html"] span.cm-property,
+.cm-s-darcula[data-lang="css"] span.cm-property { color: #9cdcfe; }
+.cm-s-darcula[data-lang="css"] span.cm-atom,
+.cm-s-darcula[data-lang="css"] span.cm-keyword { color: #569cd6; font-weight: 400; }
+.cm-s-darcula[data-lang="css"] span.cm-variable-2,
+.cm-s-darcula[data-lang="css"] span.cm-variable-3 { color: #4fc1ff; }
+.cm-s-darcula[data-lang="html"] span.cm-number,
+.cm-s-darcula[data-lang="css"] span.cm-number,
+.cm-s-darcula[data-lang="js"] span.cm-number,
+.cm-s-darcula[data-lang="json"] span.cm-number,
+.cm-s-darcula[data-lang="sql"] span.cm-number { color: #b5cea8; }
+
+/* JavaScript (alohida fayl yoki <script> ichida) */
+.cm-s-darcula[data-lang="js"] span.cm-keyword { color: #cc7832; font-weight: 600; }
+.cm-s-darcula[data-lang="js"] span.cm-def { color: #dcdcaa; font-style: normal; }
+.cm-s-darcula[data-lang="js"] span.cm-variable { color: #d4d4d4; }
+.cm-s-darcula[data-lang="js"] span.cm-variable-2 { color: #9cdcfe; }
+.cm-s-darcula[data-lang="js"] span.cm-variable-3,
+.cm-s-darcula[data-lang="js"] span.cm-type { color: #4ec9b0; }
+.cm-s-darcula[data-lang="js"] span.cm-property { color: #c39ac9; }
+.cm-s-darcula[data-lang="js"] span.cm-atom { color: #569cd6; }
+.cm-s-darcula[data-lang="js"] span.cm-operator { color: #d4d4d4; }
+.cm-s-darcula[data-lang="json"] span.cm-string.cm-property { color: #9cdcfe; }
+.cm-s-darcula[data-lang="json"] span.cm-atom { color: #569cd6; }
+
+/* SQL */
+.cm-s-darcula[data-lang="sql"] span.cm-keyword { color: #cc7832; font-weight: 600; }
+.cm-s-darcula[data-lang="sql"] span.cm-builtin,
+.cm-s-darcula[data-lang="sql"] span.cm-type { color: #4ec9b0; font-weight: 400; }
+.cm-s-darcula[data-lang="sql"] span.cm-string { color: #ce9178; }
+.cm-s-darcula[data-lang="sql"] span.cm-atom { color: #569cd6; }
+.cm-s-darcula[data-lang="sql"] span.cm-variable-2 { color: #9cdcfe; }
+
+/* HTML teglarining juftini ajratib ko'rsatish (matchtags) */
+.cm-s-darcula .CodeMirror-matchingtag { background: rgba(232, 191, 106, .16); border-bottom: 1px solid rgba(232, 191, 106, .5); }
+
+/* Emmet: Tab bilan o'tiladigan bo'sh joylar */
+.cm-tabstop { outline: 1px dashed rgba(88, 157, 246, .7); border-radius: 2px; min-width: 2px; }
+
+/* Switcher (Alt+`) */
+.picker.switcher { background: rgba(0, 0, 0, .15); padding-top: 18vh; }
+.picker.switcher #pickerInput { display: none; }

@@ -293,6 +293,8 @@ const isTestFile = p => /^test.*\.py$/.test(baseName(p)) || /_test\.py$/.test(ba
 function fileIcon(p) {
   if (isPy(p)) return isTestFile(p) ? '<i class="ico test fa-solid fa-flask"></i>' : '<i class="ico py fa-brands fa-python"></i>';
   if (p.endsWith('.md')) return '<i class="ico md fa-brands fa-markdown"></i>';
+  const lang = window.WEB && WEB.langOf(p);
+  if (lang) return WEB.icon(lang);
   return '<i class="ico txt fa-regular fa-file-lines"></i>';
 }
 
@@ -369,6 +371,10 @@ function fileMenu(p) {
 function folderMenu(d) {
   const items = [
     ['fa-file', 'Yangi Python fayl', () => newFile(d)],
+    ['fa-code', 'Yangi HTML sahifa', () => newFile(d, 'html')],
+    ['fa-palette', 'Yangi CSS fayl', () => newFile(d, 'css')],
+    ['fa-bolt', 'Yangi JavaScript fayl', () => newFile(d, 'js')],
+    ['fa-database', 'Yangi SQL fayl', () => newFile(d, 'sql')],
     ['fa-folder', 'Yangi papka', () => newFolder(d)],
   ];
   if (d) {
@@ -407,9 +413,10 @@ document.addEventListener('mousedown', e => {
 function validName(name) {
   return name && !/[\\:*?"<>|]/.test(name) && !name.split('/').some(s => !s || s === '.' || s === '..');
 }
-async function newFile(dir = null) {
+async function newFile(dir = null, ext = 'py') {
   if (dir === null) dir = state.active ? dirName(state.active) : '';
-  let name = await modal({ title: 'Yangi fayl', body: `Papka: <code>${esc(dir || 'project')}</code>`, input: 'yangi_fayl.py' });
+  const defName = { py: 'yangi_fayl.py', html: 'index.html', css: 'style.css', js: 'app.js', sql: 'sorov.sql', json: 'data.json', md: 'README.md' }[ext] || 'yangi_fayl.' + ext;
+  let name = await modal({ title: 'Yangi fayl', body: `Papka: <code>${esc(dir || 'project')}</code><br><small>Turi kengaytma bo'yicha aniqlanadi: .py .html .css .js .sql .json .md</small>`, input: defName });
   if (!name) return;
   if (!name.includes('.')) name += '.py';
   const path = dir ? dir + '/' + name : name;
@@ -417,7 +424,7 @@ async function newFile(dir = null) {
   if (path in state.files) return toast('Bunday fayl allaqachon bor', 'error');
   const tpl = isTestFile(path)
     ? `import unittest\n\n\nclass TestNamuna(unittest.TestCase):\n    def test_birinchi(self):\n        self.assertTrue(True)\n\n\nif __name__ == "__main__":\n    unittest.main()\n`
-    : '';
+    : (window.WEB ? WEB.template(path) : '');
   createFile(path, tpl);
 }
 function createFile(path, content) {
@@ -485,7 +492,21 @@ async function deletePath(p, isDir) {
 function modeFor(p) {
   if (isPy(p)) return { name: 'python', version: 3, singleLineStringErrors: false };
   if (p.endsWith('.md')) return 'markdown';
+  if (window.WEB && WEB.langOf(p)) return WEB.mode(p);
   return 'text/plain';
+}
+// Har bir til uchun chekinish, teglar va yig'ish sozlamalari
+function applyFileOptions(p) {
+  const web = window.WEB && WEB.langOf(p);
+  // Til bo'yicha rang sxemasi (style.css'dagi [data-lang] qoidalari)
+  editor.getWrapperElement().dataset.lang = web || (isPy(p) ? 'py' : 'txt');
+  const unit = web && web !== 'sql' ? 2 : 4;
+  editor.setOption('indentUnit', unit);
+  editor.setOption('tabSize', unit);
+  editor.setOption('autoCloseTags', web === 'html');
+  editor.setOption('matchTags', web === 'html' ? { bothTags: true } : false);
+  const finder = web === 'html' ? CodeMirror.fold.xml : (web === 'css' || web === 'js' || web === 'json') ? CodeMirror.fold.brace : CodeMirror.fold.indent;
+  editor.setOption('foldOptions', { rangeFinder: finder, widget: ' … ' });
 }
 function getDoc(p) {
   if (!docs[p]) {
@@ -502,7 +523,9 @@ function openFile(p, line) {
   while (d) { state.expanded[d] = true; d = dirName(d); }
   const doc = getDoc(p);
   if (editor.getDoc() !== doc) editor.swapDoc(doc);
+  applyFileOptions(p);
   renderAll();
+  if (window.KEYS) KEYS.touchRecent(p);
   if (line) {
     const ln = line - 1;
     editor.setCursor({ line: ln, ch: 0 });
@@ -568,10 +591,10 @@ function renderAll() {
 
 function renderRunConfigs() {
   const sel = $('#runConfig');
-  const pyFiles = Object.keys(state.files).filter(isPy).sort();
+  const pyFiles = Object.keys(state.files).filter(f => isPy(f) || (window.WEB && WEB.runnable(f))).sort();
   if (state.runConfig && !pyFiles.includes(state.runConfig)) state.runConfig = '';
   sel.innerHTML = `<option value="">Joriy fayl</option>` +
-    pyFiles.map(f => `<option value="${esc(f)}">${esc(f.replace(/\.py$/, ''))}</option>`).join('');
+    pyFiles.map(f => `<option value="${esc(f)}">${esc(isPy(f) ? f.replace(/\.py$/, '') : f)}</option>`).join('');
   sel.value = state.runConfig;
 }
 $('#runConfig').onchange = e => { state.runConfig = e.target.value; persist(); };
@@ -579,7 +602,12 @@ $('#runConfig').onchange = e => { state.runConfig = e.target.value; persist(); }
 /* ================= Ishga tushirish ================= */
 function runTarget() {
   if (state.runConfig) return state.runConfig;
-  if (state.active && isPy(state.active)) return state.active;
+  if (state.active && (isPy(state.active) || (window.WEB && WEB.runnable(state.active)))) return state.active;
+  // CSS ochiq bo'lsa — shu papkadagi HTML sahifani ko'rsatamiz
+  if (state.active && window.WEB && WEB.langOf(state.active) === 'css') {
+    const html = WEB.htmlFor(state.active);
+    if (html) return html;
+  }
   return 'main.py' in state.files ? 'main.py' : Object.keys(state.files).find(isPy);
 }
 let lastRun = null;
@@ -626,7 +654,9 @@ async function loadImports(con) {
 
 async function runFile(path, con = runCon) {
   path = path || runTarget();
-  if (!path) return toast('Ishga tushirish uchun .py fayl yo\'q', 'error');
+  if (!path) return toast('Ishga tushirish uchun fayl yo\'q (.py, .html, .js yoki .sql)', 'error');
+  // Python bo'lmagan fayllar o'z ishga tushirgichiga yuboriladi (tillar bir-biriga aralashmaydi)
+  if (!isPy(path) && window.WEB && WEB.runnable(path)) return WEB.run(path, con);
   if (!await ensureReady() || running) return;
   lastRun = { kind: 'file', path };
   persist(); syncFS();
@@ -648,6 +678,7 @@ async function runFile(path, con = runCon) {
   con.write(`\nProcess finished with exit code ${code}  (${secs}s)\n`, code === 0 ? 'meta' : 'err');
   outTarget = runCon;
   setRunning(false);
+  if (window.WEB) WEB.afterPythonRun();
 }
 
 /* input() — brauzer oynasi orqali */
@@ -849,6 +880,7 @@ $('#problemList').addEventListener('click', e => {
 
 /* ================= Avtoto'ldirish ================= */
 function pyHint(cm, callback) {
+  if (window.WEB && WEB.langOf(state.active || '')) return WEB.hint(cm, callback);
   const cur = cm.getCursor();
   const line = cm.getLine(cur.line);
   let start = cur.ch;
@@ -891,6 +923,7 @@ pyHint.async = true;
 let blackReady = false;
 async function formatCode() {
   const p = state.active;
+  if (p && window.WEB && WEB.langOf(p)) return WEB.format(p);
   if (!p || !isPy(p)) return;
   if (!await ensureReady()) return;
   try {
@@ -1466,8 +1499,8 @@ const actions = {
   exit: () => { persist(); location.href = '../../games.html'; },
   undo: () => editor.undo(),
   redo: () => editor.redo(),
-  find: () => editor.execCommand('find'),
-  replace: () => editor.execCommand('replace'),
+  find: () => window.KEYS ? KEYS.openFind(false) : editor.execCommand('find'),
+  replace: () => window.KEYS ? KEYS.openFind(true) : editor.execCommand('replace'),
   gotoLine: () => editor.execCommand('jumpToLine'),
   comment: () => editor.toggleComment({ indent: true }),
   duplicate: () => duplicateLine(editor),
@@ -1497,7 +1530,9 @@ const actions = {
       <p>Brauzerda to'liq ishlaydigan Python muhiti. Kod sizning kompyuteringizda, <b>Pyodide</b> (WebAssembly'dagi CPython ${pyVersion}) orqali bajariladi.</p>
       <p>• Bir nechta fayl va papkalar, modullarni import qilish<br>• <code>unittest</code> testlari va natijalar paneli<br>
       • Jedi avtoto'ldirish, pyflakes tekshiruvi, black formatlash<br>• <code>pip install</code> — PyPI'dagi sof Python paketlar<br>
-      • numpy, pandas, matplotlib kabi paketlar import qilinganda o'zi yuklanadi</p>
+      • numpy, pandas, matplotlib kabi paketlar import qilinganda o'zi yuklanadi<br>
+      • <b>HTML / CSS / JavaScript / Tailwind</b> — izolyatsiyalangan Preview oynasida, <b>SQL</b> — SQLite'da (Shift+F10)<br>
+      • PyCharm qisqartmalari: Ctrl+bosish, Alt+bosish (ko'p kursor), Ctrl+F/Ctrl+R, Ctrl+Shift+F va boshqalar (Yordam → Klaviatura qisqartmalari)</p>
       <p style="color:var(--text-dim)">Eslatma: <code>input()</code> brauzer oynasi orqali so'raladi. Cheksiz sikl sahifani qotirib qo'yishi mumkin — u holda sahifani yangilang (fayllar saqlanib qoladi).</p>`,
   }),
   collapseAll: () => { state.expanded = { '': true }; renderTree(); persist(); },
@@ -1581,7 +1616,7 @@ function makeEditor() {
     extraKeys: {
       Tab: cm => {
         if (cm.somethingSelected()) cm.indentSelection('add');
-        else cm.replaceSelection('    ', 'end');
+        else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end');
       },
       'Shift-Tab': cm => cm.indentSelection('subtract'),
       Backspace: cm => {
@@ -1590,7 +1625,8 @@ function makeEditor() {
         const c = cm.getCursor();
         const before = cm.getLine(c.line).slice(0, c.ch);
         if (before.length && /^ +$/.test(before)) {
-          const n = ((before.length - 1) % 4) + 1;
+          const unit = cm.getOption('indentUnit');
+          const n = ((before.length - 1) % unit) + 1;
           cm.replaceRange('', { line: c.line, ch: c.ch - n }, c);
           return;
         }
@@ -1602,7 +1638,9 @@ function makeEditor() {
       'Ctrl-D': duplicateLine,
       'Cmd-D': duplicateLine,
       'Ctrl-Y': 'deleteLine',
-      'Ctrl-R': 'replace',
+      'Ctrl-R': () => actions.replace(),
+      'Ctrl-F': () => actions.find(),
+      'Cmd-F': () => actions.find(),
       'Ctrl-G': 'jumpToLine',
       'Alt-Shift-Up': 'swapLineUp',
       'Alt-Shift-Down': 'swapLineDown',
@@ -1623,7 +1661,9 @@ function makeEditor() {
     $('#cursorPos').textContent = `${c.line + 1}:${c.ch + 1}` + (sel ? ` (${sel.length} belgi)` : '');
   });
   editor.on('inputRead', (cm, ch) => {
-    if (cm.state.completionActive || !isPy(state.active || '')) return;
+    if (cm.state.completionActive) return;
+    if (window.WEB && WEB.langOf(state.active || '')) return WEB.autoHint(cm, ch);
+    if (!isPy(state.active || '')) return;
     const t = ch.text.join('');
     if (/^[A-Za-z_.]$/.test(t)) {
       const cur = cm.getCursor();
@@ -1826,6 +1866,7 @@ async function initPython() {
     pyVersion = py.runPython(BOOT);
     pyReady = true;
     syncFS();
+    if (window.WEB) WEB.onPythonReady();
     $('#pyVersion').textContent = `Python ${pyVersion} (Pyodide)`;
     pyStatus(`Python ${pyVersion} tayyor`);
     runCon.write(`Python ${pyVersion} (Pyodide ${py.version}) — ${((performance.now() - t0) / 1000).toFixed(1)}s da yuklandi.\n`, 'meta');
