@@ -496,3 +496,69 @@ li.CodeMirror-hint-active .hint-type { color: #dde; }
 /* Switcher (Alt+`) */
 .picker.switcher { background: rgba(0, 0, 0, .15); padding-top: 18vh; }
 .picker.switcher #pickerInput { display: none; }
+
+/* ================= Rang namunalari va rang tanlash oynasi ================= */
+.cm-color-swatch { display: inline-block; width: 12px; height: 12px; margin: 0 3px -1px 1px; border-radius: 3px; cursor: pointer; vertical-align: baseline;
+  background: repeating-conic-gradient(#bbb 0 25%, #fff 0 50%) 0 0 / 6px 6px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); overflow: hidden; }
+.cm-color-swatch i { display: block; width: 100%; height: 100%; }
+.cm-color-swatch:hover { transform: scale(1.25); box-shadow: 0 0 0 1px #fff; }
+.cm-color-swatch.tw { border-radius: 50%; }
+.color-pop { position: fixed; z-index: 90; width: 300px; display: none; background: #3c3f41; border: 1px solid var(--border-2); border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .6); padding: 10px; user-select: none; font-size: 12px; }
+.color-pop.show { display: block; }
+.color-pop.picking { opacity: .15; }
+.cp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--text); font-weight: 600; }
+.cp-x { width: 22px; height: 22px; border-radius: 4px; font-size: 16px; color: var(--text-dim); }
+.cp-x:hover { background: #4c5052; }
+.cp-sv { position: relative; height: 150px; border-radius: 6px; cursor: crosshair; overflow: hidden; touch-action: none; }
+.cp-sv-white { position: absolute; inset: 0; background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0)); }
+.cp-sv-black { position: absolute; inset: 0; background: linear-gradient(to top, #000, rgba(0, 0, 0, 0)); }
+.cp-thumb { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(0, 0, 0, .3); pointer-events: none; }
+.cp-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.cp-eye { width: 32px; height: 32px; border-radius: 6px; background: #4c5052; color: #fff; font-size: 14px; flex-shrink: 0; }
+.cp-eye:hover { background: var(--accent); }
+.cp-sliders { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.cp-sliders input { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px; margin: 0; cursor: pointer; }
+.cp-hue { background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+.cp-alpha { background: linear-gradient(to right, transparent, var(--c, #000)), repeating-conic-gradient(#999 0 25%, #ddd 0 50%) 0 0 / 8px 8px; }
+.cp-sliders input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5); }
+.cp-sliders input::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
+.cp-preview { display: flex; width: 44px; height: 32px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: repeating-conic-gradient(#999 0 25%, #ddd 0 50%) 0 0 / 8px 8px; }
+.cp-preview i { flex: 1; }
+.cp-inputs select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border-2); border-radius: 4px; padding: 4px; font-size: 12px; }
+.cp-inputs input { flex: 1; min-width: 0; background: var(--panel-2); color: var(--code); border: 1px solid var(--border-2); border-radius: 4px; padding: 5px 8px; font: 12.5px var(--mono); outline: none; }
+.cp-inputs input:focus { border-color: var(--accent); }
+.cp-inputs input.bad { border-color: var(--red); }
+.cp-tabs { display: flex; gap: 2px; margin: 10px 0 6px; border-bottom: 1px solid var(--border-2); }
+.cp-tabs button { padding: 4px 10px; font-size: 12px; color: var(--text-dim); border-bottom: 2px solid transparent; }
+.cp-tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+.cp-pal { max-height: 170px; overflow-y: auto; }
+.cp-pal.grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; }
+.cp-pal.grid p { grid-column: 1 / -1; color: var(--text-dim); padding: 8px 0; }
+.cp-pal i { display: block; aspect-ratio: 1; border-radius: 3px; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.cp-pal i:hover { transform: scale(1.25); position: relative; z-index: 1; box-shadow: 0 0 0 2px #fff; }
+.cp-pal i.sel { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent); position: relative; z-index: 1; }
+.cp-tw-row { display: grid; grid-template-columns: 52px repeat(11, 1fr); gap: 2px; align-items: center; margin-bottom: 2px; }
+.cp-tw-row span { font-size: 10px; color: var(--text-dim); }
+.cp-tw-row i { border-radius: 2px; }
+.cp-foot { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.cp-foot span { flex: 1; color: var(--text-dim); font-size: 11px; }
+.cp-foot button { padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border-2); font-size: 12px; }
+.cp-foot button:hover { background: #4c5052; }
+.cp-foot button.ok { background: #365880; border-color: #4c708c; color: #fff; }
+
+/* ================= Qo'shimcha imkoniyatlar ================= */
+.cm-indent-guide { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .14); }
+.CodeMirror-activeline .cm-indent-guide { box-shadow: inset 1px 0 0 rgba(255, 255, 255, .22); }
+.project-name .crumb { color: #ffc66d; }
+.rn-opt { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 12.5px; color: var(--text); }
+.set-list { display: flex; flex-direction: column; gap: 4px; }
+.set-row { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 6px; cursor: pointer; }
+.set-row:hover { background: rgba(255, 255, 255, .04); }
+.set-row span { flex: 1; display: flex; flex-direction: column; }
+.set-row small { color: var(--text-dim); font-size: 11.5px; }
+.set-row input[type=number] { width: 64px; background: var(--panel-2); color: var(--code); border: 1px solid var(--border-2); border-radius: 4px; padding: 4px 6px; }
+.todo-todo { color: #a8c023; }
+.todo-fixme { color: #e05555; }
+.todo-xxx, .todo-hack { color: #d9a343; }
+.todo-note { color: #589df6; }

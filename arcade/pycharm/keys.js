@@ -695,6 +695,17 @@ def _pc_doc(src, line, col, rel):
     runSearchAll();
     setTimeout(() => { sIn.focus(); sIn.select(); }, 0);
   }
+  // Find Usages uchun: so'zni butun so'z rejimida barcha fayllardan qidirish
+  function searchFor(text, opts = {}) {
+    showBottom('search');
+    sIn.value = text;
+    for (const k of ['case', 'word', 'regex']) {
+      sOpt[k] = !!opts[k];
+      const b = document.querySelector(`[data-sopt="${k}"]`);
+      if (b) b.classList.toggle('on', sOpt[k]);
+    }
+    runSearchAll();
+  }
   async function replaceInFiles() {
     const re = searchRe();
     if (!re || re === 'bad') return;
@@ -844,7 +855,8 @@ def _pc_doc(src, line, col, rel):
       ['Qidirish', [['Faylda qidirish', 'Ctrl+F'], ['Almashtirish', 'Ctrl+R'], ['Keyingi / oldingi', 'Enter / Shift+Enter, F3'], ['Barcha mosliklarni tanlash', 'Alt+Enter (qidiruvda)'], ['Hammasini almashtirish', 'Ctrl+Enter / Alt+A'], ['Katta-kichik harf / so\'z / regex', 'Alt+C / Alt+W / Alt+X'], ['Barcha fayllarda qidirish', 'Ctrl+Shift+F'], ['Fayllarda almashtirish', 'Ctrl+Shift+R']]],
       ["Ko'p kursor va tanlash", [['Kursor qo\'shish', 'Alt+bosish'], ['Ustun bo\'yicha tanlash', 'Alt+sudrash'], ['Yuqori / pastga kursor', 'Ctrl+Alt+↑ / ↓'], ['Keyingi moslikni tanlash', 'Alt+J'], ['Oxirgisini bekor qilish', 'Shift+Alt+J'], ['Hamma mosliklarni tanlash', 'Ctrl+Alt+Shift+J'], ['Tanlovni kengaytirish / qisqartirish', 'Alt+Shift+→ / ←'], ['Bitta kursorga qaytish', 'Esc']]],
       ['Tahrirlash', [['Emmet: teg / CSS kengaytirish', 'Tab (div.card>p*3, !, m10)'], ['Emmet: keyingi bo\'sh joy', 'Tab'], ['Avtoto\'ldirish', 'Ctrl+Space'], ['Izohga olish', 'Ctrl+/'], ['Qatorni nusxalash', 'Ctrl+D'], ['Qatorni o\'chirish', 'Ctrl+Y'], ['Qatorni ko\'chirish', 'Alt+Shift+↑/↓, Ctrl+Shift+↑/↓'], ['Qatorlarni birlashtirish', 'Ctrl+Shift+J'], ['Katta/kichik harf', 'Ctrl+Shift+U'], ['Formatlash', 'Ctrl+Alt+L'], ['Saqlash', 'Ctrl+S']]],
-      ['Oyna', [['Loyiha paneli', 'Alt+1'], ['Pastki panel', 'Alt+4'], ['Yangi fayl', 'Alt+Insert'], ['Tabni yopish', 'Ctrl+F4 / Alt+W'], ['Shrift o\'lchami', 'Ctrl+= / Ctrl+- / Ctrl+0']]],
+      ['Kod (Refactor)', [['Nomini o\'zgartirish (Rename)', 'Shift+F6'], ['Foydalanilgan joylar (Find Usages)', 'Alt+F7'], ['Live Templates', 'Tab / Ctrl+J'], ["O'rab olish (Surround With)", 'Ctrl+Alt+T'], ['Blok izoh', 'Ctrl+Shift+/'], ['Rang tanlash / pipetka', 'Ctrl+Alt+C yoki rang namunasini bosing']]],
+      ['Oyna', [['Sozlamalar', 'Ctrl+Alt+S'], ['Loyiha paneli', 'Alt+1'], ['Pastki panel', 'Alt+4'], ['Yangi fayl', 'Alt+Insert'], ['Tabni yopish', 'Ctrl+F4 / Alt+W'], ['Shrift o\'lchami', 'Ctrl+= / Ctrl+- / Ctrl+0']]],
     ].map(([g, rows]) => `<div><h5>${g}</h5><table>${rows.map(([a, b]) => `<tr><td>${a}</td><td><kbd>${b}</kbd></td></tr>`).join('')}</table></div>`).join('')}</div>`,
   });
 
@@ -865,5 +877,5 @@ def _pc_doc(src, line, col, rel):
     caseToggle: () => { toggleCase(editor); editor.focus(); },
   });
 
-  return { openFind, closeFind, gotoDefinition, gotoFile, recentFiles, openSearchAll, touchRecent, picker };
+  return { openFind, closeFind, gotoDefinition, gotoFile, recentFiles, openSearchAll, searchFor, touchRecent, picker, wordUnder: (cm, pos, extra) => wordUnder(cm, pos, extra) };
 })();

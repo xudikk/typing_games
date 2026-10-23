@@ -421,6 +421,32 @@ def _pc_db_files():
     const before = cm.getLine(cur.line).slice(0, cur.ch);
     return /\bclass(Name)?\s*=\s*["'][^"']*$/.test(before);
   }
+  function inStyleAttr(cm, cur) {
+    const before = cm.getLine(cur.line).slice(0, cur.ch);
+    return /\bstyle\s*=\s*["'][^"']*$/i.test(before);
+  }
+  // HTML ichidagi qism tili: <style> → css, <script> → js, qolgani → html
+  function innerLang(cm, cur) {
+    const lang = langOf(state.active || '');
+    if (lang !== 'html') return lang;
+    const m = cm.getModeAt(cur).name;
+    return m === 'css' ? 'css' : m === 'javascript' ? 'js' : 'html';
+  }
+  // style="..." uchun CSS xususiyat va qiymatlari
+  const CSS_SPEC = (() => {
+    const m = CodeMirror.resolveMode('text/css');
+    return { props: Object.keys(m.propertyKeywords || {}).sort(), values: Object.keys(Object.assign({}, m.valueKeywords || {}, m.colorKeywords || {})).sort() };
+  })();
+  function styleAttrHint(cm, cur) {
+    const line = cm.getLine(cur.line);
+    let start = cur.ch;
+    while (start > 0 && /[\w-]/.test(line[start - 1])) start--;
+    const word = line.slice(start, cur.ch).toLowerCase();
+    const decl = line.slice(0, start).split(/["';]/).pop();
+    const list = (decl.includes(':') ? CSS_SPEC.values : CSS_SPEC.props.map(p => ({ text: p + ': ', displayText: p })))
+      .filter(x => (x.displayText || x).startsWith(word)).slice(0, 60);
+    return list.length ? { list, from: CodeMirror.Pos(cur.line, start), to: cur } : null;
+  }
 
   function hint(cm, callback) {
     const lang = langOf(state.active || '');
@@ -428,8 +454,10 @@ def _pc_db_files():
     const line = cm.getLine(cur.line);
     let done = false;
     const finish = r => { if (!done) { done = true; callback(r); } };
+    const sub = innerLang(cm, cur);
+    if (lang === 'html' && sub === 'html' && inStyleAttr(cm, cur)) return finish(styleAttrHint(cm, cur));
     // HTML class="..." ichida — Tailwind klasslari
-    if (lang === 'html' && inClassAttr(cm, cur)) {
+    if (lang === 'html' && sub === 'html' && inClassAttr(cm, cur)) {
       let start = cur.ch;
       while (start > 0 && /[\w:\-/.\[\]#]/.test(line[start - 1])) start--;
       const word = line.slice(start, cur.ch);
@@ -454,9 +482,14 @@ def _pc_db_files():
     }
     let r = null;
     try {
-      if (lang === 'html') r = CodeMirror.hint.html(cm, { completeSingle: false });
-      else if (lang === 'css') r = CodeMirror.hint.css(cm, { completeSingle: false });
-      else if (lang === 'js' || lang === 'json') r = CodeMirror.hint.javascript(cm, { completeSingle: false });
+      // <style> va <script> ichida CSS/JS yordamchilari ishlaydi
+      if (sub === 'html') r = CodeMirror.hint.html(cm, { completeSingle: false });
+      else if (sub === 'css') r = CodeMirror.hint.css(cm, { completeSingle: false });
+      else if (sub === 'js' || sub === 'json') r = CodeMirror.hint.javascript(cm, { completeSingle: false });
+      if (sub === 'js' && r && r.list.length < 3) {
+        const extra = CodeMirror.hint.anyword(cm, { completeSingle: false });
+        if (extra) r.list = [...new Set(r.list.concat(extra.list))];
+      }
     } catch (e) { r = null; }
     // Fayldagi so'zlar bilan to'ldiramiz
     if (!r || !r.list.length) {
@@ -467,10 +500,15 @@ def _pc_db_files():
   hint.async = true;
 
   function autoHint(cm, ch) {
-    const lang = langOf(state.active || '');
+    if (state.settings && state.settings.autoPopup === false) return;
     const t = ch.text.join('');
     const cur = cm.getCursor();
     const before = cm.getLine(cur.line).slice(0, cur.ch);
+    const lang = innerLang(cm, cur);
+    if (lang === 'html' && inStyleAttr(cm, cur)) {
+      if (/[\w-]/.test(t) && /[\w-]{2,}$/.test(before)) cm.showHint();
+      return;
+    }
     if (lang === 'html') {
       if (t === '<' || (inClassAttr(cm, cur) && /[\w-]$/.test(t) && /[\w-]{1,}$/.test(before))) cm.showHint();
       else if (t === ' ' && inClassAttr(cm, cur)) cm.showHint();

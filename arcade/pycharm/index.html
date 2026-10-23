@@ -67,6 +67,19 @@
             <button data-act="caseToggle"><span>Katta/kichik harf</span><kbd>Ctrl+Shift+U</kbd></button>
           </div>
         </div>
+        <div class="menu" data-menu="code">Kod
+          <div class="menu-pop">
+            <button data-act="rename"><span>Nomini o'zgartirish (Rename)</span><kbd>Shift+F6</kbd></button>
+            <button data-act="usages"><span>Foydalanilgan joylar (Find Usages)</span><kbd>Alt+F7</kbd></button>
+            <hr>
+            <button data-act="liveTemplates"><span>Live Templates...</span><kbd>Ctrl+J</kbd></button>
+            <button data-act="surround"><span>O'rab olish (Surround With)...</span><kbd>Ctrl+Alt+T</kbd></button>
+            <button data-act="blockComment"><span>Blok izoh</span><kbd>Ctrl+Shift+/</kbd></button>
+            <hr>
+            <button data-act="colorPicker"><span>🎨 Rang tanlash / pipetka</span><kbd>Ctrl+Alt+C</kbd></button>
+            <button data-act="format"><span>Kodni formatlash</span><kbd>Ctrl+Alt+L</kbd></button>
+          </div>
+        </div>
         <div class="menu" data-menu="nav">Navigatsiya
           <div class="menu-pop">
             <button data-act="gotoDef"><span>Ta'rifga o'tish</span><kbd>Ctrl+B / Ctrl+bosish</kbd></button>
@@ -85,6 +98,9 @@
           <div class="menu-pop">
             <button data-act="toggleProject"><span>Loyiha paneli</span><kbd>Alt+1</kbd></button>
             <button data-act="toggleBottom"><span>Pastki panel</span><kbd>Alt+4</kbd></button>
+            <button data-act="todo"><span>TODO ro'yxati</span></button>
+            <button data-act="toggleWrap"><span>Qatorni o'rash (word wrap)</span></button>
+            <button data-act="settings"><span>⚙ Sozlamalar...</span><kbd>Ctrl+Alt+S</kbd></button>
             <hr>
             <button data-act="zoomIn"><span>Shriftni kattalashtirish</span><kbd>Ctrl+=</kbd></button>
             <button data-act="zoomOut"><span>Shriftni kichraytirish</span><kbd>Ctrl+-</kbd></button>
@@ -327,5 +343,7 @@
   <script src="web.js"></script>
   <script src="keys.js"></script>
   <script src="emmet.js"></script>
+  <script src="colors.js"></script>
+  <script src="extras.js"></script>
 </body>
 </html>

@@ -283,6 +283,14 @@ ${unit}${CUR}
     const bare = /^[A-Za-z][\w-]*$/.test(text);
     const before = line.slice(0, start);
     const unit = ' '.repeat(cm.getOption('indentUnit'));
+    // style="..." atributi ichida — CSS qisqartmalari (df → display: flex;)
+    if (lang === 'html' && mode === 'xml' && /\bstyle\s*=\s*["'][^"']*$/i.test(before)) {
+      if (!/(["';]|^)\s*$/.test(before)) return false;
+      const out = expandCss(text);
+      if (!out) return false;
+      insert(cm, { line: cur.line, ch: start }, cur, (/[^"'\s]\s*$/.test(before) && !/;\s*$/.test(before) ? ' ' : '') + out + ' ');
+      return true;
+    }
     if (mode === 'css' || lang === 'css') {
       // Faqat qoida ichida (deklaratsiya joyida)
       if (!/^\s*$/.test(before) && !/[;{]\s*$/.test(before)) return false;
@@ -308,10 +316,12 @@ ${unit}${CUR}
     }
   }
 
+  let baseTab = null; // app.js'dagi oddiy chekinish
   function attach() {
     if (typeof editor === 'undefined' || !editor) return setTimeout(attach, 50);
     const keys = editor.getOption('extraKeys');
     const prevTab = keys.Tab;
+    baseTab = prevTab;
     keys.Tab = cm => {
       if (stops.length && nextStop(cm)) return;
       if (tryExpand(cm)) return;
@@ -327,5 +337,5 @@ ${unit}${CUR}
   }
   attach();
 
-  return { expandHtml, expandCss, parse };
+  return { expandHtml, expandCss, parse, insert, tryExpand, nextStop, hasStops: () => stops.length > 0, baseTab: () => baseTab, CUR };
 })();
